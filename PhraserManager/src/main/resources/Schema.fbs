@@ -90,8 +90,6 @@ table PhraseBlock {
   phrase_template_id: uint16;
   folder_id: uint16;
   is_tombstone: bool;
-  permissions: byte;//override
-  icon: byte;//override
   phrase_name: string;
   //history[0] - current value (eg. current password), 1 - previous, 2 - the one before that, etc.
   history: [PhraseHistory];

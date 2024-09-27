@@ -35,28 +35,22 @@ public final class PhraseBlock extends Table {
   public boolean mutateFolderId(int folder_id) { int o = __offset(8); if (o != 0) { bb.putShort(o + bb_pos, (short) folder_id); return true; } else { return false; } }
   public boolean isTombstone() { int o = __offset(10); return o != 0 ? 0!=bb.get(o + bb_pos) : false; }
   public boolean mutateIsTombstone(boolean is_tombstone) { int o = __offset(10); if (o != 0) { bb.put(o + bb_pos, (byte)(is_tombstone ? 1 : 0)); return true; } else { return false; } }
-  public byte permissions() { int o = __offset(12); return o != 0 ? bb.get(o + bb_pos) : 0; }
-  public boolean mutatePermissions(byte permissions) { int o = __offset(12); if (o != 0) { bb.put(o + bb_pos, permissions); return true; } else { return false; } }
-  public byte icon() { int o = __offset(14); return o != 0 ? bb.get(o + bb_pos) : 0; }
-  public boolean mutateIcon(byte icon) { int o = __offset(14); if (o != 0) { bb.put(o + bb_pos, icon); return true; } else { return false; } }
-  public String phraseName() { int o = __offset(16); return o != 0 ? __string(o + bb_pos) : null; }
-  public ByteBuffer phraseNameAsByteBuffer() { return __vector_as_bytebuffer(16, 1); }
-  public ByteBuffer phraseNameInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 16, 1); }
+  public String phraseName() { int o = __offset(12); return o != 0 ? __string(o + bb_pos) : null; }
+  public ByteBuffer phraseNameAsByteBuffer() { return __vector_as_bytebuffer(12, 1); }
+  public ByteBuffer phraseNameInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 12, 1); }
   public PhraseHistory history(int j) { return history(new PhraseHistory(), j); }
-  public PhraseHistory history(PhraseHistory obj, int j) { int o = __offset(18); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
-  public int historyLength() { int o = __offset(18); return o != 0 ? __vector_len(o) : 0; }
+  public PhraseHistory history(PhraseHistory obj, int j) { int o = __offset(14); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
+  public int historyLength() { int o = __offset(14); return o != 0 ? __vector_len(o) : 0; }
   public PhraseHistory.Vector historyVector() { return historyVector(new PhraseHistory.Vector()); }
-  public PhraseHistory.Vector historyVector(PhraseHistory.Vector obj) { int o = __offset(18); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
+  public PhraseHistory.Vector historyVector(PhraseHistory.Vector obj) { int o = __offset(14); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
 
-  public static void startPhraseBlock(FlatBufferBuilder builder) { builder.startTable(8); }
+  public static void startPhraseBlock(FlatBufferBuilder builder) { builder.startTable(6); }
   public static void addBlock(FlatBufferBuilder builder, int blockOffset) { builder.addStruct(0, blockOffset, 0); }
   public static void addPhraseTemplateId(FlatBufferBuilder builder, int phraseTemplateId) { builder.addShort(1, (short) phraseTemplateId, (short) 0); }
   public static void addFolderId(FlatBufferBuilder builder, int folderId) { builder.addShort(2, (short) folderId, (short) 0); }
   public static void addIsTombstone(FlatBufferBuilder builder, boolean isTombstone) { builder.addBoolean(3, isTombstone, false); }
-  public static void addPermissions(FlatBufferBuilder builder, byte permissions) { builder.addByte(4, permissions, 0); }
-  public static void addIcon(FlatBufferBuilder builder, byte icon) { builder.addByte(5, icon, 0); }
-  public static void addPhraseName(FlatBufferBuilder builder, int phraseNameOffset) { builder.addOffset(6, phraseNameOffset, 0); }
-  public static void addHistory(FlatBufferBuilder builder, int historyOffset) { builder.addOffset(7, historyOffset, 0); }
+  public static void addPhraseName(FlatBufferBuilder builder, int phraseNameOffset) { builder.addOffset(4, phraseNameOffset, 0); }
+  public static void addHistory(FlatBufferBuilder builder, int historyOffset) { builder.addOffset(5, historyOffset, 0); }
   public static int createHistoryVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
   public static void startHistoryVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
   public static int endPhraseBlock(FlatBufferBuilder builder) {
