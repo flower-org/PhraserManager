@@ -1,0 +1,3 @@
+./flatc  --gen-mutable --java Schema.fbs
+
+Some minor manual code cleanup might be needed afterwards (to have it compiling).

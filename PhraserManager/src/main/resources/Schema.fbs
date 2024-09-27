@@ -1,0 +1,110 @@
+namespace phraser;
+
+// -------- Abstract StoreBlock --------
+
+enum BlockType : byte {
+    Unknown = 0,
+    FoldersBlock = 1,
+    SymbolSetsBlock = 2,
+    PhraseTemplatesBlock = 3,
+    PhraseBlock = 4,
+    KeyBlock = 5
+}
+
+struct StoreBlock {
+  block_id: uint16;
+  //This version is a global unique update version, as opposed to block version for a particular block
+  version: uint32;
+  type: BlockType;
+  //Use the sum of millis() and micros() to seed the random generator randomSeed(millis()   micros());
+  entropy: uint64;
+}
+
+// -------- Folder / FoldersBlock --------
+
+table Folder {
+  folder_id: uint16;
+  parent_folder_id: uint16;
+  folder_name: string;
+}
+
+table FoldersBlock {
+  block: StoreBlock;
+  folders: [Folder];
+}
+
+// -------- SymbolSet / SymbolSetsBlock --------
+
+//CRD only, immutable in storage
+table SymbolSet {
+  set_id: uint16;
+  symbol_set_name: string;
+  symbol_set: string;
+}
+
+table SymbolSetsBlock {
+  block: StoreBlock;
+  symbol_sets: [SymbolSet];
+}
+
+// -------- Word / PhraseDefinition / PhraseTemplate / PhraseTemplatesBlock --------
+
+//Word is a template for a token of, e.g. login or password or url
+struct WordTemplate {
+  byte word_template_id;
+  permissions: byte;//bitmask; isViewable, isTypeable, isGenerateable
+  icon: byte;//standard icon code - TODO: enum
+  min_length: uint32;
+  max_length: uint32;
+  word_template_name: string;
+  symbol_set_ids: [uint16];
+}
+
+//CRD only, immutable in storage
+//PhraseTemplate is a template for a set of tokens, e.g. login/password/url
+table PhraseTemplate {
+  phrase_template_id: uint16;
+  phrase_template_name: string;
+  word_templates: [WordTemplate];
+}
+
+table PhraseTemplatesBlock {
+  block: StoreBlock;
+  phrase_templates: [PhraseTemplate];
+}
+
+// -------- StoreWordValue / StorePhraseHistory / PhraseBlock --------
+
+table Word {
+  word_template_id: uint16;
+  word: string;
+}
+
+table PhraseHistory {
+  phrase: [Word];
+}
+
+table PhraseBlock {
+  block: StoreBlock;
+  phrase_template_id: uint16;
+  folder_id: uint16;
+  is_tombstone: bool;
+  permissions: byte;//override
+  icon: byte;//override
+  phrase_name: string;
+  //history[0] - current value (eg. current password), 1 - previous, 2 - the one before that, etc.
+  history: [PhraseHistory];
+}
+
+// -------- // --------
+
+//Other structs
+
+//Dual-level encryption is definitely an enhancement
+table KeyBlock {
+  block: StoreBlock;
+  key: [byte];//encrypted key? doubly encrypted key (do like)
+  iv: [byte];//TODO: maybe we better have IV per block in general - that's outside flatbuf schema though
+  //TODO: and encrypt those IVs themselves as well?
+  //TODO: or use this secret IV to just xor those other IVs for speedup
+}
