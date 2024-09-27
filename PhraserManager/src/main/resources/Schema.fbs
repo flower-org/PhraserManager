@@ -3,7 +3,7 @@ namespace phraser;
 // -------- Abstract StoreBlock --------
 
 enum BlockType : byte {
-    Unknown = 0,
+    Unknown = 0,//default value needs to be present
     FoldersBlock = 1,
     SymbolSetsBlock = 2,
     PhraseTemplatesBlock = 3,
@@ -50,8 +50,8 @@ table SymbolSetsBlock {
 // -------- Word / PhraseDefinition / PhraseTemplate / PhraseTemplatesBlock --------
 
 //Word is a template for a token of, e.g. login or password or url
-struct WordTemplate {
-  byte word_template_id;
+table WordTemplate {
+  word_template_id: uint16;
   permissions: byte;//bitmask; isViewable, isTypeable, isGenerateable
   icon: byte;//standard icon code - TODO: enum
   min_length: uint32;
@@ -81,6 +81,7 @@ table Word {
 }
 
 table PhraseHistory {
+  phrase_template_id: uint16;
   phrase: [Word];
 }
 

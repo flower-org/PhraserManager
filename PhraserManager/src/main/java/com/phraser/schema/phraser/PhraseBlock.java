@@ -42,11 +42,11 @@ public final class PhraseBlock extends Table {
   public String phraseName() { int o = __offset(16); return o != 0 ? __string(o + bb_pos) : null; }
   public ByteBuffer phraseNameAsByteBuffer() { return __vector_as_bytebuffer(16, 1); }
   public ByteBuffer phraseNameInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 16, 1); }
-  public StorePhraseHistory history(int j) { return history(new StorePhraseHistory(), j); }
-  public StorePhraseHistory history(StorePhraseHistory obj, int j) { int o = __offset(18); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
+  public PhraseHistory history(int j) { return history(new PhraseHistory(), j); }
+  public PhraseHistory history(PhraseHistory obj, int j) { int o = __offset(18); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
   public int historyLength() { int o = __offset(18); return o != 0 ? __vector_len(o) : 0; }
-  public StorePhraseHistory.Vector historyVector() { return historyVector(new StorePhraseHistory.Vector()); }
-  public StorePhraseHistory.Vector historyVector(StorePhraseHistory.Vector obj) { int o = __offset(18); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
+  public PhraseHistory.Vector historyVector() { return historyVector(new PhraseHistory.Vector()); }
+  public PhraseHistory.Vector historyVector(PhraseHistory.Vector obj) { int o = __offset(18); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
 
   public static void startPhraseBlock(FlatBufferBuilder builder) { builder.startTable(8); }
   public static void addBlock(FlatBufferBuilder builder, int blockOffset) { builder.addStruct(0, blockOffset, 0); }
