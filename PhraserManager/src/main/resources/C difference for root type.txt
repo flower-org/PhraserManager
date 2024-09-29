@@ -1,0 +1,45 @@
+
+
+C difference for root type:
+
+
+
+
+inline const phraser::PhraseBlock *GetPhraseBlock(const void *buf) {
+  return ::flatbuffers::GetRoot<phraser::PhraseBlock>(buf);
+}
+
+inline const phraser::PhraseBlock *GetSizePrefixedPhraseBlock(const void *buf) {
+  return ::flatbuffers::GetSizePrefixedRoot<phraser::PhraseBlock>(buf);
+}
+
+inline PhraseBlock *GetMutablePhraseBlock(void *buf) {
+  return ::flatbuffers::GetMutableRoot<PhraseBlock>(buf);
+}
+
+inline phraser::PhraseBlock *GetMutableSizePrefixedPhraseBlock(void *buf) {
+  return ::flatbuffers::GetMutableSizePrefixedRoot<phraser::PhraseBlock>(buf);
+}
+
+inline bool VerifyPhraseBlockBuffer(
+    ::flatbuffers::Verifier &verifier) {
+  return verifier.VerifyBuffer<phraser::PhraseBlock>(nullptr);
+}
+
+inline bool VerifySizePrefixedPhraseBlockBuffer(
+    ::flatbuffers::Verifier &verifier) {
+  return verifier.VerifySizePrefixedBuffer<phraser::PhraseBlock>(nullptr);
+}
+
+inline void FinishPhraseBlockBuffer(
+    ::flatbuffers::FlatBufferBuilder &fbb,
+    ::flatbuffers::Offset<phraser::PhraseBlock> root) {
+  fbb.Finish(root);
+}
+
+inline void FinishSizePrefixedPhraseBlockBuffer(
+    ::flatbuffers::FlatBufferBuilder &fbb,
+    ::flatbuffers::Offset<phraser::PhraseBlock> root) {
+  fbb.FinishSizePrefixed(root);
+}
+

@@ -2,20 +2,24 @@ namespace phraser;
 
 // -------- Abstract StoreBlock --------
 
-enum BlockType : byte {
+//we need to know BlockType in order to deserialize - i.e. prior to deserialization, so it can't be a part of the serialized structure itself.
+/*enum BlockType : byte {
     Unknown = 0,//default value needs to be present
     FoldersBlock = 1,
     SymbolSetsBlock = 2,
     PhraseTemplatesBlock = 3,
     PhraseBlock = 4,
     KeyBlock = 5
-}
+}*/
 
 struct StoreBlock {
   block_id: uint16;
   //This version is a global unique update version, as opposed to block version for a particular block
   version: uint32;
-  type: BlockType;
+
+  //we need to know BlockType in order to deserialize - i.e. prior to deserialization, so it can't be a part of the serialized structure itself.
+  //type: BlockType;
+
   //Use the sum of millis() and micros() to seed the random generator randomSeed(millis()   micros());
   entropy: uint64;
 }
