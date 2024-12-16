@@ -33,10 +33,10 @@ public final class WordTemplate extends Table {
   public boolean mutatePermissions(byte permissions) { int o = __offset(6); if (o != 0) { bb.put(o + bb_pos, permissions); return true; } else { return false; } }
   public byte icon() { int o = __offset(8); return o != 0 ? bb.get(o + bb_pos) : 0; }
   public boolean mutateIcon(byte icon) { int o = __offset(8); if (o != 0) { bb.put(o + bb_pos, icon); return true; } else { return false; } }
-  public long minLength() { int o = __offset(10); return o != 0 ? (long)bb.getInt(o + bb_pos) & 0xFFFFFFFFL : 0L; }
-  public boolean mutateMinLength(long min_length) { int o = __offset(10); if (o != 0) { bb.putInt(o + bb_pos, (int) min_length); return true; } else { return false; } }
-  public long maxLength() { int o = __offset(12); return o != 0 ? (long)bb.getInt(o + bb_pos) & 0xFFFFFFFFL : 0L; }
-  public boolean mutateMaxLength(long max_length) { int o = __offset(12); if (o != 0) { bb.putInt(o + bb_pos, (int) max_length); return true; } else { return false; } }
+  public int minLength() { int o = __offset(10); return o != 0 ? bb.getShort(o + bb_pos) & 0xFFFF : 0; }
+  public boolean mutateMinLength(int min_length) { int o = __offset(10); if (o != 0) { bb.putShort(o + bb_pos, (short) min_length); return true; } else { return false; } }
+  public int maxLength() { int o = __offset(12); return o != 0 ? bb.getShort(o + bb_pos) & 0xFFFF : 0; }
+  public boolean mutateMaxLength(int max_length) { int o = __offset(12); if (o != 0) { bb.putShort(o + bb_pos, (short) max_length); return true; } else { return false; } }
   public String wordTemplateName() { int o = __offset(14); return o != 0 ? __string(o + bb_pos) : null; }
   public ByteBuffer wordTemplateNameAsByteBuffer() { return __vector_as_bytebuffer(14, 1); }
   public ByteBuffer wordTemplateNameInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 14, 1); }
@@ -52,8 +52,8 @@ public final class WordTemplate extends Table {
       int wordTemplateId,
       byte permissions,
       byte icon,
-      long minLength,
-      long maxLength,
+      int minLength,
+      int maxLength,
       int wordTemplateNameOffset,
       int symbolSetIdsOffset) {
     builder.startTable(7);
@@ -71,8 +71,8 @@ public final class WordTemplate extends Table {
   public static void addWordTemplateId(FlatBufferBuilder builder, int wordTemplateId) { builder.addShort(0, (short) wordTemplateId, (short) 0); }
   public static void addPermissions(FlatBufferBuilder builder, byte permissions) { builder.addByte(1, permissions, 0); }
   public static void addIcon(FlatBufferBuilder builder, byte icon) { builder.addByte(2, icon, 0); }
-  public static void addMinLength(FlatBufferBuilder builder, long minLength) { builder.addInt(3, (int) minLength, (int) 0L); }
-  public static void addMaxLength(FlatBufferBuilder builder, long maxLength) { builder.addInt(4, (int) maxLength, (int) 0L); }
+  public static void addMinLength(FlatBufferBuilder builder, int minLength) { builder.addShort(3, (short) minLength, (short) 0); }
+  public static void addMaxLength(FlatBufferBuilder builder, int maxLength) { builder.addShort(4, (short) maxLength, (short) 0); }
   public static void addWordTemplateName(FlatBufferBuilder builder, int wordTemplateNameOffset) { builder.addOffset(5, wordTemplateNameOffset, 0); }
   public static void addSymbolSetIds(FlatBufferBuilder builder, int symbolSetIdsOffset) { builder.addOffset(6, symbolSetIdsOffset, 0); }
   public static int createSymbolSetIdsVector(FlatBufferBuilder builder, int[] data) { builder.startVector(2, data.length, 2); for (int i = data.length - 1; i >= 0; i--) builder.addShort((short) data[i]); return builder.endVector(); }

@@ -36,21 +36,25 @@ public final class KeyBlock extends Table {
   public ByteBuffer keyAsByteBuffer() { return __vector_as_bytebuffer(6, 1); }
   public ByteBuffer keyInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 6, 1); }
   public boolean mutateKey(int j, byte key) { int o = __offset(6); if (o != 0) { bb.put(__vector(o) + j * 1, key); return true; } else { return false; } }
-  public byte iv(int j) { int o = __offset(8); return o != 0 ? bb.get(__vector(o) + j * 1) : 0; }
-  public int ivLength() { int o = __offset(8); return o != 0 ? __vector_len(o) : 0; }
+  public String dbName() { int o = __offset(8); return o != 0 ? __string(o + bb_pos) : null; }
+  public ByteBuffer dbNameAsByteBuffer() { return __vector_as_bytebuffer(8, 1); }
+  public ByteBuffer dbNameInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 8, 1); }
+  public byte iv(int j) { int o = __offset(10); return o != 0 ? bb.get(__vector(o) + j * 1) : 0; }
+  public int ivLength() { int o = __offset(10); return o != 0 ? __vector_len(o) : 0; }
   public ByteVector ivVector() { return ivVector(new ByteVector()); }
-  public ByteVector ivVector(ByteVector obj) { int o = __offset(8); return o != 0 ? obj.__assign(__vector(o), bb) : null; }
-  public ByteBuffer ivAsByteBuffer() { return __vector_as_bytebuffer(8, 1); }
-  public ByteBuffer ivInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 8, 1); }
-  public boolean mutateIv(int j, byte iv) { int o = __offset(8); if (o != 0) { bb.put(__vector(o) + j * 1, iv); return true; } else { return false; } }
+  public ByteVector ivVector(ByteVector obj) { int o = __offset(10); return o != 0 ? obj.__assign(__vector(o), bb) : null; }
+  public ByteBuffer ivAsByteBuffer() { return __vector_as_bytebuffer(10, 1); }
+  public ByteBuffer ivInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 10, 1); }
+  public boolean mutateIv(int j, byte iv) { int o = __offset(10); if (o != 0) { bb.put(__vector(o) + j * 1, iv); return true; } else { return false; } }
 
-  public static void startKeyBlock(FlatBufferBuilder builder) { builder.startTable(3); }
+  public static void startKeyBlock(FlatBufferBuilder builder) { builder.startTable(4); }
   public static void addBlock(FlatBufferBuilder builder, int blockOffset) { builder.addStruct(0, blockOffset, 0); }
   public static void addKey(FlatBufferBuilder builder, int keyOffset) { builder.addOffset(1, keyOffset, 0); }
   public static int createKeyVector(FlatBufferBuilder builder, byte[] data) { return builder.createByteVector(data); }
   public static int createKeyVector(FlatBufferBuilder builder, ByteBuffer data) { return builder.createByteVector(data); }
   public static void startKeyVector(FlatBufferBuilder builder, int numElems) { builder.startVector(1, numElems, 1); }
-  public static void addIv(FlatBufferBuilder builder, int ivOffset) { builder.addOffset(2, ivOffset, 0); }
+  public static void addDbName(FlatBufferBuilder builder, int dbNameOffset) { builder.addOffset(2, dbNameOffset, 0); }
+  public static void addIv(FlatBufferBuilder builder, int ivOffset) { builder.addOffset(3, ivOffset, 0); }
   public static int createIvVector(FlatBufferBuilder builder, byte[] data) { return builder.createByteVector(data); }
   public static int createIvVector(FlatBufferBuilder builder, ByteBuffer data) { return builder.createByteVector(data); }
   public static void startIvVector(FlatBufferBuilder builder, int numElems) { builder.startVector(1, numElems, 1); }

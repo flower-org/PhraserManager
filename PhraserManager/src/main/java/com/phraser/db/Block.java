@@ -1,75 +1,116 @@
 package com.phraser.db;
 
-import com.google.flatbuffers.FlatBufferBuilder;
-import com.phraser.schema.phraser.BlockType;
-import com.phraser.schema.phraser.FoldersBlock;
-import com.phraser.schema.phraser.KeyBlock;
-import com.phraser.schema.phraser.PhraseBlock;
-import com.phraser.schema.phraser.PhraseTemplatesBlock;
-import com.phraser.schema.phraser.StoreBlock;
-import com.phraser.schema.phraser.SymbolSetsBlock;
+import javafx.scene.control.Tab;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 
+/*
+  TODO: I guess we can just keep this as an export-only thing
+
+  /** 1 byte * /
+  BlockType blockType();
+
+  /** 16 bytes - matches AES data block size, not AES key size * /
+  byte[] iv();
+  /** 16 byte - adler checksum * /
+  int checksum();
+*/
 @Value.Immutable
 public interface Block {
   int FLASH_SECTOR_SIZE = 4096;
+  int BLOCK_TYPE_SIZE = 1;
   int IV_SIZE = 16;
-  int ADLER_SIZE = 2;
-  int BLOCK_DATA_SIZE = FLASH_SECTOR_SIZE - (IV_SIZE + ADLER_SIZE);
+  int ADLER_16_SIZE = 2;
+  int CHECKSUM_SIZE = ADLER_16_SIZE;
+  int BLOCK_REMAINDER_SIZE = FLASH_SECTOR_SIZE - (BLOCK_TYPE_SIZE + IV_SIZE + CHECKSUM_SIZE);
+  int BLOCK_DATA_SIZE = (BLOCK_REMAINDER_SIZE / 16) * 16;
 
-  @Nullable Integer adler16Checksum();
-  @Nullable byte[] blockIv();
+  StoreBlock storeBlock();
 
-  @Nullable FoldersBlock foldersBlock();
-  @Nullable SymbolSetsBlock symbolSetsBlock();
-  @Nullable PhraseTemplatesBlock phraseTemplatesBlock();
-  @Nullable PhraseBlock phraseBlock();
-  @Nullable KeyBlock keyBlock();
-
-  static Block create(FoldersBlock foldersBlock) {
-    return ImmutableBlock.builder()
-      .foldersBlock(foldersBlock)
-      .build();
-  }
-  static Block create(SymbolSetsBlock symbolSetsBlock) {
-    return ImmutableBlock.builder()
-      .symbolSetsBlock(symbolSetsBlock)
-      .build();
-  }
-  static Block create(PhraseTemplatesBlock phraseTemplatesBlock) {
-    return ImmutableBlock.builder()
-      .phraseTemplatesBlock(phraseTemplatesBlock)
-      .build();
-  }
-  static Block create(PhraseBlock phraseBlock) {
-    return ImmutableBlock.builder()
-      .phraseBlock(phraseBlock)
-      .build();
-  }
-  static Block create(KeyBlock keyBlock) {
-    return ImmutableBlock.builder()
-      .keyBlock(keyBlock)
-      .build();
+  default BlockType blockType() {
+    if (foldersBlock() != null) {
+      return BlockType.FOLDERS_BLOCK;
+    } else if (symbolSetsBlock() != null) {
+      return BlockType.SYMBOL_SETS_BLOCK;
+    } else if (phraseTemplatesBlock() != null) {
+      return BlockType.PHRASE_TEMPLATES_BLOCK;
+    } else if (phraseBlock() != null) {
+      return BlockType.PHRASE_BLOCK;
+    } else if (keyBlock() != null) {
+      return BlockType.KEY_BLOCK;
+    } else {
+      throw new RuntimeException("Unknown Block Type");
+    }
   }
 
-  static KeyBlock createFirstKeyBlock(byte[] key_256, byte[] iv_128) {
-    assert(key_256.length == 32);
-    assert(iv_128.length == 16);
+  default @Nullable FoldersBlock foldersBlock() {
+    if (storeBlock() instanceof FoldersBlock) {
+      return (FoldersBlock) storeBlock();
+    } else {
+      return null;
+    }
+  }
 
-    FlatBufferBuilder flatBufferBuilder = new FlatBufferBuilder(BLOCK_DATA_SIZE);
-    int baseBlockOffset = StoreBlock.createStoreBlock(flatBufferBuilder, 1, 1, BlockType.KeyBlock, System.nanoTime());
-    int keyOffset = flatBufferBuilder.createByteVector(key_256);
-    int ivOffset = flatBufferBuilder.createByteVector(iv_128);
+  default @Nullable SymbolSetsBlock symbolSetsBlock() {
+    if (storeBlock() instanceof SymbolSetsBlock) {
+      return (SymbolSetsBlock) storeBlock();
+    } else {
+      return null;
+    }
+  }
 
-    KeyBlock.startKeyBlock(flatBufferBuilder);
-    KeyBlock.addBlock(flatBufferBuilder, baseBlockOffset);
-    KeyBlock.addKey(flatBufferBuilder, keyOffset);
-    KeyBlock.addIv(flatBufferBuilder, ivOffset);
-    int keyBlockOffset = KeyBlock.endKeyBlock(flatBufferBuilder);
+  default @Nullable PhraseTemplatesBlock phraseTemplatesBlock() {
+    if (storeBlock() instanceof PhraseTemplatesBlock) {
+      return (PhraseTemplatesBlock) storeBlock();
+    } else {
+      return null;
+    }
+  }
 
-    flatBufferBuilder.finish(keyBlockOffset);
-    return KeyBlock.getRootAsKeyBlock(flatBufferBuilder.dataBuffer());
+  default @Nullable PhraseBlock phraseBlock() {
+    if (storeBlock() instanceof PhraseBlock) {
+      return (PhraseBlock) storeBlock();
+    } else {
+      return null;
+    }
+  }
+
+  default @Nullable KeyBlock keyBlock() {
+    if (storeBlock() instanceof KeyBlock) {
+      return (KeyBlock) storeBlock();
+    } else {
+      return null;
+    }
+  }
+
+  // --------------------------------------------------
+
+  default BlockType getBlockType() {
+    return blockType();
+  }
+
+  default int getVersion() {
+    return storeBlock().version();
+  }
+
+  default int getBlockId() {
+    return storeBlock().blockId();
+  }
+
+  // --------------------------------------------------
+
+  static Block create(StoreBlock storeBlock) {
+    if (!(storeBlock instanceof FoldersBlock) &&
+            !(storeBlock instanceof SymbolSetsBlock) &&
+            !(storeBlock instanceof PhraseTemplatesBlock) &&
+            !(storeBlock instanceof PhraseBlock) &&
+            !(storeBlock instanceof KeyBlock)) {
+      throw new RuntimeException("Invalid Store Block " + storeBlock.getClass());
+    }
+
+    return ImmutableBlock.builder()
+            .storeBlock(storeBlock)
+            .build();
   }
 }

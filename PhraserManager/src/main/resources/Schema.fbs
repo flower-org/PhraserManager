@@ -2,25 +2,28 @@ namespace phraser;
 
 // -------- Abstract StoreBlock --------
 
-//we need to know BlockType in order to deserialize - i.e. prior to deserialization, so it can't be a part of the serialized structure itself.
-/*enum BlockType : byte {
+// BlockType is not used in those structures, because we need to know BlockType in order to deserialize
+// - i.e. _prior_ to deserialization, so it can't be a part of the serialized structure itself.
+// We still keep this enum for the reference.
+enum BlockType : byte {
     Unknown = 0,//default value needs to be present
     FoldersBlock = 1,
     SymbolSetsBlock = 2,
     PhraseTemplatesBlock = 3,
     PhraseBlock = 4,
     KeyBlock = 5
-}*/
+}
+
+// -------- Common block structure --------
 
 struct StoreBlock {
+  type: BlockType;
+
   block_id: uint16;
   //This version is a global unique update version, as opposed to block version for a particular block
-  version: uint32;
+  version: uint16;
 
-  //we need to know BlockType in order to deserialize - i.e. prior to deserialization, so it can't be a part of the serialized structure itself.
-  //type: BlockType;
-
-  //Use the sum of millis() and micros() to seed the random generator randomSeed(millis()   micros());
+  //Use the sum of millis() and micros() to seed the random generator randomSeed(millis() + micros());
   entropy: uint64;
 }
 
@@ -56,10 +59,15 @@ table SymbolSetsBlock {
 //Word is a template for a token of, e.g. login or password or url
 table WordTemplate {
   word_template_id: uint16;
-  permissions: byte;//bitmask; isViewable, isTypeable, isGenerateable
+  //word permissions bitmask:
+  //    - isViewable (can view text in Phraser UI)
+  //    - isTypeable (can be typed via virtual USB keyboard)
+  //    - isGenerateable (can be auto-generated based on symbol sets)
+  //    - isUserEditable (can be directly edited by a user in Phraser UI)
+  permissions: byte;
   icon: byte;//standard icon code - TODO: enum
-  min_length: uint32;
-  max_length: uint32;
+  min_length: uint16;
+  max_length: uint16;
   word_template_name: string;
   symbol_set_ids: [uint16];
 }
@@ -107,7 +115,6 @@ table PhraseBlock {
 table KeyBlock {
   block: StoreBlock;
   key: [byte];//encrypted key? doubly encrypted key (do like)
-  iv: [byte];//TODO: maybe we better have IV per block in general - that's outside flatbuf schema though
-  //TODO: and encrypt those IVs themselves as well?
-  //TODO: or use this secret IV to just xor those other IVs for speedup
+  db_name: string;
+  iv: [byte];
 }

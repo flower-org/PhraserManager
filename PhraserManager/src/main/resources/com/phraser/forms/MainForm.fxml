@@ -12,7 +12,7 @@
 <VBox prefHeight="400.0" prefWidth="478.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.phraser.forms.MainForm">
     <MenuBar VBox.vgrow="NEVER">
         <Menu mnemonicParsing="false" text="File">
-            <MenuItem mnemonicParsing="false" text="New DB" />
+            <MenuItem mnemonicParsing="false" onAction="#newDb" text="New DB" />
             <MenuItem mnemonicParsing="false" text="Import DB" />
             <MenuItem mnemonicParsing="false" text="Export DB" />
             <SeparatorMenuItem/>
@@ -33,9 +33,6 @@
             <MenuItem mnemonicParsing="false" text="Show stale data" />
             <MenuItem mnemonicParsing="false" text="Filter" />
         </Menu>
-<!--        <Menu mnemonicParsing="false" text="remove Test">
-            <MenuItem mnemonicParsing="false" onAction="#showTestForm" text="remove Open Test tab" />
-        </Menu>-->
         <Menu mnemonicParsing="false" text="Help">
             <MenuItem mnemonicParsing="false" onAction="#showAboutDialog" text="About" />
         </Menu>
