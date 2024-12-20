@@ -118,6 +118,50 @@ public interface Block {
   }
 
   default byte[] toFlatBufBlock() {
+    BlockType blockType = blockType();
+    switch (blockType) {
+      case SYMBOL_SETS_BLOCK:
+        return toFlatBufSymbolSetsBlock();
+      case FOLDERS_BLOCK:
+        return toFlatBufFoldersBlock();
+      default:
+        throw new RuntimeException("Unsupported Block type: " + blockType);
+    }
+  }
+
+  default byte[] toFlatBufFoldersBlock() {
+    FlatBufferBuilder builder = new FlatBufferBuilder(12000);
+
+    List<FoldersBlock.Folder> folders = checkNotNull(foldersBlock()).folders();
+    int[] folderOffsets = new int[folders.size()];
+    for (int i = 0; i < folders.size(); i++) {
+      FoldersBlock.Folder folder = folders.get(i);
+
+      int folderNameOffset = builder.createString(folder.folderName());
+
+      int folderOffset = com.phraser.schema.phraser.Folder.createFolder(builder,
+              folder.folderId(), folder.parentFolderId(), folderNameOffset);
+
+      folderOffsets[i] = folderOffset;
+    }
+
+    int foldersOffset = com.phraser.schema.phraser.FoldersBlock.createFoldersVector(builder, folderOffsets);
+
+    com.phraser.schema.phraser.FoldersBlock.startFoldersBlock(builder);
+
+    int storeBlockOffset = com.phraser.schema.phraser.StoreBlock.createStoreBlock(builder,
+            blockType().code, storeBlock().blockId(), storeBlock().version(), storeBlock().entropy());
+
+    com.phraser.schema.phraser.FoldersBlock.addBlock(builder, storeBlockOffset);
+    com.phraser.schema.phraser.FoldersBlock.addFolders(builder, foldersOffset);
+    int symbolSetsBlockOffset = com.phraser.schema.phraser.FoldersBlock.endFoldersBlock(builder);
+
+    builder.finish(symbolSetsBlockOffset);
+
+    return builder.sizedByteArray();
+  }
+
+  default byte[] toFlatBufSymbolSetsBlock() {
     FlatBufferBuilder builder = new FlatBufferBuilder(12000);
 
     List<SymbolSetsBlock.SymbolSet> symbolSets = checkNotNull(symbolSetsBlock()).symbolSets();

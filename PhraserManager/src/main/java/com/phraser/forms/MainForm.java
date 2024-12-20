@@ -3,6 +3,7 @@ package com.phraser.forms;
 import com.phraser.db.Block;
 import com.phraser.db.KeyBlock;
 import com.phraser.db.SymbolSetsBlock;
+import com.phraser.db.FoldersBlock;
 import com.phraser.db.PhraserDB;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -70,6 +71,16 @@ public class MainForm {
         SymbolSetsBlockForm symbolSetsBlockForm = new SymbolSetsBlockForm(symbolSetsBlock, phraserDB, symbolSetsBlockCallback);
         symbolSetsBlockForm.setStage(checkNotNull(mainStage));
         final Tab tab = new Tab("Symbol Sets Block", symbolSetsBlockForm);
+        tab.setClosable(true);
+
+        addTab(tab);
+        return tab;
+    }
+
+    public Tab openFoldersBlockForm(@Nullable Block foldersBlock, PhraserDB phraserDB, Consumer<FoldersBlock> foldersBlockCallback) {
+        FoldersBlockForm foldersBlockForm = new FoldersBlockForm(foldersBlock, phraserDB, foldersBlockCallback);
+        foldersBlockForm.setStage(checkNotNull(mainStage));
+        final Tab tab = new Tab("Folders Block", foldersBlockForm);
         tab.setClosable(true);
 
         addTab(tab);

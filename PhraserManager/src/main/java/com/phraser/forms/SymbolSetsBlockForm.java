@@ -29,7 +29,6 @@ public class SymbolSetsBlockForm extends AnchorPane {
     @FXML @Nullable TextField blockIdTextField;
     @FXML @Nullable TextField versionTextField;
     @FXML @Nullable TextField blockSizeTextField;
-    @Nullable @FXML Button saveToDbButton;
     @Nullable Stage stage;
     @Nullable final Block symbolSetsBlock;
     final PhraserDB phraserDB;
@@ -71,8 +70,8 @@ public class SymbolSetsBlockForm extends AnchorPane {
     }
 
     public void saveToDb() {
-        SymbolSetsBlock newKeyBlock = formSymbolSetsBlock(true);
-        Block block = Block.create(newKeyBlock);
+        SymbolSetsBlock newSymbolSetsBlock = formSymbolSetsBlock(true);
+        Block block = Block.create(newSymbolSetsBlock);
 
         int bufferLength = block.toFlatBufBlock().length;
 
@@ -83,7 +82,7 @@ public class SymbolSetsBlockForm extends AnchorPane {
         }
 
         // This call will close the form and process the formed block
-        symbolSetsBlockCallback.accept(newKeyBlock);
+        symbolSetsBlockCallback.accept(newSymbolSetsBlock);
     }
 
     public void addSymbolSetToList(SymbolSetsBlock.SymbolSet symbolSet) {

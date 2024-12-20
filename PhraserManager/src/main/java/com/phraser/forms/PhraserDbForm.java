@@ -37,6 +37,7 @@ public class PhraserDbForm extends AnchorPane {
 
     @Nullable Tab keyBlockTab;
     @Nullable Tab symbolSetsBlockTab;
+    @Nullable Tab foldersBlockTab;
 
     public PhraserDbForm(MainForm mainForm, String defaultDbName) {
         this(mainForm, List.of(), defaultDbName);
@@ -95,6 +96,8 @@ public class PhraserDbForm extends AnchorPane {
                                     openKeyBlockForm();
                                 } else if (blockType == BlockType.SYMBOL_SETS_BLOCK) {
                                     openSymbolSetsBlockForm();
+                                } else if (blockType == BlockType.FOLDERS_BLOCK) {
+                                    openFoldersBlockForm();
                                 } else {
                                     Alert alert = new Alert(Alert.AlertType.ERROR, "Unsupported block type: " + blockType, ButtonType.OK);
                                     LOGGER.error("Unsupported block type: " + blockType);
@@ -187,6 +190,44 @@ public class PhraserDbForm extends AnchorPane {
 
                         checkNotNull(mainForm.getTabs()).getTabs().remove(symbolSetsBlockTab);
                         symbolSetsBlockTab = null;
+                    });
+        }
+    }
+
+    public void openFoldersBlockForm() {
+        if (foldersBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(foldersBlockTab)) {
+            checkNotNull(mainForm.getTabs()).getSelectionModel().select(foldersBlockTab);
+        } else {
+            Block existingFoldersBlock = phraserDB.getLastFoldersBlock();
+            if (existingFoldersBlock != null) {
+                if (JavaFxUtils.showYesNoDialog("FoldersBlock exists, edit?") == JavaFxUtils.YesNo.NO) {
+                    return;
+                }
+            }
+
+            foldersBlockTab = mainForm.openFoldersBlockForm(existingFoldersBlock, phraserDB,
+                    foldersBlock -> {
+                        int blockId;
+                        int version = 1;
+                        Block lastFoldersBlock = phraserDB.getLastFoldersBlock();
+                        if (lastFoldersBlock != null) {
+                            blockId = checkNotNull(lastFoldersBlock.foldersBlock()).blockId();
+                            version = lastFoldersBlock.foldersBlock().version() + 1;
+                        } else {
+                            blockId = phraserDB.getNextBlockId();
+                        }
+
+                        FoldersBlock blockWithVersionAndEntropy = ImmutableFoldersBlock.builder()
+                                .from(foldersBlock)
+                                .blockId(blockId)
+                                .version(version)
+                                .build();
+
+                        Block block = Block.create(blockWithVersionAndEntropy);
+                        addBlock(block);
+
+                        checkNotNull(mainForm.getTabs()).getTabs().remove(foldersBlockTab);
+                        foldersBlockTab = null;
                     });
         }
     }
