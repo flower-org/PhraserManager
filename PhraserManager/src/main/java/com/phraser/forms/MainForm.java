@@ -2,6 +2,7 @@ package com.phraser.forms;
 
 import com.phraser.db.Block;
 import com.phraser.db.KeyBlock;
+import com.phraser.db.SymbolSetsBlock;
 import com.phraser.db.PhraserDB;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -59,6 +60,16 @@ public class MainForm {
         KeyBlockForm keyBlockForm = new KeyBlockForm(keyBlock, phraserDB, keyBlockCallback);
 //        keyBlockForm.setStage(checkNotNull(mainStage));
         final Tab tab = new Tab("Key Block", keyBlockForm);
+        tab.setClosable(true);
+
+        addTab(tab);
+        return tab;
+    }
+
+    public Tab openSymbolSetsBlockForm(@Nullable Block symbolSetsBlock, PhraserDB phraserDB, Consumer<SymbolSetsBlock> symbolSetsBlockCallback) {
+        SymbolSetsBlockForm symbolSetsBlockForm = new SymbolSetsBlockForm(symbolSetsBlock, phraserDB, symbolSetsBlockCallback);
+        symbolSetsBlockForm.setStage(checkNotNull(mainStage));
+        final Tab tab = new Tab("Symbol Sets Block", symbolSetsBlockForm);
         tab.setClosable(true);
 
         addTab(tab);

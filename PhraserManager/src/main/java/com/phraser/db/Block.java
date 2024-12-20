@@ -1,9 +1,12 @@
 package com.phraser.db;
 
-import javafx.scene.control.Tab;
+import com.google.flatbuffers.FlatBufferBuilder;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /*
   TODO: I guess we can just keep this as an export-only thing
@@ -112,5 +115,37 @@ public interface Block {
     return ImmutableBlock.builder()
             .storeBlock(storeBlock)
             .build();
+  }
+
+  default byte[] toFlatBufBlock() {
+    FlatBufferBuilder builder = new FlatBufferBuilder(12000);
+
+    List<SymbolSetsBlock.SymbolSet> symbolSets = checkNotNull(symbolSetsBlock()).symbolSets();
+    int[] symbolSetOffsets = new int[symbolSets.size()];
+    for (int i = 0; i < symbolSets.size(); i++) {
+      SymbolSetsBlock.SymbolSet symbolSet = symbolSets.get(i);
+
+      int symbolSetNameOffset = builder.createString(symbolSet.getName());
+      int symbolSetStrOffset = builder.createString(symbolSet.getSymbolSet());
+      int symbolSetOffset = com.phraser.schema.phraser.SymbolSet.createSymbolSet(builder, symbolSet.symbolSetId(),
+              symbolSetNameOffset, symbolSetStrOffset);
+
+      symbolSetOffsets[i] = symbolSetOffset;
+    }
+
+    int symbolSetsOffset = com.phraser.schema.phraser.SymbolSetsBlock.createSymbolSetsVector(builder, symbolSetOffsets);
+
+    com.phraser.schema.phraser.SymbolSetsBlock.startSymbolSetsBlock(builder);
+
+    int storeBlockOffset = com.phraser.schema.phraser.StoreBlock.createStoreBlock(builder,
+            blockType().code, storeBlock().blockId(), storeBlock().version(), storeBlock().entropy());
+
+    com.phraser.schema.phraser.SymbolSetsBlock.addBlock(builder, storeBlockOffset);
+    com.phraser.schema.phraser.SymbolSetsBlock.addSymbolSets(builder, symbolSetsOffset);
+    int symbolSetsBlockOffset = com.phraser.schema.phraser.SymbolSetsBlock.endSymbolSetsBlock(builder);
+
+    builder.finish(symbolSetsBlockOffset);
+
+    return builder.sizedByteArray();
   }
 }

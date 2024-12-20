@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<fx:root type="VBox" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+    <AnchorPane VBox.vgrow="NEVER">
+        <GridPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="24.0" AnchorPane.rightAnchor="24.0" AnchorPane.topAnchor="0.0">
+            <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" />
+                <ColumnConstraints hgrow="SOMETIMES" />
+            </columnConstraints>
+            <rowConstraints>
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            </rowConstraints>
+            <children>
+                <Label text="Name:" GridPane.rowIndex="1" />
+                <Label text="SymbolSet:" GridPane.rowIndex="3" />
+                <TextField fx:id="nameTextField" GridPane.columnIndex="1" GridPane.rowIndex="1">
+               <GridPane.margin>
+                  <Insets left="10.0" />
+               </GridPane.margin></TextField>
+                <TextField fx:id="symbolSetTextField" GridPane.columnIndex="1" GridPane.rowIndex="3">
+               <GridPane.margin>
+                  <Insets left="10.0" />
+               </GridPane.margin></TextField>
+            <Label text="Id:" />
+            <TextField fx:id="idTextField" editable="false" GridPane.columnIndex="1">
+               <GridPane.margin>
+                  <Insets left="10.0" />
+               </GridPane.margin>
+            </TextField>
+              <GridPane GridPane.columnIndex="1" GridPane.rowIndex="2">
+                  <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" />
+                      <ColumnConstraints hgrow="SOMETIMES" />
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="40.0" minWidth="40.0" prefWidth="40.0" />
+                  </columnConstraints>
+                  <rowConstraints>
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  </rowConstraints>
+                  <children>
+                      <Label text="RegEx:" />
+                      <TextField fx:id="regexTextField" promptText="[0-9a-zA-Z%#!*^@$&amp;]" GridPane.columnIndex="1">
+                      <GridPane.margin>
+                         <Insets left="10.0" />
+                      </GridPane.margin>
+                  </TextField>
+                    <Button mnemonicParsing="false" onAction="#regex" text="-&gt;" GridPane.columnIndex="2" />
+                  </children>
+              </GridPane>
+            </children>
+        </GridPane>
+    </AnchorPane>
+    <AnchorPane prefHeight="35.0" VBox.vgrow="NEVER">
+        <Button fx:id="addButton" layoutX="97.0" layoutY="1.0" mnemonicParsing="false" onAction="#okClose" text="Add / Update" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="97.0" AnchorPane.rightAnchor="97.0" AnchorPane.topAnchor="0.0" />
+    </AnchorPane>
+</fx:root>

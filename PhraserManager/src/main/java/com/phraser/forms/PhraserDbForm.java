@@ -1,5 +1,6 @@
 package com.phraser.forms;
 
+import com.phraser.JavaFxUtils;
 import com.phraser.ModalWindow;
 import com.phraser.db.*;
 import javafx.collections.FXCollections;
@@ -24,6 +25,7 @@ import static com.phraser.db.PhraserDB.BLOCKS_IN_DB;
 
 public class PhraserDbForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraserDbForm.class);
+    public final static String NEW_BLOCK = "[NEW BLOCK]";
 
     @FXML @Nullable TableView<Block> dbBlocksTable;
     final ObservableList<Block> dbBlocks;
@@ -34,6 +36,7 @@ public class PhraserDbForm extends AnchorPane {
     @Nullable Tab tab;
 
     @Nullable Tab keyBlockTab;
+    @Nullable Tab symbolSetsBlockTab;
 
     public PhraserDbForm(MainForm mainForm, String defaultDbName) {
         this(mainForm, List.of(), defaultDbName);
@@ -76,52 +79,26 @@ public class PhraserDbForm extends AnchorPane {
         this.tab = tab;
     }
 
-    // if (JavaFxUtils.showYesNoDialog("AuthBlock doesn't exist, create?") == JavaFxUtils.YesNo.YES) {}
-
     public void newBlockAction() {
         try {
             CreateNewBlockDialog createNewBlockDialog = new CreateNewBlockDialog();
             Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
                     stage -> { createNewBlockDialog.setStage(stage); return createNewBlockDialog; },
-                    "Add new traffic rule");
+                    "New block");
 
             workspaceStage.setOnHidden(
                     ev -> {
                         try {
                             BlockType blockType = createNewBlockDialog.getBlockType();
                             if (blockType != null) {
-                                Alert alert = new Alert(Alert.AlertType.INFORMATION, "BlockType: " + blockType, ButtonType.OK);
-                                alert.showAndWait();
-
                                 if (blockType == BlockType.KEY_BLOCK) {
-                                    if (keyBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(keyBlockTab)) {
-                                        checkNotNull(mainForm.getTabs()).getSelectionModel().select(keyBlockTab);
-                                    } else {
-                                        keyBlockTab = mainForm.openKeyBlockForm(phraserDB.getLastKeyBlock(), phraserDB,
-                                                keyBlock -> {
-                                                    int blockId;
-                                                    int version = 1;
-                                                    Block lastKeyBlock = phraserDB.getLastKeyBlock();
-                                                    if (lastKeyBlock != null) {
-                                                        blockId = checkNotNull(lastKeyBlock.keyBlock()).blockId();
-                                                        version = lastKeyBlock.keyBlock().version() + 1;
-                                                    } else {
-                                                        blockId = phraserDB.getNextBlockId();
-                                                    }
-
-                                                    KeyBlock blockWithVersionAndEntropy = ImmutableKeyBlock.builder()
-                                                            .from(keyBlock)
-                                                            .blockId(blockId)
-                                                            .version(version)
-                                                            .build();
-
-                                                    Block block = Block.create(blockWithVersionAndEntropy);
-                                                    addBlock(block);
-
-                                                    checkNotNull(mainForm.getTabs()).getTabs().remove(keyBlockTab);
-                                                    keyBlockTab = null;
-                                                });
-                                    }
+                                    openKeyBlockForm();
+                                } else if (blockType == BlockType.SYMBOL_SETS_BLOCK) {
+                                    openSymbolSetsBlockForm();
+                                } else {
+                                    Alert alert = new Alert(Alert.AlertType.ERROR, "Unsupported block type: " + blockType, ButtonType.OK);
+                                    LOGGER.error("Unsupported block type: " + blockType);
+                                    alert.showAndWait();
                                 }
                             }
                         } catch (Exception e) {
@@ -135,6 +112,82 @@ public class PhraserDbForm extends AnchorPane {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding known server: " + e, ButtonType.OK);
             LOGGER.error("Error adding known server: ", e);
             alert.showAndWait();
+        }
+    }
+
+    public void openKeyBlockForm() {
+        if (keyBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(keyBlockTab)) {
+            checkNotNull(mainForm.getTabs()).getSelectionModel().select(keyBlockTab);
+        } else {
+            Block existingKeyBlock = phraserDB.getLastKeyBlock();
+            if (existingKeyBlock != null) {
+                if (JavaFxUtils.showYesNoDialog("KeyBlock exists, edit?") == JavaFxUtils.YesNo.NO) {
+                    return;
+                }
+            }
+
+            keyBlockTab = mainForm.openKeyBlockForm(existingKeyBlock, phraserDB,
+                    keyBlock -> {
+                        int blockId;
+                        int version = 1;
+                        Block lastKeyBlock = phraserDB.getLastKeyBlock();
+                        if (lastKeyBlock != null) {
+                            blockId = checkNotNull(lastKeyBlock.keyBlock()).blockId();
+                            version = lastKeyBlock.keyBlock().version() + 1;
+                        } else {
+                            blockId = phraserDB.getNextBlockId();
+                        }
+
+                        KeyBlock blockWithVersionAndEntropy = ImmutableKeyBlock.builder()
+                                .from(keyBlock)
+                                .blockId(blockId)
+                                .version(version)
+                                .build();
+
+                        Block block = Block.create(blockWithVersionAndEntropy);
+                        addBlock(block);
+
+                        checkNotNull(mainForm.getTabs()).getTabs().remove(keyBlockTab);
+                        keyBlockTab = null;
+                    });
+        }
+    }
+
+    public void openSymbolSetsBlockForm() {
+        if (symbolSetsBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(symbolSetsBlockTab)) {
+            checkNotNull(mainForm.getTabs()).getSelectionModel().select(symbolSetsBlockTab);
+        } else {
+            Block existingSymbolSetBlock = phraserDB.getLastSymbolSetBlock();
+            if (existingSymbolSetBlock != null) {
+                if (JavaFxUtils.showYesNoDialog("SymbolSetBlock exists, edit?") == JavaFxUtils.YesNo.NO) {
+                    return;
+                }
+            }
+
+            symbolSetsBlockTab = mainForm.openSymbolSetsBlockForm(existingSymbolSetBlock, phraserDB,
+                    symbolSetsBlock -> {
+                        int blockId;
+                        int version = 1;
+                        Block lastSymbolSetsBlock = phraserDB.getLastSymbolSetBlock();
+                        if (lastSymbolSetsBlock != null) {
+                            blockId = checkNotNull(lastSymbolSetsBlock.symbolSetsBlock()).blockId();
+                            version = lastSymbolSetsBlock.symbolSetsBlock().version() + 1;
+                        } else {
+                            blockId = phraserDB.getNextBlockId();
+                        }
+
+                        SymbolSetsBlock blockWithVersionAndEntropy = ImmutableSymbolSetsBlock.builder()
+                                .from(symbolSetsBlock)
+                                .blockId(blockId)
+                                .version(version)
+                                .build();
+
+                        Block block = Block.create(blockWithVersionAndEntropy);
+                        addBlock(block);
+
+                        checkNotNull(mainForm.getTabs()).getTabs().remove(symbolSetsBlockTab);
+                        symbolSetsBlockTab = null;
+                    });
         }
     }
 

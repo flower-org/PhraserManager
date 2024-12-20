@@ -36,9 +36,13 @@ public final class KeyBlock extends Table {
   public ByteBuffer keyAsByteBuffer() { return __vector_as_bytebuffer(6, 1); }
   public ByteBuffer keyInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 6, 1); }
   public boolean mutateKey(int j, byte key) { int o = __offset(6); if (o != 0) { bb.put(__vector(o) + j * 1, key); return true; } else { return false; } }
-  public String dbName() { int o = __offset(8); return o != 0 ? __string(o + bb_pos) : null; }
+  public byte dbName(int j) { int o = __offset(8); return o != 0 ? bb.get(__vector(o) + j * 1) : 0; }
+  public int dbNameLength() { int o = __offset(8); return o != 0 ? __vector_len(o) : 0; }
+  public ByteVector dbNameVector() { return dbNameVector(new ByteVector()); }
+  public ByteVector dbNameVector(ByteVector obj) { int o = __offset(8); return o != 0 ? obj.__assign(__vector(o), bb) : null; }
   public ByteBuffer dbNameAsByteBuffer() { return __vector_as_bytebuffer(8, 1); }
   public ByteBuffer dbNameInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 8, 1); }
+  public boolean mutateDbName(int j, byte db_name) { int o = __offset(8); if (o != 0) { bb.put(__vector(o) + j * 1, db_name); return true; } else { return false; } }
   public byte iv(int j) { int o = __offset(10); return o != 0 ? bb.get(__vector(o) + j * 1) : 0; }
   public int ivLength() { int o = __offset(10); return o != 0 ? __vector_len(o) : 0; }
   public ByteVector ivVector() { return ivVector(new ByteVector()); }
@@ -46,18 +50,24 @@ public final class KeyBlock extends Table {
   public ByteBuffer ivAsByteBuffer() { return __vector_as_bytebuffer(10, 1); }
   public ByteBuffer ivInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 10, 1); }
   public boolean mutateIv(int j, byte iv) { int o = __offset(10); if (o != 0) { bb.put(__vector(o) + j * 1, iv); return true; } else { return false; } }
+  public int bucketCount() { int o = __offset(12); return o != 0 ? bb.getShort(o + bb_pos) & 0xFFFF : 0; }
+  public boolean mutateBucketCount(int bucket_count) { int o = __offset(12); if (o != 0) { bb.putShort(o + bb_pos, (short) bucket_count); return true; } else { return false; } }
 
-  public static void startKeyBlock(FlatBufferBuilder builder) { builder.startTable(4); }
+  public static void startKeyBlock(FlatBufferBuilder builder) { builder.startTable(5); }
   public static void addBlock(FlatBufferBuilder builder, int blockOffset) { builder.addStruct(0, blockOffset, 0); }
   public static void addKey(FlatBufferBuilder builder, int keyOffset) { builder.addOffset(1, keyOffset, 0); }
   public static int createKeyVector(FlatBufferBuilder builder, byte[] data) { return builder.createByteVector(data); }
   public static int createKeyVector(FlatBufferBuilder builder, ByteBuffer data) { return builder.createByteVector(data); }
   public static void startKeyVector(FlatBufferBuilder builder, int numElems) { builder.startVector(1, numElems, 1); }
   public static void addDbName(FlatBufferBuilder builder, int dbNameOffset) { builder.addOffset(2, dbNameOffset, 0); }
+  public static int createDbNameVector(FlatBufferBuilder builder, byte[] data) { return builder.createByteVector(data); }
+  public static int createDbNameVector(FlatBufferBuilder builder, ByteBuffer data) { return builder.createByteVector(data); }
+  public static void startDbNameVector(FlatBufferBuilder builder, int numElems) { builder.startVector(1, numElems, 1); }
   public static void addIv(FlatBufferBuilder builder, int ivOffset) { builder.addOffset(3, ivOffset, 0); }
   public static int createIvVector(FlatBufferBuilder builder, byte[] data) { return builder.createByteVector(data); }
   public static int createIvVector(FlatBufferBuilder builder, ByteBuffer data) { return builder.createByteVector(data); }
   public static void startIvVector(FlatBufferBuilder builder, int numElems) { builder.startVector(1, numElems, 1); }
+  public static void addBucketCount(FlatBufferBuilder builder, int bucketCount) { builder.addShort(4, (short) bucketCount, (short) 0); }
   public static int endKeyBlock(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;

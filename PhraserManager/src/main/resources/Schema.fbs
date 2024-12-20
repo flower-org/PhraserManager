@@ -111,10 +111,10 @@ table PhraseBlock {
 
 //Other structs
 
-//Dual-level encryption is definitely an enhancement
 table KeyBlock {
   block: StoreBlock;
-  key: [byte];//encrypted key? doubly encrypted key (do like)
-  db_name: string;
+  key: [byte];
+  db_name: [byte];//encrypted DB name
   iv: [byte];
+  bucket_count: uint16;
 }
