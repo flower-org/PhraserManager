@@ -1,13 +1,20 @@
 package com.phraser.forms;
 
 import com.phraser.ModalWindow;
-import com.phraser.db.*;
+import com.phraser.db.Block;
+import com.phraser.db.ImmutableSymbolSet;
+import com.phraser.db.ImmutableSymbolSetsBlock;
+import com.phraser.db.PhraserDB;
+import com.phraser.db.SymbolSetsBlock;
 import com.phraser.utils.PhraserUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import org.slf4j.Logger;

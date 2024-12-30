@@ -1,0 +1,65 @@
+package com.phraser.forms;
+
+import com.phraser.db.ImmutableSymbolSet;
+import com.phraser.db.SymbolSetsBlock;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TableView;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
+import java.io.IOException;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public class PickSymbolSetDialog extends VBox {
+    final static Logger LOGGER = LoggerFactory.getLogger(SymbolSetDialog.class);
+
+    @Nullable Stage stage;
+
+    @Nullable SymbolSetsBlock.SymbolSet symbolSet;
+    @Nullable @FXML TableView<SymbolSetsBlock.SymbolSet> symbolSetTableView;
+
+    public PickSymbolSetDialog(SymbolSetsBlock symbolSetsBlock) {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("PickSymbolSetDialog.fxml"));
+        fxmlLoader.setRoot(this);
+        fxmlLoader.setController(this);
+
+        try {
+            fxmlLoader.load();
+        } catch (IOException exception) {
+            throw new RuntimeException(exception);
+        }
+
+        ObservableList<SymbolSetsBlock.SymbolSet> list = FXCollections.observableArrayList();
+        list.addAll(symbolSetsBlock.symbolSets());
+        checkNotNull(symbolSetTableView).itemsProperty().set(list);
+    }
+
+    public void setStage(Stage stage) {
+        this.stage = stage;
+    }
+
+    @Nullable
+    public SymbolSetsBlock.SymbolSet getSymbolSet() {
+        return symbolSet;
+    }
+
+    public void okClose() {
+        try {
+            symbolSet = checkNotNull(symbolSetTableView).getSelectionModel().getSelectedItem();
+            checkNotNull(stage).close();
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "SymbolSetDialog close Error: " + e, ButtonType.OK);
+            LOGGER.error("SymbolSetDialog close Error:", e);
+            alert.showAndWait();
+        }
+    }
+}

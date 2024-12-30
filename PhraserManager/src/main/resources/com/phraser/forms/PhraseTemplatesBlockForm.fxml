@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<fx:root prefHeight="767.0" prefWidth="810.0" type="AnchorPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+        <SplitPane dividerPositions="0.0, 0.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+            <AnchorPane maxHeight="35.0" minHeight="35.0" prefHeight="35.0" SplitPane.resizableWithParent="false">
+                <ToolBar AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <items>
+                  <Button fx:id="saveToDbButton" mnemonicParsing="false" onAction="#saveToDb" text="Save to DB" />
+                  <Separator orientation="VERTICAL" prefHeight="200.0" />
+                    </items>
+                </ToolBar>
+            </AnchorPane>
+            <AnchorPane maxHeight="90.0">
+                <children>
+                    <GridPane layoutX="74.0" layoutY="110.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="180.0" minWidth="180.0" prefWidth="180.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                        </columnConstraints>
+                        <rowConstraints>
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        </rowConstraints>
+                        <children>
+                            <TextField fx:id="blockIdTextField" editable="false" GridPane.columnIndex="1">
+                                <GridPane.margin>
+                                    <Insets right="10.0" />
+                                </GridPane.margin></TextField>
+                            <Label text="Block Id:">
+                                <GridPane.margin>
+                                    <Insets left="10.0" />
+                                </GridPane.margin>
+                            </Label>
+                            <Label text="Version:" GridPane.rowIndex="1">
+                                <GridPane.margin>
+                                    <Insets left="10.0" />
+                                </GridPane.margin>
+                            </Label>
+                            <TextField fx:id="versionTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                <GridPane.margin>
+                                    <Insets right="10.0" />
+                                </GridPane.margin>
+                            </TextField>
+                     <Label text="Block Size (max 4096):" GridPane.rowIndex="2">
+                        <GridPane.margin>
+                           <Insets left="10.0" />
+                        </GridPane.margin>
+                     </Label>
+                     <TextField fx:id="blockSizeTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                        <GridPane.margin>
+                           <Insets right="10.0" />
+                        </GridPane.margin>
+                     </TextField>
+                        </children>
+                    </GridPane>
+                </children>
+            </AnchorPane>
+            <AnchorPane prefWidth="808.0">
+            <children>
+               <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                 <tabs>
+                   <Tab text="Word Templates">
+                       <content>
+                           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                               <children>
+                                   <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                       <items>
+                                           <AnchorPane maxHeight="35.0" minHeight="35.0" prefHeight="35.0">
+                                               <children>
+                                                   <ToolBar layoutX="66.0" layoutY="34.0" prefHeight="40.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                       <items>
+                                                           <Button fx:id="newWordTemplateButton" mnemonicParsing="false" onAction="#newWordTemplate" text="New" />
+                                                           <Button fx:id="removeWordTemplateButton" mnemonicParsing="false" onAction="#removeWordTemplate" text="Remove" />
+                                                       </items>
+                                                   </ToolBar>
+                                               </children>
+                                           </AnchorPane>
+                                           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                                               <children>
+                                                   <SplitPane dividerPositions="0.5" prefHeight="160.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                       <items>
+                                                           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                                                               <children>
+                                                                   <TableView fx:id="wordTemplatesTableView" layoutX="56.0" layoutY="14.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                                       <columns>
+                                                                           <TableColumn minWidth="150.0" prefWidth="150.0" text="Word Template Id">
+                                                                               <cellValueFactory>
+                                                                                   <PropertyValueFactory property="id" />
+                                                                               </cellValueFactory>
+                                                                           </TableColumn>
+                                                                           <TableColumn minWidth="200.0" prefWidth="200.0" text="Word Template Name">
+                                                                               <cellValueFactory>
+                                                                                   <PropertyValueFactory property="name" />
+                                                                               </cellValueFactory>
+                                                                           </TableColumn>
+                                                                       </columns>
+                                                                   </TableView>
+                                                               </children>
+                                                           </AnchorPane>
+                                                           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                                                               <children>
+                                                         <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                            <children>
+                                                                         <GridPane>
+                                                                             <columnConstraints>
+                                                                                 <ColumnConstraints hgrow="SOMETIMES" maxWidth="100.0" minWidth="100.0" prefWidth="100.0" />
+                                                                                 <ColumnConstraints hgrow="SOMETIMES" />
+                                                                             </columnConstraints>
+                                                                             <rowConstraints>
+                                                                                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                                                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                                     <RowConstraints maxHeight="105.0" minHeight="105.0" prefHeight="105.0" vgrow="SOMETIMES" />
+                                                                                 <RowConstraints vgrow="SOMETIMES" />
+                                                                             </rowConstraints>
+                                                                             <children>
+                                                                                 <TextField fx:id="wordTemplateIdTextField" editable="false" GridPane.columnIndex="1">
+                                                                                     <GridPane.margin>
+                                                                                         <Insets right="10.0" />
+                                                                                     </GridPane.margin>
+                                                                                 </TextField>
+                                                                                 <Label text="Id:">
+                                                                                     <GridPane.margin>
+                                                                                         <Insets left="10.0" />
+                                                                                     </GridPane.margin>
+                                                                                 </Label>
+                                                                                 <Label text="Name:" GridPane.rowIndex="1">
+                                                                                     <GridPane.margin>
+                                                                                         <Insets left="10.0" />
+                                                                                     </GridPane.margin>
+                                                                                 </Label>
+                                                                                 <TextField fx:id="wordTemplateNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                                                                     <GridPane.margin>
+                                                                                         <Insets right="10.0" />
+                                                                                     </GridPane.margin>
+                                                                                 </TextField>
+                                                                                 <Label text="Symbol Sets:" GridPane.rowIndex="6">
+                                                                                     <GridPane.margin>
+                                                                                         <Insets left="10.0" />
+                                                                                     </GridPane.margin>
+                                                                                 </Label>
+                                                                                 <SplitPane dividerPositions="0.0" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" GridPane.columnIndex="1" GridPane.rowIndex="6">
+                                                                                     <items>
+                                                                                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                                                                                             <children>
+                                                                                                 <TableView fx:id="wordTemplateSymbolSetsTableView" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                                                                     <columns>
+                                                                                                         <TableColumn minWidth="150.0" prefWidth="150.0" text="Symbol Set Id">
+                                                                                                             <cellValueFactory>
+                                                                                                                 <PropertyValueFactory property="id" />
+                                                                                                             </cellValueFactory>
+                                                                                                         </TableColumn>
+                                                                                                         <TableColumn minWidth="150.0" prefWidth="150.0" text="Symbol Set Name">
+                                                                                                             <cellValueFactory>
+                                                                                                                 <PropertyValueFactory property="name" />
+                                                                                                             </cellValueFactory>
+                                                                                                         </TableColumn>
+                                                                                                     </columns>
+                                                                                                 </TableView>
+                                                                                             </children>
+                                                                                         </AnchorPane>
+                                                                                         <AnchorPane maxHeight="35.0" minHeight="35.0" prefHeight="35.0">
+                                                                                             <children>
+                                                                                                 <ToolBar layoutX="-15.0" layoutY="28.0" maxHeight="35.0" minHeight="35.0" prefHeight="35.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                                                                     <items>
+                                                                                                         <Button fx:id="addWordTemplateSymbolSetButton" mnemonicParsing="false" onAction="#addSymbolSet" text="Add symbol set" />
+                                                                                                         <Button fx:id="removeWordTemplateSymbolSetButton" mnemonicParsing="false" onAction="#removeSymbolSet" text="Remove symbol set" />
+                                                                                                     </items>
+                                                                                                 </ToolBar>
+                                                                                             </children>
+                                                                                         </AnchorPane>
+                                                                                     </items>
+                                                                                 </SplitPane>
+                                                                     <Label text="Max Length:" GridPane.rowIndex="4">
+                                                                        <GridPane.margin>
+                                                                           <Insets left="10.0" />
+                                                                        </GridPane.margin>
+                                                                     </Label>
+                                                                     <Label text="Min Length:" GridPane.rowIndex="3">
+                                                                        <GridPane.margin>
+                                                                           <Insets left="10.0" />
+                                                                        </GridPane.margin>
+                                                                     </Label>
+                                                                     <Label text="Icon:" GridPane.rowIndex="2">
+                                                                        <GridPane.margin>
+                                                                           <Insets left="10.0" />
+                                                                        </GridPane.margin>
+                                                                     </Label>
+                                                                     <Label text="Permissions:" GridPane.rowIndex="5">
+                                                                        <GridPane.margin>
+                                                                           <Insets left="10.0" />
+                                                                        </GridPane.margin>
+                                                                     </Label>
+                                                                     <VBox prefHeight="200.0" prefWidth="100.0" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                                                                        <children>
+                                                                           <CheckBox fx:id="wordTemplateIsGenerateableCheckBox" mnemonicParsing="false" text="isGenerateable" />
+                                                                           <CheckBox fx:id="wordTemplateIsUserEditableCheckBox" mnemonicParsing="false" text="isUserEditable" />
+                                                                           <CheckBox fx:id="wordTemplateIsTypeableCheckBox" mnemonicParsing="false" text="isTypeable" />
+                                                                           <CheckBox fx:id="wordTemplateIsViewableCheckBox" mnemonicParsing="false" text="isViewable" />
+                                                                        </children>
+                                                                        <GridPane.margin>
+                                                                           <Insets left="10.0" right="10.0" top="10.0" />
+                                                                        </GridPane.margin>
+                                                                     </VBox>
+                                                                     <ComboBox fx:id="wordTemplateIconComboBox" prefWidth="150.0" value="Key" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                                                         <items>
+                                                                             <FXCollections fx:factory="observableArrayList">
+                                                                                 <String fx:value="Key" />
+                                                                                 <String fx:value="Login" />
+                                                                                 <String fx:value="Asterisk" />
+                                                                                 <String fx:value="Lock" />
+                                                                                 <String fx:value="Aa" />
+                                                                                 <String fx:value="Star" />
+      
+                                                                                 <String fx:value="Settings" />
+                                                                                 <String fx:value="Folder" />
+                                                                                 <String fx:value="ToParentFolder" />
+                                                                                 <String fx:value="LookingGlass" />
+                                                                                 <String fx:value="LTTriangle" />
+                                                                                 <String fx:value="GTTriangle" />
+      
+                                                                                 <String fx:value="TextOut" />
+                                                                                 <String fx:value="Ledger" />
+                                                                                 <String fx:value="PlusMinus" />
+                                                                                 <String fx:value="Stars" />
+                                                                                 <String fx:value="Message" />
+                                                                                 <String fx:value="Quote" />
+      
+                                                                                 <String fx:value="Question" />
+                                                                                 <String fx:value="Plus" />
+                                                                                 <String fx:value="Minus" />
+                                                                                 <String fx:value="X" />
+                                                                                 <String fx:value="Check" />
+                                                                                 <String fx:value="Copy" />
+                                                                             </FXCollections>
+                                                                         </items>
+                                                                     </ComboBox>
+                                                                     <TextField fx:id="wordTemplateMinLengthTextField" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                                                                        <GridPane.margin>
+                                                                           <Insets right="10.0" />
+                                                                        </GridPane.margin>
+                                                                     </TextField>
+                                                                     <TextField fx:id="wordTemplateMaxLengthTextField" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                                                                        <GridPane.margin>
+                                                                           <Insets right="10.0" />
+                                                                        </GridPane.margin>
+                                                                     </TextField>
+                                                                             </children>
+                                                                         </GridPane>
+                                                               <Button fx:id="addUpdateWordTemplateButton" mnemonicParsing="false" onAction="#addUpdateWordTemplate" text="Add / Update Word Template">
+                                                                  <VBox.margin>
+                                                                     <Insets top="10.0" />
+                                                                  </VBox.margin>
+                                                               </Button>
+                                                            </children>
+                                                         </VBox>
+                                                               </children>
+                                                           </AnchorPane>
+                                                       </items>
+                                                   </SplitPane>
+                                               </children>
+                                           </AnchorPane>
+                                       </items>
+                                   </SplitPane>
+                               </children>
+                           </AnchorPane>
+                       </content>
+                   </Tab>
+                   <Tab text="Phrase Templates">
+                     <content>
+                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                              <children>
+                                 <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                   <items>
+                                     <AnchorPane maxHeight="35.0" minHeight="35.0" prefHeight="35.0">
+                                          <children>
+                                             <ToolBar layoutX="66.0" layoutY="34.0" prefHeight="40.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                               <items>
+                                                 <Button fx:id="newPhraseTemplateButton" mnemonicParsing="false" onAction="#newPhraseTemplate"  text="New" />
+                                                 <Button fx:id="removePhraseTemplateButton" mnemonicParsing="false" onAction="#removePhraseTemplate"  text="Remove" />
+                                               </items>
+                                             </ToolBar>
+                                          </children>
+                                       </AnchorPane>
+                                     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                                          <children>
+                                             <SplitPane dividerPositions="0.5" prefHeight="160.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                               <items>
+                                                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                                                      <children>
+                                                         <TableView fx:id="phraseTemplatesTableView" layoutX="56.0" layoutY="14.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                             <columns>
+                                                                 <TableColumn minWidth="150.0" prefWidth="150.0" text="Phrase Template Id">
+                                                                     <cellValueFactory>
+                                                                         <PropertyValueFactory property="id" />
+                                                                     </cellValueFactory>
+                                                                 </TableColumn>
+                                                                 <TableColumn minWidth="200.0" prefWidth="200.0" text="Phrase Template Name">
+                                                                     <cellValueFactory>
+                                                                         <PropertyValueFactory property="name" />
+                                                                     </cellValueFactory>
+                                                                 </TableColumn>
+                                                             </columns>
+                                                         </TableView>
+                                                      </children>
+                                                   </AnchorPane>
+                                                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                                                      <children>
+                                                         <VBox alignment="TOP_CENTER" layoutX="119.0" layoutY="355.0" prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                            <children>
+                                                               <GridPane>
+                                                                  <columnConstraints>
+                                                                     <ColumnConstraints hgrow="SOMETIMES" maxWidth="80.0" minWidth="80.0" prefWidth="80.0" />
+                                                                     <ColumnConstraints hgrow="SOMETIMES" />
+                                                                  </columnConstraints>
+                                                                  <rowConstraints>
+                                                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                                     <RowConstraints vgrow="SOMETIMES" />
+                                                                  </rowConstraints>
+                                                                  <children>
+                                                                     <TextField fx:id="phraseTemplateIdTextField" editable="false" GridPane.columnIndex="1">
+                                                                        <GridPane.margin>
+                                                                           <Insets right="10.0" />
+                                                                        </GridPane.margin>
+                                                                     </TextField>
+                                                                     <Label text="Id:">
+                                                                        <GridPane.margin>
+                                                                           <Insets left="10.0" />
+                                                                        </GridPane.margin>
+                                                                     </Label>
+                                                                     <Label text="Name:" GridPane.rowIndex="1">
+                                                                        <GridPane.margin>
+                                                                           <Insets left="10.0" />
+                                                                        </GridPane.margin>
+                                                                     </Label>
+                                                                     <TextField fx:id="phraseTemplateNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                                                        <GridPane.margin>
+                                                                           <Insets right="10.0" />
+                                                                        </GridPane.margin>
+                                                                     </TextField>
+                                                                     <Label text="Words:" GridPane.rowIndex="2">
+                                                                        <GridPane.margin>
+                                                                           <Insets left="10.0" />
+                                                                        </GridPane.margin>
+                                                                     </Label>
+                                                                     <SplitPane dividerPositions="0.0" orientation="VERTICAL" prefHeight="350.0" prefWidth="160.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                                                       <items>
+                                                                         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                                                                              <children>
+                                                                                 <TableView fx:id="phraseTemplateWordsTableView" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                                                     <columns>
+                                                                                         <TableColumn minWidth="150.0" prefWidth="150.0" text="Word Template Id">
+                                                                                             <cellValueFactory>
+                                                                                                 <PropertyValueFactory property="id" />
+                                                                                             </cellValueFactory>
+                                                                                         </TableColumn>
+                                                                                         <TableColumn minWidth="200.0" prefWidth="200.0" text="Word Template Name">
+                                                                                             <cellValueFactory>
+                                                                                                 <PropertyValueFactory property="name" />
+                                                                                             </cellValueFactory>
+                                                                                         </TableColumn>
+                                                                                     </columns>
+                                                                                 </TableView>
+                                                                              </children>
+                                                                           </AnchorPane>
+                                                                         <AnchorPane maxHeight="35.0" minHeight="35.0" prefHeight="35.0">
+                                                                              <children>
+                                                                                 <ToolBar layoutX="-15.0" layoutY="28.0" maxHeight="35.0" minHeight="35.0" prefHeight="35.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                                                   <items>
+                                                                                     <Button fx:id="addPhraseTemplateWordButton" mnemonicParsing="false" onAction="#addPhraseTemplateWord" text="Add word" />
+                                                                                       <Button fx:id="removePhraseTemplateWordButton" mnemonicParsing="false" onAction="#removePhraseTemplateWord" text="Remove word" />
+                                                                                   </items>
+                                                                                 </ToolBar>
+                                                                              </children>
+                                                                           </AnchorPane>
+                                                                       </items>
+                                                                     </SplitPane>
+                                                                  </children>
+                                                               </GridPane>
+                                                               <Button fx:id="addUpdatePhraseTemplateButton" mnemonicParsing="false" onAction="#addUpdatePhraseTemplate" text="Add / Update Phrase Template">
+                                                                  <VBox.margin>
+                                                                     <Insets top="10.0" />
+                                                                  </VBox.margin>
+                                                               </Button>
+                                                            </children>
+                                                         </VBox>
+                                                      </children>
+                                                   </AnchorPane>
+                                               </items>
+                                             </SplitPane>
+                                          </children>
+                                       </AnchorPane>
+                                   </items>
+                                 </SplitPane>
+                              </children>
+                           </AnchorPane>
+                     </content>
+                   </Tab>
+                 </tabs>
+               </TabPane>
+            </children>
+            </AnchorPane>
+        </SplitPane>
+    </children>
+</fx:root>

@@ -1,11 +1,17 @@
 package com.phraser.forms;
 
 import com.phraser.HexTool;
-import com.phraser.db.*;
+import com.phraser.db.Block;
+import com.phraser.db.ImmutableKeyBlock;
+import com.phraser.db.KeyBlock;
+import com.phraser.db.PhraserDB;
 import com.phraser.utils.PhraserUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.AnchorPane;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;

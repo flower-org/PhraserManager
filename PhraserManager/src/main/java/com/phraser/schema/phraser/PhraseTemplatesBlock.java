@@ -34,12 +34,20 @@ public final class PhraseTemplatesBlock extends Table {
   public int phraseTemplatesLength() { int o = __offset(6); return o != 0 ? __vector_len(o) : 0; }
   public PhraseTemplate.Vector phraseTemplatesVector() { return phraseTemplatesVector(new PhraseTemplate.Vector()); }
   public PhraseTemplate.Vector phraseTemplatesVector(PhraseTemplate.Vector obj) { int o = __offset(6); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
+  public WordTemplate wordTemplates(int j) { return wordTemplates(new WordTemplate(), j); }
+  public WordTemplate wordTemplates(WordTemplate obj, int j) { int o = __offset(8); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
+  public int wordTemplatesLength() { int o = __offset(8); return o != 0 ? __vector_len(o) : 0; }
+  public WordTemplate.Vector wordTemplatesVector() { return wordTemplatesVector(new WordTemplate.Vector()); }
+  public WordTemplate.Vector wordTemplatesVector(WordTemplate.Vector obj) { int o = __offset(8); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
 
-  public static void startPhraseTemplatesBlock(FlatBufferBuilder builder) { builder.startTable(2); }
+  public static void startPhraseTemplatesBlock(FlatBufferBuilder builder) { builder.startTable(3); }
   public static void addBlock(FlatBufferBuilder builder, int blockOffset) { builder.addStruct(0, blockOffset, 0); }
   public static void addPhraseTemplates(FlatBufferBuilder builder, int phraseTemplatesOffset) { builder.addOffset(1, phraseTemplatesOffset, 0); }
   public static int createPhraseTemplatesVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
   public static void startPhraseTemplatesVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
+  public static void addWordTemplates(FlatBufferBuilder builder, int wordTemplatesOffset) { builder.addOffset(2, wordTemplatesOffset, 0); }
+  public static int createWordTemplatesVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
+  public static void startWordTemplatesVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
   public static int endPhraseTemplatesBlock(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;

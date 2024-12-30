@@ -2,7 +2,17 @@ package com.phraser.forms;
 
 import com.phraser.JavaFxUtils;
 import com.phraser.ModalWindow;
-import com.phraser.db.*;
+import com.phraser.db.BlockType;
+import com.phraser.db.FoldersBlock;
+import com.phraser.db.ImmutableFoldersBlock;
+import com.phraser.db.ImmutableKeyBlock;
+import com.phraser.db.ImmutablePhraseTemplatesBlock;
+import com.phraser.db.ImmutableSymbolSetsBlock;
+import com.phraser.db.KeyBlock;
+import com.phraser.db.PhraserDB;
+import com.phraser.db.PhraseTemplatesBlock;
+import com.phraser.db.Block;
+import com.phraser.db.SymbolSetsBlock;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -38,6 +48,7 @@ public class PhraserDbForm extends AnchorPane {
     @Nullable Tab keyBlockTab;
     @Nullable Tab symbolSetsBlockTab;
     @Nullable Tab foldersBlockTab;
+    @Nullable Tab phraseTemplatesBlockTab;
 
     public PhraserDbForm(MainForm mainForm, String defaultDbName) {
         this(mainForm, List.of(), defaultDbName);
@@ -98,6 +109,8 @@ public class PhraserDbForm extends AnchorPane {
                                     openSymbolSetsBlockForm();
                                 } else if (blockType == BlockType.FOLDERS_BLOCK) {
                                     openFoldersBlockForm();
+                                } else if (blockType == BlockType.PHRASE_TEMPLATES_BLOCK) {
+                                    openPhraseTemplatesBlockForm();
                                 } else {
                                     Alert alert = new Alert(Alert.AlertType.ERROR, "Unsupported block type: " + blockType, ButtonType.OK);
                                     LOGGER.error("Unsupported block type: " + blockType);
@@ -232,11 +245,46 @@ public class PhraserDbForm extends AnchorPane {
         }
     }
 
-    public void updateBlockAction() {
-        //
+    public void openPhraseTemplatesBlockForm() {
+        if (phraseTemplatesBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(phraseTemplatesBlockTab)) {
+            checkNotNull(mainForm.getTabs()).getSelectionModel().select(phraseTemplatesBlockTab);
+        } else {
+            Block existingPhraseTemplatesBlock = phraserDB.getLastPhraseTemplatesBlock();
+            if (existingPhraseTemplatesBlock != null) {
+                if (JavaFxUtils.showYesNoDialog("PhraseTemplatesBlock exists, edit?") == JavaFxUtils.YesNo.NO) {
+                    return;
+                }
+            }
+
+            phraseTemplatesBlockTab = mainForm.openPhraseTemplatesBlockForm(existingPhraseTemplatesBlock,
+                    phraserDB,
+                    phraseTemplatesBlock -> {
+                        int blockId;
+                        int version = 1;
+                        Block lastPhraseTemplatesBlock = phraserDB.getLastPhraseTemplatesBlock();
+                        if (lastPhraseTemplatesBlock != null) {
+                            blockId = checkNotNull(lastPhraseTemplatesBlock.phraseTemplatesBlock()).blockId();
+                            version = lastPhraseTemplatesBlock.phraseTemplatesBlock().version() + 1;
+                        } else {
+                            blockId = phraserDB.getNextBlockId();
+                        }
+
+                        PhraseTemplatesBlock blockWithVersionAndEntropy = ImmutablePhraseTemplatesBlock.builder()
+                                .from(phraseTemplatesBlock)
+                                .blockId(blockId)
+                                .version(version)
+                                .build();
+
+                        Block block = Block.create(blockWithVersionAndEntropy);
+                        addBlock(block);
+
+                        checkNotNull(mainForm.getTabs()).getTabs().remove(phraseTemplatesBlockTab);
+                        phraseTemplatesBlockTab = null;
+                    });
+        }
     }
 
-    public void tombstoneBlockAction() {
+    public void updateBlockAction() {
         //
     }
 

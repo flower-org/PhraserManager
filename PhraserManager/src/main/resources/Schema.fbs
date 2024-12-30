@@ -77,12 +77,13 @@ table WordTemplate {
 table PhraseTemplate {
   phrase_template_id: uint16;
   phrase_template_name: string;
-  word_templates: [WordTemplate];
+  word_template_ids: [uint16];
 }
 
 table PhraseTemplatesBlock {
   block: StoreBlock;
   phrase_templates: [PhraseTemplate];
+  word_templates: [WordTemplate];
 }
 
 // -------- StoreWordValue / StorePhraseHistory / PhraseBlock --------

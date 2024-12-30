@@ -32,18 +32,20 @@ public final class PhraseTemplate extends Table {
   public String phraseTemplateName() { int o = __offset(6); return o != 0 ? __string(o + bb_pos) : null; }
   public ByteBuffer phraseTemplateNameAsByteBuffer() { return __vector_as_bytebuffer(6, 1); }
   public ByteBuffer phraseTemplateNameInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 6, 1); }
-  public WordTemplate wordTemplates(int j) { return wordTemplates(new WordTemplate(), j); }
-  public WordTemplate wordTemplates(WordTemplate obj, int j) { int o = __offset(8); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
-  public int wordTemplatesLength() { int o = __offset(8); return o != 0 ? __vector_len(o) : 0; }
-  public WordTemplate.Vector wordTemplatesVector() { return wordTemplatesVector(new WordTemplate.Vector()); }
-  public WordTemplate.Vector wordTemplatesVector(WordTemplate.Vector obj) { int o = __offset(8); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
+  public int wordTemplateIds(int j) { int o = __offset(8); return o != 0 ? bb.getShort(__vector(o) + j * 2) & 0xFFFF : 0; }
+  public int wordTemplateIdsLength() { int o = __offset(8); return o != 0 ? __vector_len(o) : 0; }
+  public ShortVector wordTemplateIdsVector() { return wordTemplateIdsVector(new ShortVector()); }
+  public ShortVector wordTemplateIdsVector(ShortVector obj) { int o = __offset(8); return o != 0 ? obj.__assign(__vector(o), bb) : null; }
+  public ByteBuffer wordTemplateIdsAsByteBuffer() { return __vector_as_bytebuffer(8, 2); }
+  public ByteBuffer wordTemplateIdsInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 8, 2); }
+  public boolean mutateWordTemplateIds(int j, int word_template_ids) { int o = __offset(8); if (o != 0) { bb.putShort(__vector(o) + j * 2, (short) word_template_ids); return true; } else { return false; } }
 
   public static int createPhraseTemplate(FlatBufferBuilder builder,
       int phraseTemplateId,
       int phraseTemplateNameOffset,
-      int wordTemplatesOffset) {
+      int wordTemplateIdsOffset) {
     builder.startTable(3);
-    PhraseTemplate.addWordTemplates(builder, wordTemplatesOffset);
+    PhraseTemplate.addWordTemplateIds(builder, wordTemplateIdsOffset);
     PhraseTemplate.addPhraseTemplateName(builder, phraseTemplateNameOffset);
     PhraseTemplate.addPhraseTemplateId(builder, phraseTemplateId);
     return PhraseTemplate.endPhraseTemplate(builder);
@@ -52,9 +54,9 @@ public final class PhraseTemplate extends Table {
   public static void startPhraseTemplate(FlatBufferBuilder builder) { builder.startTable(3); }
   public static void addPhraseTemplateId(FlatBufferBuilder builder, int phraseTemplateId) { builder.addShort(0, (short) phraseTemplateId, (short) 0); }
   public static void addPhraseTemplateName(FlatBufferBuilder builder, int phraseTemplateNameOffset) { builder.addOffset(1, phraseTemplateNameOffset, 0); }
-  public static void addWordTemplates(FlatBufferBuilder builder, int wordTemplatesOffset) { builder.addOffset(2, wordTemplatesOffset, 0); }
-  public static int createWordTemplatesVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
-  public static void startWordTemplatesVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
+  public static void addWordTemplateIds(FlatBufferBuilder builder, int wordTemplateIdsOffset) { builder.addOffset(2, wordTemplateIdsOffset, 0); }
+  public static int createWordTemplateIdsVector(FlatBufferBuilder builder, int[] data) { builder.startVector(2, data.length, 2); for (int i = data.length - 1; i >= 0; i--) builder.addShort((short) data[i]); return builder.endVector(); }
+  public static void startWordTemplateIdsVector(FlatBufferBuilder builder, int numElems) { builder.startVector(2, numElems, 2); }
   public static int endPhraseTemplate(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;

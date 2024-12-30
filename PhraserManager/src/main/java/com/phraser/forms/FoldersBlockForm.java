@@ -1,10 +1,19 @@
 package com.phraser.forms;
 
-import com.phraser.db.*;
+import com.phraser.db.Block;
+import com.phraser.db.FoldersBlock;
+import com.phraser.db.ImmutableFolder;
+import com.phraser.db.ImmutableFoldersBlock;
+import com.phraser.db.PhraserDB;
 import com.phraser.utils.PhraserUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.StringUtils;
@@ -13,7 +22,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;

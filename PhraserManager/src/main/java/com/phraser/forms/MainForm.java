@@ -2,6 +2,7 @@ package com.phraser.forms;
 
 import com.phraser.db.Block;
 import com.phraser.db.KeyBlock;
+import com.phraser.db.PhraseTemplatesBlock;
 import com.phraser.db.SymbolSetsBlock;
 import com.phraser.db.FoldersBlock;
 import com.phraser.db.PhraserDB;
@@ -44,8 +45,8 @@ public class MainForm {
         checkNotNull(serverInfoLabel).setText(text);
     }
 
+    //TODO: loadDb - Inconsistencies check on load?
     public void newDb() {
-        // TODO: request DB name via dialog
         String dbName = "New DB #" + (++newDbCount);
 
         PhraserDbForm phraserDbForm = new PhraserDbForm(this, dbName);
@@ -81,6 +82,18 @@ public class MainForm {
         FoldersBlockForm foldersBlockForm = new FoldersBlockForm(foldersBlock, phraserDB, foldersBlockCallback);
         foldersBlockForm.setStage(checkNotNull(mainStage));
         final Tab tab = new Tab("Folders Block", foldersBlockForm);
+        tab.setClosable(true);
+
+        addTab(tab);
+        return tab;
+    }
+
+    public Tab openPhraseTemplatesBlockForm(@Nullable Block phraseTemplatesBlock,
+                                            PhraserDB phraserDB, Consumer<PhraseTemplatesBlock> phraseTemplatesBlockCallback) {
+        PhraseTemplatesBlockForm phraseTemplatesBlockForm = new PhraseTemplatesBlockForm(phraseTemplatesBlock,
+                phraserDB, phraseTemplatesBlockCallback);
+        phraseTemplatesBlockForm.setStage(checkNotNull(mainStage));
+        final Tab tab = new Tab("Phrase Templates Block", phraseTemplatesBlockForm);
         tab.setClosable(true);
 
         addTab(tab);

@@ -18,7 +18,6 @@
                     <items>
                         <Button mnemonicParsing="false" onAction="#newBlockAction" text="New" />
                         <Button mnemonicParsing="false" onAction="#updateBlockAction" text="Update" />
-                        <Button mnemonicParsing="false" onAction="#tombstoneBlockAction" text="Tombstone (soft delete)" />
                         <Separator orientation="VERTICAL" prefHeight="200.0" />
                         <Button mnemonicParsing="false" onAction="#defragmentDBAction" text="Defragment DB" />
                         <Separator orientation="VERTICAL" prefHeight="200.0" />
