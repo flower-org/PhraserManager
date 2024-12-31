@@ -29,22 +29,38 @@ public final class Word extends Table {
 
   public int wordTemplateId() { int o = __offset(4); return o != 0 ? bb.getShort(o + bb_pos) & 0xFFFF : 0; }
   public boolean mutateWordTemplateId(int word_template_id) { int o = __offset(4); if (o != 0) { bb.putShort(o + bb_pos, (short) word_template_id); return true; } else { return false; } }
-  public String word() { int o = __offset(6); return o != 0 ? __string(o + bb_pos) : null; }
-  public ByteBuffer wordAsByteBuffer() { return __vector_as_bytebuffer(6, 1); }
-  public ByteBuffer wordInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 6, 1); }
+  public String name() { int o = __offset(6); return o != 0 ? __string(o + bb_pos) : null; }
+  public ByteBuffer nameAsByteBuffer() { return __vector_as_bytebuffer(6, 1); }
+  public ByteBuffer nameInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 6, 1); }
+  public String word() { int o = __offset(8); return o != 0 ? __string(o + bb_pos) : null; }
+  public ByteBuffer wordAsByteBuffer() { return __vector_as_bytebuffer(8, 1); }
+  public ByteBuffer wordInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 8, 1); }
+  public byte permissions() { int o = __offset(10); return o != 0 ? bb.get(o + bb_pos) : 0; }
+  public boolean mutatePermissions(byte permissions) { int o = __offset(10); if (o != 0) { bb.put(o + bb_pos, permissions); return true; } else { return false; } }
+  public byte icon() { int o = __offset(12); return o != 0 ? bb.get(o + bb_pos) : 0; }
+  public boolean mutateIcon(byte icon) { int o = __offset(12); if (o != 0) { bb.put(o + bb_pos, icon); return true; } else { return false; } }
 
   public static int createWord(FlatBufferBuilder builder,
       int wordTemplateId,
-      int wordOffset) {
-    builder.startTable(2);
+      int nameOffset,
+      int wordOffset,
+      byte permissions,
+      byte icon) {
+    builder.startTable(5);
     Word.addWord(builder, wordOffset);
+    Word.addName(builder, nameOffset);
     Word.addWordTemplateId(builder, wordTemplateId);
+    Word.addIcon(builder, icon);
+    Word.addPermissions(builder, permissions);
     return Word.endWord(builder);
   }
 
-  public static void startWord(FlatBufferBuilder builder) { builder.startTable(2); }
+  public static void startWord(FlatBufferBuilder builder) { builder.startTable(5); }
   public static void addWordTemplateId(FlatBufferBuilder builder, int wordTemplateId) { builder.addShort(0, (short) wordTemplateId, (short) 0); }
-  public static void addWord(FlatBufferBuilder builder, int wordOffset) { builder.addOffset(1, wordOffset, 0); }
+  public static void addName(FlatBufferBuilder builder, int nameOffset) { builder.addOffset(1, nameOffset, 0); }
+  public static void addWord(FlatBufferBuilder builder, int wordOffset) { builder.addOffset(2, wordOffset, 0); }
+  public static void addPermissions(FlatBufferBuilder builder, byte permissions) { builder.addByte(3, permissions, 0); }
+  public static void addIcon(FlatBufferBuilder builder, byte icon) { builder.addByte(4, icon, 0); }
   public static int endWord(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;

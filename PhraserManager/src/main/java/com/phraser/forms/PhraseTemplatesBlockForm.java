@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.phraser.db.Block.DATA_BLOCK_SIZE;
 import static com.phraser.forms.PhraserDbForm.NEW_BLOCK;
 
 public class PhraseTemplatesBlockForm extends AnchorPane {
@@ -237,8 +238,8 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
         Block block = Block.create(newPhraseTemplatesBlock);
         int bufferLength = block.toFlatBufBlock().length;
 
-        if (bufferLength > 4096) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Block size can't exceed 4096 bytes", ButtonType.OK);
+        if (bufferLength > DATA_BLOCK_SIZE) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Block size can't exceed "+DATA_BLOCK_SIZE+" bytes", ButtonType.OK);
             alert.showAndWait();
             return;
         }

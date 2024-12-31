@@ -22,12 +22,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Value.Immutable
 public interface Block {
   int FLASH_SECTOR_SIZE = 4096;
-  int BLOCK_TYPE_SIZE = 1;
   int IV_SIZE = 16;
-  int ADLER_16_SIZE = 2;
-  int CHECKSUM_SIZE = ADLER_16_SIZE;
-  int BLOCK_REMAINDER_SIZE = FLASH_SECTOR_SIZE - (BLOCK_TYPE_SIZE + IV_SIZE + CHECKSUM_SIZE);
-  int BLOCK_DATA_SIZE = (BLOCK_REMAINDER_SIZE / 16) * 16;
+  int ADLER_16_CHECKSUM_SIZE = 2;
+  int DATA_BLOCK_SIZE = FLASH_SECTOR_SIZE - (IV_SIZE + ADLER_16_CHECKSUM_SIZE);
 
   StoreBlock storeBlock();
 

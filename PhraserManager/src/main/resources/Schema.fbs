@@ -21,7 +21,7 @@ struct StoreBlock {
 
   block_id: uint16;
   //This version is a global unique update version, as opposed to block version for a particular block
-  version: uint16;
+  version: uint32;
 
   //Use the sum of millis() and micros() to seed the random generator randomSeed(millis() + micros());
   entropy: uint64;
@@ -90,7 +90,10 @@ table PhraseTemplatesBlock {
 
 table Word {
   word_template_id: uint16;
+  name: string;
   word: string;
+  permissions: byte;
+  icon: byte;//standard icon code - TODO: enum
 }
 
 table PhraseHistory {

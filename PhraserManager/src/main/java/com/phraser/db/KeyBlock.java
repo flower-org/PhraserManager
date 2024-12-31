@@ -4,7 +4,7 @@ import com.google.flatbuffers.FlatBufferBuilder;
 import com.phraser.utils.PhraserUtils;
 import org.immutables.value.Value;
 
-import static com.phraser.db.Block.BLOCK_DATA_SIZE;
+import static com.phraser.db.Block.DATA_BLOCK_SIZE;
 
 @Value.Immutable
 public interface KeyBlock extends StoreBlock {
@@ -18,7 +18,7 @@ public interface KeyBlock extends StoreBlock {
         assert(key_256.length == 32);
         assert(iv_128.length == 16);
 
-        FlatBufferBuilder flatBufferBuilder = new FlatBufferBuilder(BLOCK_DATA_SIZE);
+        FlatBufferBuilder flatBufferBuilder = new FlatBufferBuilder(DATA_BLOCK_SIZE);
         int baseBlockOffset = com.phraser.schema.phraser.StoreBlock.createStoreBlock(flatBufferBuilder,
                 BlockType.KEY_BLOCK.code, 1, 1, PhraserUtils.generateEntropy());
         int keyOffset = flatBufferBuilder.createByteVector(key_256);
