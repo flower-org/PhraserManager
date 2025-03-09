@@ -231,33 +231,33 @@
                                                                      <ComboBox fx:id="wordTemplateIconComboBox" prefWidth="150.0" value="Key" GridPane.columnIndex="1" GridPane.rowIndex="2">
                                                                          <items>
                                                                              <FXCollections fx:factory="observableArrayList">
-                                                                                 <String fx:value="Key" />
-                                                                                 <String fx:value="Login" />
-                                                                                 <String fx:value="Asterisk" />
-                                                                                 <String fx:value="Lock" />
-                                                                                 <String fx:value="Aa" />
-                                                                                 <String fx:value="Star" />
-      
-                                                                                 <String fx:value="Settings" />
-                                                                                 <String fx:value="Folder" />
-                                                                                 <String fx:value="ToParentFolder" />
-                                                                                 <String fx:value="LookingGlass" />
-                                                                                 <String fx:value="LTTriangle" />
-                                                                                 <String fx:value="GTTriangle" />
-      
-                                                                                 <String fx:value="TextOut" />
-                                                                                 <String fx:value="Ledger" />
-                                                                                 <String fx:value="PlusMinus" />
-                                                                                 <String fx:value="Stars" />
-                                                                                 <String fx:value="Message" />
-                                                                                 <String fx:value="Quote" />
-      
-                                                                                 <String fx:value="Question" />
-                                                                                 <String fx:value="Plus" />
-                                                                                 <String fx:value="Minus" />
+                                                                                 <String fx:value="KEY" />
+                                                                                 <String fx:value="LOGIN" />
+                                                                                 <String fx:value="ASTERISK" />
+                                                                                 <String fx:value="LOCK" />
+                                                                                 <String fx:value="AA" />
+                                                                                 <String fx:value="STAR" />
+
+                                                                                 <String fx:value="SETTINGS" />
+                                                                                 <String fx:value="FOLDER" />
+                                                                                 <String fx:value="TOPARENTFOLDER" />
+                                                                                 <String fx:value="LOOKINGGLASS" />
+                                                                                 <String fx:value="LTTRIANGLE" />
+                                                                                 <String fx:value="GTTRIANGLE" />
+
+                                                                                 <String fx:value="TEXTOUT" />
+                                                                                 <String fx:value="LEDGER" />
+                                                                                 <String fx:value="PLUSMINUS" />
+                                                                                 <String fx:value="STARS" />
+                                                                                 <String fx:value="MESSAGE" />
+                                                                                 <String fx:value="QUOTE" />
+
+                                                                                 <String fx:value="QUESTION" />
+                                                                                 <String fx:value="PLUS" />
+                                                                                 <String fx:value="MINUS" />
                                                                                  <String fx:value="X" />
-                                                                                 <String fx:value="Check" />
-                                                                                 <String fx:value="Copy" />
+                                                                                 <String fx:value="CHECK" />
+                                                                                 <String fx:value="COPY" />
                                                                              </FXCollections>
                                                                          </items>
                                                                      </ComboBox>

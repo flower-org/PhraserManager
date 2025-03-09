@@ -2,6 +2,7 @@ package com.phraser.forms;
 
 import com.phraser.ModalWindow;
 import com.phraser.db.Block;
+import com.phraser.db.Icon;
 import com.phraser.db.ImmutablePhraseTemplate;
 import com.phraser.db.ImmutablePhraseTemplatesBlock;
 import com.phraser.db.ImmutableSymbolSet;
@@ -368,7 +369,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
                         .wordTemplateName("WORD TEMPLATE NOT FOUND")
                         .addSymbolSetIds()
                         .permissions((byte)0)
-                        .icon(PhraseTemplatesBlock.Icon.X)
+                        .icon(Icon.X)
                         .minLength(0)
                         .maxLength(0)
                         .build());
@@ -490,7 +491,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
         }
 
         byte permissions = getWordPermissions();
-        PhraseTemplatesBlock.Icon icon = PhraseTemplatesBlock.Icon.valueOf(checkNotNull(wordTemplateIconComboBox).getSelectionModel().getSelectedItem());
+        Icon icon = Icon.valueOf(checkNotNull(wordTemplateIconComboBox).getSelectionModel().getSelectedItem());
         int minLength = Integer.parseInt(checkNotNull(wordTemplateMinLengthTextField).textProperty().get());
         int maxLength = Integer.parseInt(checkNotNull(wordTemplateMaxLengthTextField).textProperty().get());
         if (minLength > maxLength) {
