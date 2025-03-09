@@ -17,7 +17,7 @@ enum BlockType : byte {
 // -------- Common block structure --------
 
 struct StoreBlock {
-  type: BlockType;
+  //type: BlockType;
 
   block_id: uint16;
   //This version is a global unique update version, as opposed to block version for a particular block
