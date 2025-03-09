@@ -35,7 +35,7 @@ public interface PhraseTemplatesBlock extends StoreBlock {
         Check((byte)23),
         Copy((byte)24);
 
-        final byte code;
+        public final byte code;
 
         Icon(byte code) {
             this.code = code;

@@ -20,7 +20,7 @@ public interface KeyBlock extends StoreBlock {
 
         FlatBufferBuilder flatBufferBuilder = new FlatBufferBuilder(DATA_BLOCK_SIZE);
         int baseBlockOffset = com.phraser.schema.phraser.StoreBlock.createStoreBlock(flatBufferBuilder,
-                BlockType.KEY_BLOCK.code, 1, 1, PhraserUtils.generateEntropy());
+                1, 1, PhraserUtils.generateEntropy());
         int keyOffset = flatBufferBuilder.createByteVector(key_256);
         int ivOffset = flatBufferBuilder.createByteVector(iv_128);
 
@@ -36,9 +36,10 @@ public interface KeyBlock extends StoreBlock {
 
     // --------------------------------------------------
 
-    static KeyBlock createFirstKeyBlock(byte[] key_256, int version) {
+    static KeyBlock createFirstKeyBlock(byte[] key_256, byte[] iv_128, int version) {
         return ImmutableKeyBlock.builder()
                 .key(key_256)
+                .iv(iv_128)
                 .version(version)
                 .build();
     }

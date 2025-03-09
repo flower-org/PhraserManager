@@ -6,6 +6,7 @@ import com.phraser.db.ImmutableSymbolSet;
 import com.phraser.db.ImmutableSymbolSetsBlock;
 import com.phraser.db.PhraserDB;
 import com.phraser.db.SymbolSetsBlock;
+import com.phraser.dbcodec.BlockEncoder;
 import com.phraser.utils.PhraserUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -81,7 +82,7 @@ public class SymbolSetsBlockForm extends AnchorPane {
         SymbolSetsBlock newSymbolSetsBlock = formSymbolSetsBlock(true);
         Block block = Block.create(newSymbolSetsBlock);
 
-        int bufferLength = block.toFlatBufBlock().length;
+        int bufferLength = BlockEncoder.toFlatBufBlock(block).length;
 
         if (bufferLength > DATA_BLOCK_SIZE) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Block size can't exceed "+DATA_BLOCK_SIZE+" bytes", ButtonType.OK);
@@ -173,7 +174,7 @@ public class SymbolSetsBlockForm extends AnchorPane {
     void updateBlockSize() {
         Block block = Block.create(formSymbolSetsBlock(false));
 
-        int bufferLength = block.toFlatBufBlock().length;
+        int bufferLength = BlockEncoder.toFlatBufBlock(block).length;
         checkNotNull(blockSizeTextField).textProperty().set(Integer.toString(bufferLength));
     }
 

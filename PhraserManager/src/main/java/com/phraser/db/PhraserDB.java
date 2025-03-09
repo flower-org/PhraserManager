@@ -35,7 +35,7 @@ public class PhraserDB {
   @Nullable final Consumer<String> dbNameListener;
 
   public static PhraserDB createNewDb(int bucketCount, String dbName, @Nullable Consumer<String> dbNameListener) {
-    return new PhraserDB(List.of(Block.create(KeyBlock.createFirstKeyBlock(DEFAULT_KEY, 1))), bucketCount, dbName, dbNameListener);
+    return new PhraserDB(List.of(Block.create(KeyBlock.createFirstKeyBlock(DEFAULT_KEY, DEFAULT_IV, 1))), bucketCount, dbName, dbNameListener);
   }
 
   final Block[] blocks;

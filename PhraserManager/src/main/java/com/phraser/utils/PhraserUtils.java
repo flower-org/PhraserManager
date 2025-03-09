@@ -32,4 +32,12 @@ public class PhraserUtils {
         SECURE_RANDOM.nextBytes(iv);
         return iv;
     }
+
+    public static void reverseArray(byte[] arr) {
+        for (int i = 0; i < arr.length/2; i++) {
+            byte tmp = arr[i];
+            arr[i] = arr[arr.length - 1 - i];
+            arr[arr.length - 1 - i] = tmp;
+        }
+    }
 }

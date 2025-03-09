@@ -5,6 +5,7 @@ import com.phraser.db.FoldersBlock;
 import com.phraser.db.ImmutableFolder;
 import com.phraser.db.ImmutableFoldersBlock;
 import com.phraser.db.PhraserDB;
+import com.phraser.dbcodec.BlockEncoder;
 import com.phraser.utils.PhraserUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -169,7 +170,7 @@ public class FoldersBlockForm extends AnchorPane {
         FoldersBlock newFoldersBlock = formFoldersBlock(true);
         Block block = Block.create(newFoldersBlock);
 
-        int bufferLength = block.toFlatBufBlock().length;
+        int bufferLength = BlockEncoder.toFlatBufBlock(block).length;
 
         if (bufferLength > DATA_BLOCK_SIZE) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Block size can't exceed "+DATA_BLOCK_SIZE+" bytes", ButtonType.OK);
@@ -234,7 +235,7 @@ public class FoldersBlockForm extends AnchorPane {
     void updateBlockSize() {
         Block block = Block.create(formFoldersBlock(false));
 
-        int bufferLength = block.toFlatBufBlock().length;
+        int bufferLength = BlockEncoder.toFlatBufBlock(block).length;
         checkNotNull(blockSizeTextField).textProperty().set(Integer.toString(bufferLength));
     }
 
