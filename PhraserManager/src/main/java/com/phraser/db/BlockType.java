@@ -1,11 +1,17 @@
 package com.phraser.db;
 
+import static com.phraser.schema.phraser.BlockType.FoldersBlock;
+import static com.phraser.schema.phraser.BlockType.SymbolSetsBlock;
+import static com.phraser.schema.phraser.BlockType.PhraseTemplatesBlock;
+import static com.phraser.schema.phraser.BlockType.PhraseBlock;
+import static com.phraser.schema.phraser.BlockType.KeyBlock;
+
 public enum BlockType {
-    FOLDERS_BLOCK((byte)1),
-    SYMBOL_SETS_BLOCK((byte)2),
-    PHRASE_TEMPLATES_BLOCK((byte)3),
-    PHRASE_BLOCK((byte)4),
-    KEY_BLOCK((byte)5);
+    FOLDERS_BLOCK(FoldersBlock),
+    SYMBOL_SETS_BLOCK(SymbolSetsBlock),
+    PHRASE_TEMPLATES_BLOCK(PhraseTemplatesBlock),
+    PHRASE_BLOCK(PhraseBlock),
+    KEY_BLOCK(KeyBlock);
 
     public final byte code;
 
@@ -15,11 +21,11 @@ public enum BlockType {
 
     public static BlockType fromCode(byte code) {
         switch (code) {
-            case 1: return BlockType.FOLDERS_BLOCK;
-            case 2: return BlockType.SYMBOL_SETS_BLOCK;
-            case 3: return BlockType.PHRASE_TEMPLATES_BLOCK;
-            case 4: return BlockType.PHRASE_BLOCK;
-            case 5: return BlockType.KEY_BLOCK;
+            case FoldersBlock: return BlockType.FOLDERS_BLOCK;
+            case SymbolSetsBlock: return BlockType.SYMBOL_SETS_BLOCK;
+            case PhraseTemplatesBlock: return BlockType.PHRASE_TEMPLATES_BLOCK;
+            case PhraseBlock: return BlockType.PHRASE_BLOCK;
+            case KeyBlock: return BlockType.KEY_BLOCK;
             default: throw new RuntimeException("Unknown BlockType code " + code);
         }
     }
