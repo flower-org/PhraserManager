@@ -6,12 +6,43 @@ namespace phraser;
 // - i.e. _prior_ to deserialization, so it can't be a part of the serialized structure itself.
 // We still keep this enum for the reference.
 enum BlockType : byte {
-    Unknown = 0,//default value needs to be present
+    Unknown = 0,//default value must be present in enum
     FoldersBlock = 1,
     SymbolSetsBlock = 2,
     PhraseTemplatesBlock = 3,
     PhraseBlock = 4,
     KeyBlock = 5
+}
+
+enum Icon : byte {
+    Unknown = 0,//default value must be present in enum
+    Key = 1,
+    Login = 2,
+    Asterisk = 3,
+    Lock = 4,
+    Aa = 5,
+    Star = 6,
+
+    Settings = 7,
+    Folder = 8,
+    ToParentFolder = 9,
+    LookingGlass = 10,
+    LTTriangle = 11,
+    GTTriangle = 12,
+
+    TextOut = 13,
+    Ledger = 14,
+    PlusMinus = 15,
+    Stars = 16,
+    Message = 17,
+    Quote = 18,
+
+    Question = 19,
+    Plus = 20,
+    Minus = 21,
+    X = 22,
+    Check = 23,
+    Copy = 24
 }
 
 // -------- Common block structure --------
@@ -65,7 +96,7 @@ table WordTemplate {
   //    - isGenerateable (can be auto-generated based on symbol sets)
   //    - isUserEditable (can be directly edited by a user in Phraser UI)
   permissions: byte;
-  icon: byte;//standard icon code - TODO: enum
+  icon: Icon; //standard icon code
   min_length: uint16;
   max_length: uint16;
   word_template_name: string;
@@ -93,7 +124,7 @@ table Word {
   name: string;
   word: string;
   permissions: byte;
-  icon: byte;//standard icon code - TODO: enum
+  icon: Icon; //standard icon code
 }
 
 table PhraseHistory {
