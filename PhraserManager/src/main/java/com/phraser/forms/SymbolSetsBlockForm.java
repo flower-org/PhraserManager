@@ -137,6 +137,7 @@ public class SymbolSetsBlockForm extends AnchorPane {
         if (selected != null) {
             symbolSets.remove(selected);
         }
+        updateBlockSize();
     }
 
     public void update() {

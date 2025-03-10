@@ -144,10 +144,10 @@ public class PhraserDbForm extends AnchorPane {
 
         List<PhraseTemplatesBlock.PhraseTemplate> phraseTemplates = List.of(
             PhraseTemplatesBlock.PhraseTemplate.of(1,
-                "Standard",
+                "LoginPass",
                 List.of(1, 2)),
             PhraseTemplatesBlock.PhraseTemplate.of(2,
-                "WebPortal",
+                "3 Security questions",
                 List.of(1, 2, 3, 4, 3, 4, 3, 4))
         );
 
