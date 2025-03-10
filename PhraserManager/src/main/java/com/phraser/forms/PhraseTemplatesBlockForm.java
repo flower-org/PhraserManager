@@ -46,7 +46,6 @@ import static com.phraser.forms.PhraserDbForm.NEW_BLOCK;
 public class PhraseTemplatesBlockForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraseTemplatesBlockForm.class);
 
-
     @FXML @Nullable Button addUpdateWordTemplateButton;
 
     @FXML @Nullable TextField blockIdTextField;
@@ -561,9 +560,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
                         try {
                             PhraseTemplatesBlock.WordTemplate wordTemplate = pickWordTemplateDialog.getWordTemplate();
                             if (wordTemplate != null) {
-                                if (!phraseTemplateWords.contains(wordTemplate)) {
                                     phraseTemplateWords.add(wordTemplate);
-                                }
                             }
                         } catch (Exception e) {
                             Alert alert = new Alert(Alert.AlertType.ERROR, "Error picking Word Template: " + e, ButtonType.OK);
@@ -582,12 +579,9 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
     }
 
     public void removePhraseTemplateWord() {
-        PhraseTemplatesBlock.PhraseTemplate selectedItem =
-                checkNotNull(phraseTemplatesTableView).getSelectionModel().getSelectedItem();
-        phraseTemplates.remove(selectedItem);
-        if (phraseTemplates.isEmpty()) {
-            newPhraseTemplate();
-        }
+        int selectedIndex =
+                checkNotNull(phraseTemplateWordsTableView).getSelectionModel().getSelectedIndex();
+        phraseTemplateWords.remove(selectedIndex);
     }
 
     public void addUpdatePhraseTemplate() {
