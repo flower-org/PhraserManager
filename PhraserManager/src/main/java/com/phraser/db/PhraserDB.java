@@ -29,10 +29,10 @@ public class PhraserDB {
 
   final long bucketCount;
 
-  int lastBlockVersion = 0;
+  int lastBlockId = 0;
   int bucketCursor = 0;
 
-  @Nullable final Consumer<String> dbNameListener;
+  @Nullable Consumer<String> dbNameListener;
 
   public static PhraserDB createNewDb(int bucketCount, String dbName, @Nullable Consumer<String> dbNameListener) {
     return new PhraserDB(List.of(Block.create(KeyBlock.createFirstKeyBlock(DEFAULT_KEY, DEFAULT_IV, 1))), bucketCount, dbName, dbNameListener);
@@ -60,7 +60,7 @@ public class PhraserDB {
   }
 
   public void addBlock(Block block) {
-    lastBlockVersion = Math.min(lastBlockVersion, block.getVersion());
+    lastBlockId = Math.max(lastBlockId, block.getBlockId());
     blocks[bucketCursor++] = block;
 
     if (block.foldersBlock() != null) {
@@ -98,6 +98,10 @@ public class PhraserDB {
     if (dbNameListener != null) {
       dbNameListener.accept(dbName);
     }
+  }
+
+  public void setDbNameListener(@Nullable Consumer<String> dbNameListener) {
+    this.dbNameListener = dbNameListener;
   }
 
   public int totalBlockCountIncludingEmpty() {
@@ -152,7 +156,7 @@ public class PhraserDB {
   }
 
   public int getNextBlockId() {
-    lastBlockVersion++;
-    return lastBlockVersion;
+    lastBlockId++;
+    return lastBlockId;
   }
 }

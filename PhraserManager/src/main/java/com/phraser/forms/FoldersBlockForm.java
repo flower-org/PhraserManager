@@ -131,9 +131,16 @@ public class FoldersBlockForm extends AnchorPane {
         ));
 
         checkNotNull(foldersTreeView).getSelectionModel().select(rootItem);
-        rootItem.expandedProperty().set(true);
+        expandAll(rootItem);
 
         updateBlockSize();
+    }
+
+    void expandAll(TreeItem<?> parent) {
+        parent.expandedProperty().set(true);
+        for (TreeItem<?> child : parent.getChildren()) {
+            expandAll(child);
+        }
     }
 
     public void fillFolders(Block foldersBlock) {

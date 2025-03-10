@@ -1,5 +1,6 @@
 package com.phraser.forms;
 
+import com.phraser.JavaFxUtils;
 import com.phraser.db.Block;
 import com.phraser.db.KeyBlock;
 import com.phraser.db.PhraseTemplatesBlock;
@@ -19,6 +20,7 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.phraser.JavaFxUtils.YesNo.YES;
 
 public class MainForm {
     @Nullable Stage mainStage;
@@ -45,11 +47,15 @@ public class MainForm {
         checkNotNull(serverInfoLabel).setText(text);
     }
 
-    //TODO: loadDb - Inconsistencies check on load?
     public void newDb() {
+        boolean initDefaultConfig = false;
+        if (YES == JavaFxUtils.showYesNoDialog("Initialize default DB configuration?")) {
+            initDefaultConfig = true;
+        }
+
         String dbName = "New DB #" + (++newDbCount);
 
-        PhraserDbForm phraserDbForm = new PhraserDbForm(this, dbName);
+        PhraserDbForm phraserDbForm = new PhraserDbForm(this, dbName, initDefaultConfig);
         phraserDbForm.setStage(checkNotNull(mainStage));
         final Tab tab = new Tab(dbName, phraserDbForm);
         tab.setClosable(true);

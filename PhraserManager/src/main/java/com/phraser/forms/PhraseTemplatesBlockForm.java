@@ -40,15 +40,12 @@ import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.phraser.db.Block.DATA_BLOCK_SIZE;
+import static com.phraser.db.PhraseTemplatesBlock.*;
 import static com.phraser.forms.PhraserDbForm.NEW_BLOCK;
 
 public class PhraseTemplatesBlockForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraseTemplatesBlockForm.class);
 
-    final static byte GENERATEABLE = 1;
-    final static byte TYPEABLE = 2;
-    final static byte VIEWABLE = 4;
-    final static byte USER_EDITABLE = 8;
 
     @FXML @Nullable Button addUpdateWordTemplateButton;
 
@@ -311,12 +308,12 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
             disableSymbolSets(!isGenerateable);
         });
         byte permissions = wordTemplate.permissions();
-        boolean isGenerateable = (permissions & GENERATEABLE) == GENERATEABLE;
+        boolean isGenerateable = isGenerateable(permissions);
         disableSymbolSets(!isGenerateable);
         checkNotNull(wordTemplateIsGenerateableCheckBox).selectedProperty().set(isGenerateable);
-        checkNotNull(wordTemplateIsTypeableCheckBox).selectedProperty().set((permissions & TYPEABLE) == TYPEABLE);
-        checkNotNull(wordTemplateIsViewableCheckBox).selectedProperty().set((permissions & VIEWABLE) == VIEWABLE);
-        checkNotNull(wordTemplateIsUserEditableCheckBox).selectedProperty().set((permissions & USER_EDITABLE) == USER_EDITABLE);
+        checkNotNull(wordTemplateIsTypeableCheckBox).selectedProperty().set(isTypeable(permissions));
+        checkNotNull(wordTemplateIsViewableCheckBox).selectedProperty().set(isViewable(permissions));
+        checkNotNull(wordTemplateIsUserEditableCheckBox).selectedProperty().set(isUserEditable(permissions));
 
         //symbol sets
         wordTemplateSymbolSets = FXCollections.observableArrayList();
@@ -506,7 +503,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
         for (SymbolSetsBlock.SymbolSet symbolSet : wordTemplateSymbolSets) {
             symbolSetIds.add(symbolSet.symbolSetId());
         }
-        if (((permissions & GENERATEABLE) == GENERATEABLE) && symbolSetIds.isEmpty()) {
+        if (isGenerateable(permissions) && symbolSetIds.isEmpty()) {
             throw new RuntimeException("Generateable words should have symbol sets attached.");
         }
 
