@@ -1,5 +1,6 @@
 package com.phraser.forms;
 
+import com.phraser.JavaFxUtils;
 import com.phraser.ModalWindow;
 import com.phraser.db.Block;
 import com.phraser.db.Icon;
@@ -39,6 +40,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.phraser.JavaFxUtils.YesNo.YES;
 import static com.phraser.db.Block.DATA_BLOCK_SIZE;
 import static com.phraser.db.PhraseTemplatesBlock.*;
 import static com.phraser.forms.PhraserDbForm.NEW_BLOCK;
@@ -207,9 +209,9 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
             checkNotNull(phraseTemplatesTableView).itemsProperty().set(this.phraseTemplates);
         }
 
-        checkNotNull(wordTemplateMinLengthTextField).textProperty().set("10");
+        checkNotNull(wordTemplateMinLengthTextField).textProperty().set("16");
         //maxLength
-        checkNotNull(wordTemplateMaxLengthTextField).textProperty().set("35");
+        checkNotNull(wordTemplateMaxLengthTextField).textProperty().set("32");
 
         updateBlockSize();
     }
@@ -225,7 +227,39 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
         checkNotNull(blockSizeTextField).textProperty().set(Integer.toString(bufferLength));
     }
 
+    public boolean phraseTemplateChanged() {
+        if (phraseTemplate != null) {
+            try {
+                PhraseTemplatesBlock.PhraseTemplate newPhraseTemplate = formPhraseTemplate();
+                return !newPhraseTemplate.equals(phraseTemplate);
+            } catch (Exception e) {}
+        }
+        return false;
+    }
+
+    public boolean wordTemplateChanged() {
+        if (oldWordTemplate != null) {
+            try {
+                PhraseTemplatesBlock.WordTemplate newWordTemplate = formWordTemplate();
+                return !newWordTemplate.equals(oldWordTemplate);
+            } catch (Exception e) {}
+        }
+        return false;
+    }
+
     public void saveToDb() {
+        if (phraseTemplateChanged()) {
+            if (YES == JavaFxUtils.showYesNoDialog("PhraseTemplate was changed but not updated, apply changes?")) {
+                addUpdatePhraseTemplate();
+            }
+        }
+
+        if (wordTemplateChanged()) {
+            if (YES == JavaFxUtils.showYesNoDialog("WordTemplate was changed but not updated, apply changes?")) {
+                addUpdateWordTemplate();
+            }
+        }
+
         PhraseTemplatesBlock newPhraseTemplatesBlock = formPhraseTemplatesBlock(true);
         if (newPhraseTemplatesBlock.phraseTemplates() == null || newPhraseTemplatesBlock.phraseTemplates().isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Block must contain PhraseTemplates", ButtonType.OK);
@@ -277,10 +311,25 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
     public void removeWordTemplate() {
         PhraseTemplatesBlock.WordTemplate selectedItem =
                 checkNotNull(wordTemplatesTableView).getSelectionModel().getSelectedItem();
+
+        if (selectedItem != null && phraseTemplates != null) {
+            for (PhraseTemplate phraseTemplate : phraseTemplates) {
+                if (phraseTemplate.wordTemplateIds().contains(selectedItem.wordTemplateId())) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Word template [" + selectedItem.wordTemplateName()
+                            + "] is used in PhraseTemplate [" + phraseTemplate.phraseTemplateName()
+                            + "]. Can't delete.", ButtonType.OK);
+                    alert.showAndWait();
+                    return;
+                }
+            }
+        }
+
         wordTemplates.remove(selectedItem);
         if (wordTemplates.isEmpty()) {
             newWordTemplate();
         }
+
+        updateBlockSize();
     }
 
     void disableSymbolSets(boolean disable) {;
@@ -393,6 +442,8 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
         if (phraseTemplates.isEmpty()) {
             newPhraseTemplate();
         }
+
+        updateBlockSize();
     }
 
     public void addSymbolSet() {
@@ -423,8 +474,6 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
                             LOGGER.error("Error adding known server: ", e);
                             alert.showAndWait();
                         }
-
-                        updateBlockSize();
                     }
             );
         } catch (Exception e) {
@@ -451,6 +500,8 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
         try {
             PhraseTemplatesBlock.WordTemplate newWordTemplate = formWordTemplate();
             addWordTemplate(newWordTemplate, true);
+
+            updateBlockSize();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR, e.getMessage(), ButtonType.OK);
             LOGGER.error("Error in addUpdateWordTemplate: ", e);
@@ -567,8 +618,6 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
                             LOGGER.error("Error picking Word Template: ", e);
                             alert.showAndWait();
                         }
-
-                        updateBlockSize();
                     }
             );
         } catch (Exception e) {
@@ -588,6 +637,8 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
         try {
             PhraseTemplatesBlock.PhraseTemplate newPhraseTemplate = formPhraseTemplate();
             addPhraseTemplate(newPhraseTemplate, true);
+
+            updateBlockSize();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR, e.getMessage(), ButtonType.OK);
             LOGGER.error("addUpdatePhraseTemplate: ", e);
