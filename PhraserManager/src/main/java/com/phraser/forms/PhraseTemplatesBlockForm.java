@@ -641,7 +641,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
             phraseTemplates.set(index, newPhraseTemplate);
         }
 
-        nextPhraseTemplateId = Math.max(nextWordTemplateId, newPhraseTemplate.phraseTemplateId());
+        nextPhraseTemplateId = Math.max(nextPhraseTemplateId, newPhraseTemplate.phraseTemplateId());
 
         if (selectPhraseTemplate) {
             phraseTemplate = newPhraseTemplate;
