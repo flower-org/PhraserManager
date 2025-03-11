@@ -34,8 +34,75 @@ public class BlockEncoder {
     }
 
     public static byte[] toFlatBufPhraseBlock(PhraseBlock phraseBlock) {
+        StoreBlock storeBlock = phraseBlock;
+        FlatBufferBuilder builder = new FlatBufferBuilder(12000);
+
+        List<PhraseBlock.PhraseHistory> history = checkNotNull(phraseBlock).history();
+        return new byte[42];
+
         //TODO: implement
-        throw new UnsupportedOperationException();
+/*        int[] wordTemplateOffsets = new int[wordTemplates.size()];
+        for (int i = 0; i < wordTemplates.size(); i++) {
+            PhraseTemplatesBlock.WordTemplate wordTemplate = wordTemplates.get(i);
+
+            int wordTemplateId = wordTemplate.wordTemplateId();
+            byte permissions = wordTemplate.permissions();
+            byte icon = wordTemplate.icon().code;
+            int minLength = wordTemplate.minLength();
+            int maxLength = wordTemplate.maxLength();
+
+            int wordTemplateNameOffset = builder.createString(wordTemplate.wordTemplateName());
+            int[] symbolSetIds = toIdArray(wordTemplate.symbolSetIds());
+            int symbolSetIdsOffset = com.phraser.schema.phraser.WordTemplate.createSymbolSetIdsVector(builder, symbolSetIds);
+
+            int wordTemplateOffset = com.phraser.schema.phraser.WordTemplate.createWordTemplate(builder,
+                    wordTemplateId, permissions, icon, minLength, maxLength, wordTemplateNameOffset, symbolSetIdsOffset);
+
+            wordTemplateOffsets[i] = wordTemplateOffset;
+        }
+
+        int wordTemplatesOffset =
+                com.phraser.schema.phraser.PhraseTemplatesBlock.createWordTemplatesVector(builder, wordTemplateOffsets);
+
+        // -----------------------------------------------------------------------
+
+        List<PhraseTemplatesBlock.PhraseTemplate> phraseTemplates =
+                checkNotNull(phraseTemplatesBlock).phraseTemplates();
+
+        int[] phraseTemplateOffsets = new int[phraseTemplates.size()];
+        for (int i = 0; i < phraseTemplates.size(); i++) {
+            PhraseTemplatesBlock.PhraseTemplate phraseTemplate = phraseTemplates.get(i);
+
+            int phraseTemplateId = phraseTemplate.phraseTemplateId();
+            int phraseTemplateNameOffset = builder.createString(phraseTemplate.phraseTemplateName());
+            int[] wordTemplateIds = toIdArray(phraseTemplate.wordTemplateIds());
+
+            int wordTemplateIdsOffset = com.phraser.schema.phraser.PhraseTemplate.createWordTemplateIdsVector(builder, wordTemplateIds);
+
+            int phraseTemplateOffset = com.phraser.schema.phraser.PhraseTemplate.createPhraseTemplate(builder,
+                    phraseTemplateId, phraseTemplateNameOffset, wordTemplateIdsOffset);
+
+            phraseTemplateOffsets[i] = phraseTemplateOffset;
+        }
+
+        int phraseTemplatesOffset =
+                com.phraser.schema.phraser.PhraseTemplatesBlock.createPhraseTemplatesVector(builder, phraseTemplateOffsets);
+
+        // -----------------------------------------------------------------------
+
+        com.phraser.schema.phraser.PhraseTemplatesBlock.startPhraseTemplatesBlock(builder);
+
+        int storeBlockOffset = com.phraser.schema.phraser.StoreBlock.createStoreBlock(builder,
+                storeBlock.blockId(), storeBlock.version(), storeBlock.entropy());
+
+        com.phraser.schema.phraser.PhraseTemplatesBlock.addBlock(builder, storeBlockOffset);
+        com.phraser.schema.phraser.PhraseTemplatesBlock.addPhraseTemplates(builder, phraseTemplatesOffset);
+        com.phraser.schema.phraser.PhraseTemplatesBlock.addWordTemplates(builder, wordTemplatesOffset);
+        int symbolSetsBlockOffset = com.phraser.schema.phraser.FoldersBlock.endFoldersBlock(builder);
+
+        builder.finish(symbolSetsBlockOffset);
+
+        return builder.sizedByteArray();*/
     }
 
     public static byte[] toKeyBlock(KeyBlock keyBlock) {

@@ -51,7 +51,8 @@ public class DbEncoder {
         fillRandomBytes(fullDataBytes, blockBytes.length + 3, fullDataBytes.length);
         reverseArray(fullDataBytes);
 
-        //calculate adler16
+        //TODO: the on-disk block structure has change since
+        //calculate adler32
         Adler32 adler32 = new Adler32();
         adler32.update(fullDataBytes);
         long checksum = adler32.getValue();

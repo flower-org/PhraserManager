@@ -470,15 +470,15 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
                                 }
                             }
                         } catch (Exception e) {
-                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding known server: " + e, ButtonType.OK);
-                            LOGGER.error("Error adding known server: ", e);
+                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error picking Symbol Set: " + e, ButtonType.OK);
+                            LOGGER.error("Error picking Symbol Set: ", e);
                             alert.showAndWait();
                         }
                     }
             );
         } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding known server: " + e, ButtonType.OK);
-            LOGGER.error("Error adding known server: ", e);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error picking Symbol Set: " + e, ButtonType.OK);
+            LOGGER.error("Error picking Symbol Set: ", e);
             alert.showAndWait();
         }
     }
@@ -490,8 +490,8 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
                 wordTemplateSymbolSets.remove(symbolSet);
             }
         } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding known server: " + e, ButtonType.OK);
-            LOGGER.error("Error adding known server: ", e);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error removing Symbol Set: " + e, ButtonType.OK);
+            LOGGER.error("Error removing Symbol Set: ", e);
             alert.showAndWait();
         }
     }

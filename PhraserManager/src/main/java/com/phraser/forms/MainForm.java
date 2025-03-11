@@ -3,6 +3,7 @@ package com.phraser.forms;
 import com.phraser.JavaFxUtils;
 import com.phraser.db.Block;
 import com.phraser.db.KeyBlock;
+import com.phraser.db.PhraseBlock;
 import com.phraser.db.PhraseTemplatesBlock;
 import com.phraser.db.SymbolSetsBlock;
 import com.phraser.db.FoldersBlock;
@@ -24,7 +25,7 @@ import static com.phraser.JavaFxUtils.YesNo.YES;
 
 public class MainForm {
     @Nullable Stage mainStage;
-    @FXML @Nullable Label serverInfoLabel;
+    @FXML @Nullable Label infoLabel;
     @FXML @Nullable TabPane tabs;
     int testFormCount = 0;
     int newDbCount = 0;
@@ -44,12 +45,12 @@ public class MainForm {
     }
 
     public void setStatusText(String text) {
-        checkNotNull(serverInfoLabel).setText(text);
+        checkNotNull(infoLabel).setText(text);
     }
 
     public void newDb() {
         boolean initDefaultConfig = false;
-        if (YES == JavaFxUtils.showYesNoDialog("Initialize default DB configuration?")) {
+        if (YES == JavaFxUtils.showYesNoDialog("New DB", "Initialize default DB configuration?")) {
             initDefaultConfig = true;
         }
 
@@ -100,6 +101,25 @@ public class MainForm {
                 phraserDB, phraseTemplatesBlockCallback);
         phraseTemplatesBlockForm.setStage(checkNotNull(mainStage));
         final Tab tab = new Tab("Phrase Templates Block", phraseTemplatesBlockForm);
+        tab.setClosable(true);
+
+        addTab(tab);
+        return tab;
+    }
+
+    public Tab openPhraseBlockForm(@Nullable Block phraseBlock, PhraserDB phraserDB,
+                                   Consumer<PhraseBlock> phraseTemplatesBlockCallback) {
+        PhraseBlockForm phraseBlockForm = new PhraseBlockForm(phraseBlock,
+                phraserDB, phraseTemplatesBlockCallback);
+        phraseBlockForm.setStage(checkNotNull(mainStage));
+        String phraseBlockTabName;
+        if (phraseBlock != null) {
+            phraseBlockTabName = "Phrase Block: " + checkNotNull(phraseBlock.phraseBlock()).phraseName();
+        } else {
+            phraseBlockTabName = "New Phrase Block";
+        }
+
+        final Tab tab = new Tab(phraseBlockTabName, phraseBlockForm);
         tab.setClosable(true);
 
         addTab(tab);

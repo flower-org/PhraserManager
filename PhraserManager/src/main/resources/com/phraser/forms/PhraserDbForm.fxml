@@ -17,7 +17,7 @@
                 <ToolBar AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <items>
                         <Button mnemonicParsing="false" onAction="#newBlockAction" text="New" />
-                        <Button mnemonicParsing="false" onAction="#updateBlockAction" text="Update" />
+                        <Button mnemonicParsing="false" onAction="#updateBlockAction" text="View/Update" />
                         <Separator orientation="VERTICAL" prefHeight="200.0" />
                         <Button mnemonicParsing="false" onAction="#defragmentDBAction" text="Defragment DB" />
                         <Separator orientation="VERTICAL" prefHeight="200.0" />

@@ -117,8 +117,8 @@ public class SymbolSetsBlockForm extends AnchorPane {
                                 addSymbolSetToList(symbolSet);
                             }
                         } catch (Exception e) {
-                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding known server: " + e, ButtonType.OK);
-                            LOGGER.error("Error adding known server: ", e);
+                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding Symbol Set: " + e, ButtonType.OK);
+                            LOGGER.error("Error adding Symbol Set: ", e);
                             alert.showAndWait();
                         }
 
@@ -126,8 +126,8 @@ public class SymbolSetsBlockForm extends AnchorPane {
                     }
             );
         } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding known server: " + e, ButtonType.OK);
-            LOGGER.error("Error adding known server: ", e);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding Symbol Set: " + e, ButtonType.OK);
+            LOGGER.error("Error adding Symbol Set: ", e);
             alert.showAndWait();
         }
     }
@@ -158,8 +158,8 @@ public class SymbolSetsBlockForm extends AnchorPane {
                                 symbolSets.set(selectedIndex, updatedSymbolSet);
                             }
                         } catch (Exception e) {
-                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding known server: " + e, ButtonType.OK);
-                            LOGGER.error("Error adding known server: ", e);
+                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error updating Symbol Set: " + e, ButtonType.OK);
+                            LOGGER.error("Error updating Symbol Set: ", e);
                             alert.showAndWait();
                         }
                         updateBlockSize();

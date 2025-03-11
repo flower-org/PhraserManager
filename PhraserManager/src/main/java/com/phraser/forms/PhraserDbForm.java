@@ -6,9 +6,11 @@ import com.phraser.db.BlockType;
 import com.phraser.db.FoldersBlock;
 import com.phraser.db.ImmutableFoldersBlock;
 import com.phraser.db.ImmutableKeyBlock;
+import com.phraser.db.ImmutablePhraseBlock;
 import com.phraser.db.ImmutablePhraseTemplatesBlock;
 import com.phraser.db.ImmutableSymbolSetsBlock;
 import com.phraser.db.KeyBlock;
+import com.phraser.db.PhraseBlock;
 import com.phraser.db.PhraserDB;
 import com.phraser.db.PhraseTemplatesBlock;
 import com.phraser.db.Block;
@@ -112,6 +114,8 @@ public class PhraserDbForm extends AnchorPane {
                                     openFoldersBlockForm();
                                 } else if (blockType == BlockType.PHRASE_TEMPLATES_BLOCK) {
                                     openPhraseTemplatesBlockForm();
+                                } else if (blockType == BlockType.PHRASE_BLOCK) {
+                                    newPhraseBlockForm();
                                 } else {
                                     Alert alert = new Alert(Alert.AlertType.ERROR, "Unsupported block type: " + blockType, ButtonType.OK);
                                     LOGGER.error("Unsupported block type: " + blockType);
@@ -119,15 +123,15 @@ public class PhraserDbForm extends AnchorPane {
                                 }
                             }
                         } catch (Exception e) {
-                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding known server: " + e, ButtonType.OK);
-                            LOGGER.error("Error adding known server: ", e);
+                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding Block: " + e, ButtonType.OK);
+                            LOGGER.error("Error adding Block: ", e);
                             alert.showAndWait();
                         }
                     }
             );
         } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding known server: " + e, ButtonType.OK);
-            LOGGER.error("Error adding known server: ", e);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding Block: " + e, ButtonType.OK);
+            LOGGER.error("Error adding Block: ", e);
             alert.showAndWait();
         }
     }
@@ -279,6 +283,37 @@ public class PhraserDbForm extends AnchorPane {
                         phraseTemplatesBlockTab = null;
                     });
         }
+    }
+
+    public void newPhraseBlockForm() {
+        openPhraseBlockForm(null);
+    }
+
+    public void openPhraseBlockForm(@Nullable Block existingPhraseBlock) {
+        phraseTemplatesBlockTab = mainForm.openPhraseBlockForm(existingPhraseBlock,
+            phraserDB,
+            phraseBlock -> {
+                int blockId;
+                long version = phraserDB.getNextVersion();
+                Block lastPhraseTemplatesBlock = phraserDB.getLastPhraseTemplatesBlock();
+                if (lastPhraseTemplatesBlock != null) {
+                    blockId = checkNotNull(lastPhraseTemplatesBlock.phraseTemplatesBlock()).blockId();
+                } else {
+                    blockId = phraserDB.getNextBlockId();
+                }
+
+                PhraseBlock blockWithVersionAndEntropy = ImmutablePhraseBlock.builder()
+                        .from(phraseBlock)
+                        .blockId(blockId)
+                        .version(version)
+                        .build();
+
+                Block block = Block.create(blockWithVersionAndEntropy);
+                addBlock(block);
+
+                checkNotNull(mainForm.getTabs()).getTabs().remove(phraseTemplatesBlockTab);
+                phraseTemplatesBlockTab = null;
+            });
     }
 
     public void updateBlockAction() {

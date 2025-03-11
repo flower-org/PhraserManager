@@ -1,7 +1,10 @@
 package com.phraser.db;
 
+import org.immutables.value.Value;
+
 import java.util.List;
 
+@Value.Immutable
 public interface PhraseBlock extends StoreBlock {
     interface Word {
         /** 16 bit */
