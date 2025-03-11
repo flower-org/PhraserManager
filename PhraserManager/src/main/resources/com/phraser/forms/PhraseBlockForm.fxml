@@ -114,14 +114,14 @@
                                              <CheckBox mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                                              <ToolBar prefHeight="40.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                                <items>
-                                                 <Button mnemonicParsing="false" text="..." />
-                                                   <TextField prefHeight="24.0" prefWidth="339.0" />
+                                                 <Button mnemonicParsing="false" onAction="#openFolder" text="..." />
+                                                   <TextField fx:id="folderTextField" editable="false" prefHeight="24.0" prefWidth="339.0" />
                                                </items>
                                              </ToolBar>
                                              <ToolBar prefHeight="40.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                                                <items>
-                                                 <Button mnemonicParsing="false" text="..." />
-                                                   <TextField prefHeight="24.0" prefWidth="339.0" />
+                                                 <Button mnemonicParsing="false" onAction="#openPhraseTemplate" text="..." />
+                                                   <TextField fx:id="phraseTemplateTextField" editable="false" prefHeight="24.0" prefWidth="339.0" />
                                                </items>
                                              </ToolBar>
                                           </children>
@@ -138,9 +138,9 @@
                                                             <children>
                                                                <ToolBar maxHeight="35.0" minHeight="35.0" prefHeight="35.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                                  <items>
-                                                                   <Button mnemonicParsing="false" text="New" />
-                                                               <Button mnemonicParsing="false" text="View/Update" />
-                                                                     <Button mnemonicParsing="false" text="Delete" />
+                                                                   <Button mnemonicParsing="false" onAction="#newPhraseHistory" text="New" />
+                                                               <Button mnemonicParsing="false" onAction="#updatePhraseHistory" text="View/Update" />
+                                                                     <Button mnemonicParsing="false" onAction="#deletePhraseHistory" text="Delete" />
                                                                  </items>
                                                                </ToolBar>
                                                             </children>
@@ -167,7 +167,7 @@
                                                                                     <children>
                                                                                        <TitledPane prefHeight="200.0" prefWidth="200.0" text="Words" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                                                           <content>
-                                                                                             <TableView prefHeight="200.0" prefWidth="200.0">
+                                                                                             <TableView fx:id="phraseHistoryWordsTableView" prefHeight="200.0" prefWidth="200.0">
                                                                                                <columns>
                                                                                                  <TableColumn prefWidth="75.0" text="C1" />
                                                                                                  <TableColumn prefWidth="75.0" text="C2" />

@@ -290,14 +290,37 @@ public class PhraserDbForm extends AnchorPane {
     }
 
     public void openPhraseBlockForm(@Nullable Block existingPhraseBlock) {
-        phraseTemplatesBlockTab = mainForm.openPhraseBlockForm(existingPhraseBlock,
+        String error = null;
+        Block foldersDbBlock = phraserDB.getLastFoldersBlock();
+        if (foldersDbBlock == null) {
+            error = "FoldersBlock not found, please create";
+        }
+        Block phraseTemplatesDbBlock = phraserDB.getLastPhraseTemplatesBlock();
+        if (phraseTemplatesDbBlock == null) {
+            error = "PhraseTemplatesBlock not found, please create";
+        }
+        Block symbolSetsBlock = phraserDB.getLastSymbolSetBlock();
+        if (symbolSetsBlock == null) {
+            error = "SymbolSetsBlock not found, please create";
+        }
+        if (error != null) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, error, ButtonType.OK);
+            LOGGER.error(error);
+            alert.showAndWait();
+            return;
+        }
+
+        //TODO: map of those tabs by phrase block id to switch to if already open
+        Tab phraseBlockTab = mainForm.openPhraseBlockForm(existingPhraseBlock,
+            checkNotNull(foldersDbBlock),
+            checkNotNull(phraseTemplatesDbBlock),
+            checkNotNull(symbolSetsBlock),
             phraserDB,
             phraseBlock -> {
                 int blockId;
                 long version = phraserDB.getNextVersion();
-                Block lastPhraseTemplatesBlock = phraserDB.getLastPhraseTemplatesBlock();
-                if (lastPhraseTemplatesBlock != null) {
-                    blockId = checkNotNull(lastPhraseTemplatesBlock.phraseTemplatesBlock()).blockId();
+                if (existingPhraseBlock != null) {
+                    blockId = checkNotNull(existingPhraseBlock.phraseTemplatesBlock()).blockId();
                 } else {
                     blockId = phraserDB.getNextBlockId();
                 }

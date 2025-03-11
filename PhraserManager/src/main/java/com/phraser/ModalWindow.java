@@ -27,6 +27,10 @@ public class ModalWindow {
     }
 
     public static Stage showModal(Window window, Function<Stage, Parent> rootFunction, String title, @Nullable StageStyle stageStyle) {
+        return showModal(window, rootFunction, title, stageStyle, false);
+    }
+
+    public static Stage showModal(Window window, Function<Stage, Parent> rootFunction, String title, @Nullable StageStyle stageStyle, boolean resizable) {
         Stage stage = new Stage();
         Parent root = rootFunction.apply(stage);
 
@@ -40,7 +44,7 @@ public class ModalWindow {
         }
 
         stage.initOwner(window);
-        stage.resizableProperty().set(false);
+        stage.resizableProperty().set(resizable);
         stage.show();
 
         return stage;
