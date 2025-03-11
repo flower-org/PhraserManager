@@ -43,7 +43,8 @@ public class DefaultDBCreator {
                 SymbolSetsBlock.SymbolSet.of(4, "Lowercase", "abcdefghijklmnopqrstuvwxyz".toCharArray()),
                 SymbolSetsBlock.SymbolSet.of(5, "Special", "%#!*^@$&".toCharArray()),
                 SymbolSetsBlock.SymbolSet.of(6, "Min special", "#!?".toCharArray()),
-                SymbolSetsBlock.SymbolSet.of(7, "Ext special", "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~".toCharArray())
+                SymbolSetsBlock.SymbolSet.of(7, "Ext special", "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~".toCharArray()),
+                SymbolSetsBlock.SymbolSet.of(8, "Space", " ".toCharArray())
         );
         SymbolSetsBlock storeSymbolSetsBlock = ImmutableSymbolSetsBlock.builder()
                 .blockId(2)
@@ -94,7 +95,7 @@ public class DefaultDBCreator {
                         0,
                         512,
                         "question",
-                        List.of()
+                        List.of()//empty since it's not generateable
                 ),
                 PhraseTemplatesBlock.WordTemplate.of(4,
                         getWordPermissions(true, true, true, true),
@@ -102,7 +103,23 @@ public class DefaultDBCreator {
                         24,
                         64,
                         "answer",
-                        List.of(1,2,7)
+                        List.of(1,2,8)
+                ),
+                PhraseTemplatesBlock.WordTemplate.of(5,
+                        getWordPermissions(true, false, true, false),
+                        Icon.KEY,
+                        24,
+                        64,
+                        "drive password",
+                        List.of(1,2,5)
+                ),
+                PhraseTemplatesBlock.WordTemplate.of(6,
+                        getWordPermissions(true, true, true, true),
+                        Icon.LOGIN,
+                        8,
+                        24,
+                        "generated login",
+                        List.of(1,2)
                 )
         );
 
@@ -111,8 +128,14 @@ public class DefaultDBCreator {
                         "Login/Pass",
                         List.of(1, 2)),
                 PhraseTemplatesBlock.PhraseTemplate.of(2,
+                        "OS/encrypted drive",
+                        List.of(1, 2, 5)),
+                PhraseTemplatesBlock.PhraseTemplate.of(3,
                         "3 Security questions",
-                        List.of(1, 2, 3, 4, 3, 4, 3, 4))
+                        List.of(1, 2, 3, 4, 3, 4, 3, 4)),
+                PhraseTemplatesBlock.PhraseTemplate.of(4,
+                        "Generated Login/Pass",
+                        List.of(6, 2))
         );
 
         PhraseTemplatesBlock storePhraseTemplatesBlock = ImmutablePhraseTemplatesBlock.builder()
