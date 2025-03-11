@@ -107,7 +107,7 @@ public class DefaultDBCreator {
                 ),
                 PhraseTemplatesBlock.WordTemplate.of(5,
                         getWordPermissions(true, false, true, false),
-                        Icon.KEY,
+                        Icon.LOCK,
                         24,
                         64,
                         "drive password",
