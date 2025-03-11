@@ -145,7 +145,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
             checkNotNull(versionTextField).setText(NEW_BLOCK);
         } else {
             checkNotNull(blockIdTextField).setText(Integer.toString(checkNotNull(phraseTemplatesBlock.phraseTemplatesBlock()).blockId()));
-            checkNotNull(versionTextField).setText(Integer.toString(checkNotNull(phraseTemplatesBlock.phraseTemplatesBlock()).version()));
+            checkNotNull(versionTextField).setText(Long.toString(checkNotNull(phraseTemplatesBlock.phraseTemplatesBlock()).version()));
         }
 
         this.phraserDB = phraserDB;

@@ -96,7 +96,7 @@ public class FoldersBlockForm extends AnchorPane {
         this.foldersBlock = foldersBlock;
         if (foldersBlock != null) {
             checkNotNull(blockIdTextField).textProperty().set(Integer.toString(foldersBlock.getBlockId()));
-            checkNotNull(versionTextField).textProperty().set(Integer.toString(foldersBlock.getVersion()));
+            checkNotNull(versionTextField).textProperty().set(Long.toString(foldersBlock.getVersion()));
 
             fillFolders(foldersBlock);
         } else {
@@ -163,6 +163,7 @@ public class FoldersBlockForm extends AnchorPane {
 
             for (FoldersBlock.Folder childFolder : childFolders) {
                 int childFolderId = childFolder.folderId();
+                maxFolderId = Math.max(maxFolderId, childFolderId);
                 String childFolderName = childFolder.folderName();
 
                 TreeItem<FolderStruct> childNode = new TreeItem<>(new FolderStruct(childFolderId, childFolderName));

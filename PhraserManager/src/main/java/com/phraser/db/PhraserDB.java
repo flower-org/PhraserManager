@@ -30,6 +30,7 @@ public class PhraserDB {
   final long bucketCount;
 
   int lastBlockId = 0;
+  long lastVersion = 0;
   int bucketCursor = 0;
 
   @Nullable Consumer<String> dbNameListener;
@@ -62,6 +63,7 @@ public class PhraserDB {
   public void addBlock(Block block) {
     lastBlockId = Math.max(lastBlockId, block.getBlockId());
     blocks[bucketCursor++] = block;
+    lastVersion = Math.max(lastVersion, block.getVersion());
 
     if (block.foldersBlock() != null) {
       com.phraser.db.FoldersBlock foldersBlock = block.foldersBlock();
@@ -158,5 +160,10 @@ public class PhraserDB {
   public int getNextBlockId() {
     lastBlockId++;
     return lastBlockId;
+  }
+
+  public long getNextVersion() {
+    lastVersion++;
+    return lastVersion;
   }
 }

@@ -8,7 +8,7 @@ public interface StoreBlock {
     int blockId();
 
     /** 32 bit */
-    int version();//32 bit
+    long version();//32 bit
 
     /** 64 bit */
     long entropy();//64 bit

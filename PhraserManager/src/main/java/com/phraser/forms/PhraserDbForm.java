@@ -146,11 +146,10 @@ public class PhraserDbForm extends AnchorPane {
             keyBlockTab = mainForm.openKeyBlockForm(existingKeyBlock, phraserDB,
                     keyBlock -> {
                         int blockId;
-                        int version = 1;
+                        long version = phraserDB.getNextVersion();
                         Block lastKeyBlock = phraserDB.getLastKeyBlock();
                         if (lastKeyBlock != null) {
                             blockId = checkNotNull(lastKeyBlock.keyBlock()).blockId();
-                            version = lastKeyBlock.keyBlock().version() + 1;
                         } else {
                             blockId = phraserDB.getNextBlockId();
                         }
@@ -184,11 +183,10 @@ public class PhraserDbForm extends AnchorPane {
             symbolSetsBlockTab = mainForm.openSymbolSetsBlockForm(existingSymbolSetBlock, phraserDB,
                     symbolSetsBlock -> {
                         int blockId;
-                        int version = 1;
+                        long version = phraserDB.getNextVersion();
                         Block lastSymbolSetsBlock = phraserDB.getLastSymbolSetBlock();
                         if (lastSymbolSetsBlock != null) {
                             blockId = checkNotNull(lastSymbolSetsBlock.symbolSetsBlock()).blockId();
-                            version = lastSymbolSetsBlock.symbolSetsBlock().version() + 1;
                         } else {
                             blockId = phraserDB.getNextBlockId();
                         }
@@ -222,11 +220,10 @@ public class PhraserDbForm extends AnchorPane {
             foldersBlockTab = mainForm.openFoldersBlockForm(existingFoldersBlock, phraserDB,
                     foldersBlock -> {
                         int blockId;
-                        int version = 1;
+                        long version = phraserDB.getNextVersion();
                         Block lastFoldersBlock = phraserDB.getLastFoldersBlock();
                         if (lastFoldersBlock != null) {
                             blockId = checkNotNull(lastFoldersBlock.foldersBlock()).blockId();
-                            version = lastFoldersBlock.foldersBlock().version() + 1;
                         } else {
                             blockId = phraserDB.getNextBlockId();
                         }
@@ -261,11 +258,10 @@ public class PhraserDbForm extends AnchorPane {
                     phraserDB,
                     phraseTemplatesBlock -> {
                         int blockId;
-                        int version = 1;
+                        long version = phraserDB.getNextVersion();
                         Block lastPhraseTemplatesBlock = phraserDB.getLastPhraseTemplatesBlock();
                         if (lastPhraseTemplatesBlock != null) {
                             blockId = checkNotNull(lastPhraseTemplatesBlock.phraseTemplatesBlock()).blockId();
-                            version = lastPhraseTemplatesBlock.phraseTemplatesBlock().version() + 1;
                         } else {
                             blockId = phraserDB.getNextBlockId();
                         }

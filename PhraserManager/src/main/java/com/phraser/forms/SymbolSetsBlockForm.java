@@ -61,7 +61,7 @@ public class SymbolSetsBlockForm extends AnchorPane {
         this.symbolSetsBlock = symbolSetsBlock;
         if (symbolSetsBlock != null) {
             checkNotNull(blockIdTextField).textProperty().set(Integer.toString(symbolSetsBlock.getBlockId()));
-            checkNotNull(versionTextField).textProperty().set(Integer.toString(symbolSetsBlock.getVersion()));
+            checkNotNull(versionTextField).textProperty().set(Long.toString(symbolSetsBlock.getVersion()));
             for (SymbolSetsBlock.SymbolSet symbolSet : checkNotNull(symbolSetsBlock.symbolSetsBlock()).symbolSets()) {
                 addSymbolSetToList(symbolSet);
             }

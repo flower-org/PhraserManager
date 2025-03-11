@@ -92,7 +92,7 @@ public class KeyBlockForm extends AnchorPane {
             checkNotNull(bucketCountTextField).textProperty().set("384");
         } else {
             checkNotNull(blockIdTextField).setText(Integer.toString(checkNotNull(keyBlock.keyBlock()).blockId()));
-            checkNotNull(versionTextField).setText(Integer.toString(checkNotNull(keyBlock.keyBlock()).version()));
+            checkNotNull(versionTextField).setText(Long.toString(checkNotNull(keyBlock.keyBlock()).version()));
             checkNotNull(dbNameTextField).setText(keyBlock.keyBlock().dbName());
             checkNotNull(bucketCountTextField).textProperty().set(Integer.toString(checkNotNull(keyBlock.keyBlock()).bucketCount()));
 

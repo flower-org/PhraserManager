@@ -79,7 +79,7 @@ public interface Block {
     return blockType();
   }
 
-  default int getVersion() {
+  default long getVersion() {
     return storeBlock().version();
   }
 
