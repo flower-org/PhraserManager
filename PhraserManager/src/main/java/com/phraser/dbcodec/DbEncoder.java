@@ -24,8 +24,8 @@ import static com.phraser.utils.PhraserUtils.reverseArray;
 
   /** 16 bytes - matches AES data block size, not AES key size * /
   byte[] iv();
-  /** 16 byte - adler checksum * /
-  int checksum();
+  /** 4 byte unsigned - Adler32 checksum * /
+  long checksum();
 */
 public class DbEncoder {
     static final SecureRandom SECURE_RANDOM = new SecureRandom();
