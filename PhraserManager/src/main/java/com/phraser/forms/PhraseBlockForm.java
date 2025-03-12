@@ -74,18 +74,13 @@ public class PhraseBlockForm extends AnchorPane {
         public final String wordName;
         public final String value;
 
-        public final boolean isGenerateable;
-        public final boolean isUserEditable;
         public final boolean isTypeable;
         public final boolean isViewable;
 
-        public UIWord(int wordId, String wordName, String value,
-                      boolean isGenerateable, boolean isUserEditable, boolean isTypeable, boolean isViewable) {
+        public UIWord(int wordId, String wordName, String value, boolean isTypeable, boolean isViewable) {
             this.wordId = wordId;
             this.wordName = wordName;
             this.value = value;
-            this.isGenerateable = isGenerateable;
-            this.isUserEditable = isUserEditable;
             this.isTypeable = isTypeable;
             this.isViewable = isViewable;
         }
@@ -127,6 +122,7 @@ public class PhraseBlockForm extends AnchorPane {
     final SymbolSetsBlock symbolSetsBlock;
 
     @Nullable PhraseTemplatesBlock.PhraseTemplate phraseTemplate;
+    @Nullable FoldersBlock.Folder folder;
 
     public PhraseBlockForm(@Nullable Block phraseBlock,
                             FoldersBlock foldersBlock,
@@ -208,7 +204,7 @@ public class PhraseBlockForm extends AnchorPane {
         updateBlockSize();
     }
 
-    void updateBlockSize() {
+    protected void updateBlockSize() {
         Block block = Block.create(formPhraseBlock(false));
 
         int bufferLength = BlockEncoder.toFlatBufBlock(block).length;
@@ -221,39 +217,14 @@ public class PhraseBlockForm extends AnchorPane {
 
     // ----------------------------------------------------------------------
 
-    PhraseBlock formPhraseBlock(boolean useRealEntropy) {
-        List<UIPhraseHistory> phraseHistoryList = new ArrayList<>(this.phraseHistoryList);
-
-        return ImmutablePhraseBlock.builder()
-                .blockId(phraseBlock == null ? -1 : phraseBlock.getBlockId())
-                .version(123)
-                .entropy(useRealEntropy ? PhraserUtils.generateEntropy() : 123L)
-
-                /*
-                TODO:
-                    .phraseTemplateId(int)
-                    .folderId(int)
-                    .isTombstone(boolean)
-                    .phraseName(String)
-                    .history(phraseHistoryList)
-                */
-
-                .phraseTemplateId(0)
-                .folderId(0)
-                .isTombstone(true)
-                .phraseName("String")
-
-                .build();
-    }
-
-    PhraseTemplatesBlock.WordTemplate getWordTemplate(int wordTemplateId) {
+    protected PhraseTemplatesBlock.WordTemplate getWordTemplate(int wordTemplateId) {
         return phraseTemplatesBlock.wordTemplates().stream()
                 .filter(word -> wordTemplateId == word.wordTemplateId())
                 .findFirst()
                 .get();
     }
 
-    List<char[]> getSymbolSets(PhraseTemplatesBlock.WordTemplate wordTemplate) {
+    protected List<char[]> getSymbolSets(PhraseTemplatesBlock.WordTemplate wordTemplate) {
         return wordTemplate.symbolSetIds().stream().map(
                 symbolSetId -> {
                     Optional<char[]> symbolSetOpt = symbolSetsBlock.symbolSets().stream()
@@ -396,25 +367,20 @@ public class PhraseBlockForm extends AnchorPane {
                                                     .findFirst();
 
                                     String wordName;
-                                    boolean isGenerateable, isUserEditable, isTypeable, isViewable;
+                                    boolean isTypeable, isViewable;
 
                                     if (wordTemplateOpt.isEmpty()) {
                                         wordName = "Unrecognized";
-                                        isGenerateable = false;
-                                        isUserEditable = false;
                                         isTypeable = false;
                                         isViewable = false;
                                     } else {
                                         PhraseTemplatesBlock.WordTemplate wordTemplate = wordTemplateOpt.get();
                                         wordName = wordTemplate.wordTemplateName();
-                                        isGenerateable = PhraseTemplatesBlock.isGenerateable(wordTemplate.permissions());
-                                        isUserEditable = PhraseTemplatesBlock.isUserEditable(wordTemplate.permissions());
                                         isTypeable = PhraseTemplatesBlock.isTypeable(wordTemplate.permissions());
                                         isViewable = PhraseTemplatesBlock.isViewable(wordTemplate.permissions());
                                     }
 
-                                    UIWord uiWord = new UIWord(wordId, wordName, value,
-                                            isGenerateable, isUserEditable, isTypeable, isViewable);
+                                    UIWord uiWord = new UIWord(wordId, wordName, value, isTypeable, isViewable);
                                     words.add(uiWord);
                                 }
                             }
@@ -474,31 +440,56 @@ public class PhraseBlockForm extends AnchorPane {
     }
 
     public void openFolder() {
-/*        try {
-            PickPhraseTemplateDialog pickPhraseTemplateDialog = new PickPhraseTemplateDialog(phraseTemplatesBlock.phraseTemplates());
+        try {
+            PickFolderDialog pickFolderDialog = new PickFolderDialog(foldersBlock.folders());
             Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
-                    stage -> { pickPhraseTemplateDialog.setStage(stage); return pickPhraseTemplateDialog; },
-                    "Pick Phrase Template");
+                    stage -> { pickFolderDialog.setStage(stage); return pickFolderDialog; },
+                    "Pick Folder");
 
             workspaceStage.setOnHidden(
                     ev -> {
                         try {
-                            PhraseTemplatesBlock.PhraseTemplate phraseTemplate = pickPhraseTemplateDialog.phraseTemplate;
-                            if (phraseTemplate != null) {
-                                this.phraseTemplate = phraseTemplate;
-                                checkNotNull(phraseTemplateTextField).textProperty().set(phraseTemplate.phraseTemplateName());
+                            PickFolderDialog.UIFolder folder = pickFolderDialog.getFolder();
+                            if (folder != null) {
+                                this.folder = folder.folder;
+                                checkNotNull(folderTextField).textProperty().set("[" + folder.getId() + "] " + folder.getPath());
                             }
                         } catch (Exception e) {
-                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error picking Symbol Set: " + e, ButtonType.OK);
-                            LOGGER.error("Error picking Symbol Set: ", e);
+                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error picking folder: " + e, ButtonType.OK);
+                            LOGGER.error("Error picking folder: ", e);
                             alert.showAndWait();
                         }
                     }
             );
         } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Error picking Symbol Set: " + e, ButtonType.OK);
-            LOGGER.error("Error picking Symbol Set: ", e);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error picking folder: " + e, ButtonType.OK);
+            LOGGER.error("Error picking folder: ", e);
             alert.showAndWait();
-        }*/
+        }
+    }
+
+    protected PhraseBlock formPhraseBlock(boolean useRealEntropy) {
+        List<UIPhraseHistory> phraseHistoryList = new ArrayList<>(this.phraseHistoryList);
+
+        return ImmutablePhraseBlock.builder()
+                .blockId(phraseBlock == null ? -1 : phraseBlock.getBlockId())
+                .version(123)
+                .entropy(useRealEntropy ? PhraserUtils.generateEntropy() : 123L)
+
+                /*
+                TODO:
+                    .phraseTemplateId(int)
+                    .folderId(int)
+                    .isTombstone(boolean)
+                    .phraseName(String)
+                    .history(phraseHistoryList)
+                */
+
+                .phraseTemplateId(0)
+                .folderId(0)
+                .isTombstone(true)
+                .phraseName("String")
+
+                .build();
     }
 }

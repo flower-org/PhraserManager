@@ -10,12 +10,12 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<?import javafx.scene.control.cell.PropertyValueFactory?>
 <fx:root prefHeight="700.0" prefWidth="810.0" type="AnchorPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <SplitPane dividerPositions="0.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
@@ -87,7 +87,7 @@
                                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                           </rowConstraints>
                                           <children>
-                                             <TextField fx:id="phraseTemplateIdTextField" editable="false" GridPane.columnIndex="1">
+                                             <TextField fx:id="phraseTemplateIdTextField" GridPane.columnIndex="1">
                                                 <GridPane.margin>
                                                    <Insets right="10.0" />
                                                 </GridPane.margin>
@@ -193,7 +193,7 @@
                                                                                                            <PropertyValueFactory property="value" />
                                                                                                        </cellValueFactory>
                                                                                                    </TableColumn>
-                                                                                                   <TableColumn fx:id="copyColumn"  minWidth="100.0" prefWidth="100.0" text="Copy" />
+                                                                                                   <TableColumn fx:id="copyColumn" minWidth="100.0" prefWidth="100.0" text="Copy" />
                                                                                                </columns>
                                                                                              </TableView>
                                                                                           </content>
