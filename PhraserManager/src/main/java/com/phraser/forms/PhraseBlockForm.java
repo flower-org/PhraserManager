@@ -492,4 +492,8 @@ public class PhraseBlockForm extends AnchorPane {
 
                 .build();
     }
+
+    public void saveToDb() {
+
+    }
 }
