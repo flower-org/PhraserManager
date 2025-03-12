@@ -23,4 +23,13 @@ public class HexTool {
         }
         return data;
     }
+
+    public static byte[] intToBytesBigEndian(int value) {
+        return new byte[] {
+                (byte) (value >> 24), // Most significant byte
+                (byte) (value >> 16),
+                (byte) (value >> 8),
+                (byte) value           // Least significant byte
+        };
+    }
 }

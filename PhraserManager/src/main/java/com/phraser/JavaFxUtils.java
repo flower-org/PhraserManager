@@ -117,10 +117,14 @@ public class JavaFxUtils {
         itemsBuilder.append(selectedItem == null || selectedItem.valueProperty().get() == null ? "" : selectedItem.valueProperty().get().toString());
       }
 
-      final ClipboardContent clipboardContent = new ClipboardContent();
-      clipboardContent.putString(itemsBuilder.toString());
-      Clipboard.getSystemClipboard().setContent(clipboardContent);
+      copyToClipboard(itemsBuilder.toString());
     }
+  }
+
+  public static void copyToClipboard(String text) {
+    final ClipboardContent clipboardContent = new ClipboardContent();
+    clipboardContent.putString(text);
+    Clipboard.getSystemClipboard().setContent(clipboardContent);
   }
 
   //TODO: unit test coverage

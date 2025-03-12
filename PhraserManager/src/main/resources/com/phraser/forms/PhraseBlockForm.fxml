@@ -15,6 +15,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <fx:root prefHeight="700.0" prefWidth="810.0" type="AnchorPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <SplitPane dividerPositions="0.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
@@ -153,8 +154,16 @@
                                                                         <children>
                                                                            <TableView fx:id="phraseHistoryTableView" layoutX="29.0" layoutY="6.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                                              <columns>
-                                                                               <TableColumn prefWidth="75.0" text="C1" />
-                                                                               <TableColumn prefWidth="75.0" text="C2" />
+                                                                                 <TableColumn minWidth="300.0" prefWidth="300.0" text="Phrase History order# (0 - newest)">
+                                                                                     <cellValueFactory>
+                                                                                         <PropertyValueFactory property="index" />
+                                                                                     </cellValueFactory>
+                                                                                 </TableColumn>
+                                                                                 <TableColumn minWidth="150.0" prefWidth="150.0" text="Ordinal">
+                                                                                     <cellValueFactory>
+                                                                                         <PropertyValueFactory property="ordinal" />
+                                                                                     </cellValueFactory>
+                                                                                 </TableColumn>
                                                                              </columns>
                                                                            </TableView>
                                                                         </children>
@@ -169,8 +178,22 @@
                                                                                           <content>
                                                                                              <TableView fx:id="phraseHistoryWordsTableView" prefHeight="200.0" prefWidth="200.0">
                                                                                                <columns>
-                                                                                                 <TableColumn prefWidth="75.0" text="C1" />
-                                                                                                 <TableColumn prefWidth="75.0" text="C2" />
+                                                                                                   <TableColumn minWidth="100.0" prefWidth="100.0" text="Word Id">
+                                                                                                       <cellValueFactory>
+                                                                                                           <PropertyValueFactory property="wordId" />
+                                                                                                       </cellValueFactory>
+                                                                                                   </TableColumn>
+                                                                                                   <TableColumn minWidth="150.0" prefWidth="150.0" text="Word Name">
+                                                                                                       <cellValueFactory>
+                                                                                                           <PropertyValueFactory property="wordName" />
+                                                                                                       </cellValueFactory>
+                                                                                                   </TableColumn>
+                                                                                                   <TableColumn minWidth="150.0" prefWidth="150.0" text="Word Value">
+                                                                                                       <cellValueFactory>
+                                                                                                           <PropertyValueFactory property="value" />
+                                                                                                       </cellValueFactory>
+                                                                                                   </TableColumn>
+                                                                                                   <TableColumn fx:id="copyColumn"  minWidth="100.0" prefWidth="100.0" text="Copy" />
                                                                                                </columns>
                                                                                              </TableView>
                                                                                           </content>

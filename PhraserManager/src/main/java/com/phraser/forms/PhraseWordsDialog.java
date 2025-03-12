@@ -31,11 +31,10 @@ public class PhraseWordsDialog extends VBox {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom(); // Single instance
 
     @Nullable Stage stage;
-
-    @Nullable
-    PhraseBlockForm.UIPhraseHistory phraseHistory;
+    @Nullable List<RetWord> phraseUpdate;
 
     public static class DialogWord {
+        public final int wordId;
         public final String name;
         public final String value;
         public final boolean isGenerateable;
@@ -49,11 +48,10 @@ public class PhraseWordsDialog extends VBox {
         public final int minLength;
         public final int maxLength;
 
-        @Nullable String newValue;
-
-        public DialogWord(String name, String value, int minLength, int maxLength,
+        public DialogWord(int wordId, String name, String value, int minLength, int maxLength,
                           boolean isUserEditable, boolean isGenerateable, boolean isViewable,
                           @Nullable List<char[]> symbolSets, boolean isIncompatible) {
+            this.wordId = wordId;
             this.name = name;
             this.value = value;
             this.isGenerateable = isGenerateable;
@@ -64,16 +62,21 @@ public class PhraseWordsDialog extends VBox {
             this.minLength = minLength;
             this.maxLength = maxLength;
         }
+    }
 
-        @Nullable
-        public String getNewValue() {
-            return newValue;
+    public static class RetWord {
+        public final int wordId;
+        public final String value;
+
+        public RetWord(int wordId, String value) {
+            this.wordId = wordId;
+            this.value = value;
         }
     }
 
     @Nullable
-    public PhraseBlockForm.UIPhraseHistory getPhraseHistory() {
-        return phraseHistory;
+    public List<RetWord> getPhraseUpdate() {
+        return phraseUpdate;
     }
 
     public void setStage(Stage stage) {
@@ -83,6 +86,7 @@ public class PhraseWordsDialog extends VBox {
     @FXML @Nullable GridPane wordsGridPane;
 
     final List<TextField> wordTextFields;
+    final List<DialogWord> words;
 
     public PhraseWordsDialog(List<DialogWord> words) {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("PhraseWordsDialog.fxml"));
@@ -95,6 +99,7 @@ public class PhraseWordsDialog extends VBox {
             throw new RuntimeException(exception);
         }
 
+        this.words = words;
         wordTextFields = new ArrayList<>();
         for (int row = 0; row < words.size(); row++) {
             DialogWord word = words.get(row);
@@ -143,8 +148,15 @@ public class PhraseWordsDialog extends VBox {
 
     public void okClose() {
         try {
-            //TODO: create phrase history
-            phraseHistory = null;
+            List<RetWord> newPhraseUpdate = new ArrayList<>();
+            for (int i = 0; i < words.size(); i++) {
+                DialogWord word = words.get(i);
+                TextField textField = wordTextFields.get(i);
+
+                newPhraseUpdate.add(new RetWord(word.wordId, textField.textProperty().get()));
+            }
+
+            phraseUpdate = newPhraseUpdate;
             checkNotNull(stage).close();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "PhraseWordsDialog close Error: " + e, ButtonType.OK);

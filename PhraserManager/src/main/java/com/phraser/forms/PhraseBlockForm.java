@@ -1,5 +1,6 @@
 package com.phraser.forms;
 
+import com.phraser.JavaFxUtils;
 import com.phraser.ModalWindow;
 import com.phraser.db.Block;
 import com.phraser.db.FoldersBlock;
@@ -15,19 +16,28 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -38,17 +48,24 @@ public class PhraseBlockForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraseBlockForm.class);
 
     public static class UIPhraseHistory {
-        /** 0 - newest history, actual value */
-        int index;
-        List<UIPhraseHistory> ownerList;
+        static AtomicInteger COUNTER = new AtomicInteger(0);
 
-        public UIPhraseHistory(int index, List<UIPhraseHistory> ownerList) {
-            this.index = index;
+        /** 0 - newest history, actual value */
+        final List<UIPhraseHistory> ownerList;
+        final List<UIWord> words;
+        final int ordinal = COUNTER.incrementAndGet();
+
+        public UIPhraseHistory(List<UIPhraseHistory> ownerList, List<UIWord> words) {
             this.ownerList = ownerList;
+            this.words = words;
         }
 
         public int getIndex() {
             return ownerList.indexOf(this);
+        }
+
+        public int getOrdinal() {
+            return ordinal;
         }
     }
 
@@ -73,11 +90,18 @@ public class PhraseBlockForm extends AnchorPane {
             this.isViewable = isViewable;
         }
 
+        public int getWordId() {
+            return wordId;
+        }
         public String getWordName() {
             return wordName;
         }
         public String getValue() {
-            return value;
+            if (isViewable) {
+                return value;
+            } else {
+                return "*****";
+            }
         }
     }
 
@@ -88,6 +112,7 @@ public class PhraseBlockForm extends AnchorPane {
     @FXML @Nullable TableView<UIWord> phraseHistoryWordsTableView;
     @FXML @Nullable TextField folderTextField;
     @FXML @Nullable TextField phraseTemplateTextField;
+    @FXML @Nullable TableColumn<UIWord, String> copyColumn;
 
     ObservableList<UIPhraseHistory> phraseHistoryList;
     ObservableList<UIWord> phraseHistoryWordList;
@@ -141,6 +166,43 @@ public class PhraseBlockForm extends AnchorPane {
         this.phraseHistoryWordList = FXCollections.observableArrayList();
         checkNotNull(phraseHistoryWordsTableView).itemsProperty().set(phraseHistoryWordList);
 
+        phraseHistoryTableView.getSelectionModel().selectedItemProperty().addListener(
+                (obs, oldSelection, newSelection) -> {
+                    phraseHistoryWordList.clear();
+                    if (newSelection != null) {
+                        phraseHistoryWordList.addAll(newSelection.words);
+                    }
+        });
+
+        checkNotNull(copyColumn).setCellFactory(new Callback<>() {
+            @Override
+            public TableCell<UIWord, String> call(TableColumn<UIWord, String> tableColumn) {
+                return new TableCell<>() {
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        int index = getIndex();
+                        List<UIWord> items = getTableView().getItems();
+                        if (index >= 0 && index < items.size()) {
+                            UIWord message = items.get(index);
+                            if (message.isTypeable) {
+                                setGraphic(getButton(message));
+                                return;
+                            }
+                        }
+                        setGraphic(null);
+                    }
+
+                    private Button getButton(UIWord message) {
+                        Button button = new Button("Copy");
+                        button.setOnAction(event -> {
+                            JavaFxUtils.copyToClipboard(message.value);
+                        });
+                        return button;
+                    }
+                };
+            }
+        });
+
         // TODO: Init Form from phraseBlock
 
         updateBlockSize();
@@ -184,6 +246,25 @@ public class PhraseBlockForm extends AnchorPane {
                 .build();
     }
 
+    PhraseTemplatesBlock.WordTemplate getWordTemplate(int wordTemplateId) {
+        return phraseTemplatesBlock.wordTemplates().stream()
+                .filter(word -> wordTemplateId == word.wordTemplateId())
+                .findFirst()
+                .get();
+    }
+
+    List<char[]> getSymbolSets(PhraseTemplatesBlock.WordTemplate wordTemplate) {
+        return wordTemplate.symbolSetIds().stream().map(
+                symbolSetId -> {
+                    Optional<char[]> symbolSetOpt = symbolSetsBlock.symbolSets().stream()
+                            .filter(symbolSet -> symbolSetId == symbolSet.symbolSetId() )
+                            .map(SymbolSetsBlock.SymbolSet::symbolSet)
+                            .findFirst();
+                    return symbolSetOpt.get();
+                }
+        ).toList();
+    }
+
     public void newPhraseHistory() {
         try {
             if (phraseTemplate == null) {
@@ -193,81 +274,174 @@ public class PhraseBlockForm extends AnchorPane {
                 return;
             }
 
-            phraseTemplatesBlock.wordTemplates();
             List<DialogWord> dialogWords = phraseTemplate.wordTemplateIds().stream()
                     .map(
                     wordTemplateId -> {
-                        Optional<PhraseTemplatesBlock.WordTemplate> wordTemplateOpt = phraseTemplatesBlock.wordTemplates().stream()
-                                .filter(word -> wordTemplateId.equals(word.wordTemplateId()))
-                                .findFirst();
-                        PhraseTemplatesBlock.WordTemplate wordTemplate = checkNotNull(wordTemplateOpt).get();
-                        List<char[]> symbolSets = wordTemplate.symbolSetIds().stream().map(
-                                symbolSetId -> {
-                                    Optional<char[]> symbolSetOpt = symbolSetsBlock.symbolSets().stream()
-                                        .filter(symbolSet -> symbolSetId == symbolSet.symbolSetId() )
-                                        .map(SymbolSetsBlock.SymbolSet::symbolSet)
-                                        .findFirst();
-                                    return symbolSetOpt.get();
-                                }
-                        ).toList();
-
-                        return new DialogWord(wordTemplate.getName(),
+                        PhraseTemplatesBlock.WordTemplate wordTemplate = getWordTemplate(wordTemplateId);
+                        return new DialogWord(wordTemplate.getId(),
+                                wordTemplate.getName(),
                                 "",
                                 wordTemplate.minLength(),
                                 wordTemplate.maxLength(),
                                 PhraseTemplatesBlock.isUserEditable(wordTemplate.permissions()),
                                 PhraseTemplatesBlock.isGenerateable(wordTemplate.permissions()),
                                 PhraseTemplatesBlock.isViewable(wordTemplate.permissions()),
-                                symbolSets,
+                                getSymbolSets(wordTemplate),
                                 false
                             );
                     }
             ).toList();
 
-            //TODO: remove test
-            /*dialogWords = List.of(
-                    new DialogWord("login", "hello", 10, 10, true, false, true, null, false),
-                    new DialogWord("password", "world", 10, 10, false, true, false,
-                            List.of("qwertyuiopasdfghjklzxcvbnm1234567890".toCharArray()), false),
-                    new DialogWord("unknown", "incompatible", 10, 10, true, true, false, null, true),
-                    new DialogWord("new", "wow", 10, 10, false, true, true, List.of("qwertyuiopasdfghjklzxcvbnm1234567890".toCharArray()), false),
-                    new DialogWord("2new", "2wow", 10, 10, true, true, false, List.of("qwertyuiopasdfghjklzxcvbnm1234567890".toCharArray()), false)
-            );*/
-
-            PhraseWordsDialog phraseWordsDialog = new PhraseWordsDialog(dialogWords);
-            Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
-                    stage -> { phraseWordsDialog.setStage(stage); return phraseWordsDialog; },
-                    "Phrase",
-                    null,
-                    true);
-
-            workspaceStage.setOnHidden(
-                    ev -> {
-                        try {
-                            UIPhraseHistory phraseHistory = phraseWordsDialog.getPhraseHistory();
-                            if (phraseHistory != null) {
-                                phraseHistoryList.add(phraseHistory);
-                            }
-                        } catch (Exception e) {
-                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error picking Symbol Set: " + e, ButtonType.OK);
-                            LOGGER.error("Error picking Symbol Set: ", e);
-                            alert.showAndWait();
-                        }
-                    }
-            );
+            showPhraseWordsDialog(dialogWords);
         } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Error picking Symbol Set: " + e, ButtonType.OK);
-            LOGGER.error("Error picking Symbol Set: ", e);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding Phrase History: " + e, ButtonType.OK);
+            LOGGER.error("Error adding Phrase History: ", e);
             alert.showAndWait();
         }
     }
 
     public void updatePhraseHistory() {
-        //
+        try {
+            UIPhraseHistory selectedItem = checkNotNull(phraseHistoryTableView).getSelectionModel().selectedItemProperty().get();
+            if (selectedItem == null) {
+                return;
+            }
+
+            if (phraseTemplate == null) {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Phrase Template not chosen, please choose.", ButtonType.OK);
+                LOGGER.error("Phrase Template not chosen");
+                alert.showAndWait();
+                return;
+            }
+
+            Map<Integer, Queue<DialogWord>> existingWords = new HashMap<>();
+            for (UIWord word : selectedItem.words) {
+                Queue<DialogWord> queue = existingWords.computeIfAbsent(word.wordId, k -> new ArrayDeque<>());
+
+                PhraseTemplatesBlock.WordTemplate wordTemplate = getWordTemplate(word.wordId);
+                DialogWord dialogWord = new DialogWord(word.wordId,
+                        word.wordName,
+                        word.value,
+                        wordTemplate.minLength(),
+                        wordTemplate.maxLength(),
+                        PhraseTemplatesBlock.isUserEditable(wordTemplate.permissions()),
+                        PhraseTemplatesBlock.isGenerateable(wordTemplate.permissions()),
+                        PhraseTemplatesBlock.isViewable(wordTemplate.permissions()),
+                        getSymbolSets(wordTemplate),
+                        !checkNotNull(phraseTemplate).wordTemplateIds().contains(word.wordId));
+
+                queue.add(dialogWord);
+            }
+
+            List<DialogWord> dialogWords = new ArrayList<>();
+            List<Integer> wordTemplateIds = phraseTemplate.wordTemplateIds();
+            for (int wordTemplateId : wordTemplateIds) {
+                PhraseTemplatesBlock.WordTemplate wordTemplate = getWordTemplate(wordTemplateId);
+                DialogWord dialogWord;
+                Queue<DialogWord> dialogWordQueue = existingWords.get(wordTemplateId);
+                if (dialogWordQueue != null && !dialogWordQueue.isEmpty()) {
+                    dialogWord = dialogWordQueue.poll();
+                } else {
+                    dialogWord = new DialogWord(wordTemplate.getId(),
+                            wordTemplate.getName(),
+                            "",
+                            wordTemplate.minLength(),
+                            wordTemplate.maxLength(),
+                            PhraseTemplatesBlock.isUserEditable(wordTemplate.permissions()),
+                            PhraseTemplatesBlock.isGenerateable(wordTemplate.permissions()),
+                            PhraseTemplatesBlock.isViewable(wordTemplate.permissions()),
+                            getSymbolSets(wordTemplate),
+                            false
+                    );
+                }
+                dialogWords.add(dialogWord);
+            }
+
+            for (Queue<DialogWord> dialogWordQueue : existingWords.values()) {
+                while (!dialogWordQueue.isEmpty()) {
+                    dialogWords.add(dialogWordQueue.poll());
+                }
+            }
+
+            showPhraseWordsDialog(dialogWords);
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding Phrase History: " + e, ButtonType.OK);
+            LOGGER.error("Error adding Phrase History: ", e);
+            alert.showAndWait();
+        }
+    }
+
+    protected void showPhraseWordsDialog(List<DialogWord> dialogWords) {
+        PhraseWordsDialog phraseWordsDialog = new PhraseWordsDialog(dialogWords);
+        Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
+                stage -> { phraseWordsDialog.setStage(stage); return phraseWordsDialog; },
+                "Phrase",
+                null,
+                true);
+
+        workspaceStage.setOnHidden(
+                ev -> {
+                    try {
+                        List<PhraseWordsDialog.RetWord> phraseUpdate = phraseWordsDialog.getPhraseUpdate();
+                        if (phraseUpdate != null) {
+                            List<UIWord> words = new ArrayList<>();
+                            for (PhraseWordsDialog.RetWord retWord : phraseUpdate) {
+                                int wordId = retWord.wordId;
+                                if (checkNotNull(phraseTemplate).wordTemplateIds().contains(wordId)) {
+                                    String value = retWord.value;
+
+                                    Optional<PhraseTemplatesBlock.WordTemplate> wordTemplateOpt =
+                                            phraseTemplatesBlock.wordTemplates().stream()
+                                                    .filter(w -> w.wordTemplateId() == wordId)
+                                                    .findFirst();
+
+                                    String wordName;
+                                    boolean isGenerateable, isUserEditable, isTypeable, isViewable;
+
+                                    if (wordTemplateOpt.isEmpty()) {
+                                        wordName = "Unrecognized";
+                                        isGenerateable = false;
+                                        isUserEditable = false;
+                                        isTypeable = false;
+                                        isViewable = false;
+                                    } else {
+                                        PhraseTemplatesBlock.WordTemplate wordTemplate = wordTemplateOpt.get();
+                                        wordName = wordTemplate.wordTemplateName();
+                                        isGenerateable = PhraseTemplatesBlock.isGenerateable(wordTemplate.permissions());
+                                        isUserEditable = PhraseTemplatesBlock.isUserEditable(wordTemplate.permissions());
+                                        isTypeable = PhraseTemplatesBlock.isTypeable(wordTemplate.permissions());
+                                        isViewable = PhraseTemplatesBlock.isViewable(wordTemplate.permissions());
+                                    }
+
+                                    UIWord uiWord = new UIWord(wordId, wordName, value,
+                                            isGenerateable, isUserEditable, isTypeable, isViewable);
+                                    words.add(uiWord);
+                                }
+                            }
+
+                            UIPhraseHistory phraseHistory = new UIPhraseHistory(phraseHistoryList, words);
+                            phraseHistoryList.add(0, phraseHistory);
+                        }
+                    } catch (Exception e) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding Phrase History: " + e, ButtonType.OK);
+                        LOGGER.error("Error adding Phrase History: ", e);
+                        alert.showAndWait();
+                    }
+                }
+        );
     }
 
     public void deletePhraseHistory() {
-        //
+        try {
+            UIPhraseHistory item = checkNotNull(phraseHistoryTableView).getSelectionModel().getSelectedItem();
+            if (item != null) {
+                phraseHistoryList.remove(item);
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error removing Phrase History: " + e, ButtonType.OK);
+            LOGGER.error("Error removing Phrase History: ", e);
+            alert.showAndWait();
+        }
     }
 
     public void openPhraseTemplate() {
