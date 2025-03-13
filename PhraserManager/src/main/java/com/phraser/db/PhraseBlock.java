@@ -6,12 +6,17 @@ import java.util.List;
 
 @Value.Immutable
 public interface PhraseBlock extends StoreBlock {
+    @Value.Immutable
     interface Word {
         /** 16 bit */
         int wordTemplateId();
+        String name();
         String word();
+        byte permissions();
+        Icon icon(); //standard icon code
     }
 
+    @Value.Immutable
     interface PhraseHistory {
         /** 16 bit */
         int phraseTemplateId();

@@ -18,6 +18,17 @@ import java.util.List;
 import static com.phraser.db.PhraseTemplatesBlock.getWordPermissions;
 
 public class DefaultDBCreator {
+    public static final char[] DIGITS = "0123456789".toCharArray();
+    public static final char[] LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();
+    public static final char[] UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    public static final char[] LOWERCASE = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+    public static final char[] SPECIAL = "%#!*^@$&".toCharArray();
+    public static final char[] MIN_SPECIAL = "#!?".toCharArray();
+    public static final char[] EXT_SPECIAL = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~".toCharArray();
+    public static final char[] SPACE = " ".toCharArray();
+
+    public static final List<char[]> DEFAULT_SYMBOL_SETS = List.of(DIGITS, LETTERS, MIN_SPECIAL);
+
     static List<Block> initDefaultBlockConfig(String dbName) {
         // 1. KeyBlock
         int bucketCount = 256;
@@ -37,15 +48,16 @@ public class DefaultDBCreator {
 
         // 2. SymbolSetsBlock
         List<SymbolSetsBlock.SymbolSet> symbolSets = List.of(
-                SymbolSetsBlock.SymbolSet.of(1, "Digits", "0123456789".toCharArray()),
-                SymbolSetsBlock.SymbolSet.of(2, "Letters", "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray()),
-                SymbolSetsBlock.SymbolSet.of(3, "Uppercase", "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray()),
-                SymbolSetsBlock.SymbolSet.of(4, "Lowercase", "abcdefghijklmnopqrstuvwxyz".toCharArray()),
-                SymbolSetsBlock.SymbolSet.of(5, "Special", "%#!*^@$&".toCharArray()),
-                SymbolSetsBlock.SymbolSet.of(6, "Min special", "#!?".toCharArray()),
-                SymbolSetsBlock.SymbolSet.of(7, "Ext special", "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~".toCharArray()),
-                SymbolSetsBlock.SymbolSet.of(8, "Space", " ".toCharArray())
+                SymbolSetsBlock.SymbolSet.of(1, "Digits", DIGITS),
+                SymbolSetsBlock.SymbolSet.of(2, "Letters", LETTERS),
+                SymbolSetsBlock.SymbolSet.of(3, "Uppercase", UPPERCASE),
+                SymbolSetsBlock.SymbolSet.of(4, "Lowercase", LOWERCASE),
+                SymbolSetsBlock.SymbolSet.of(5, "Special", SPECIAL),
+                SymbolSetsBlock.SymbolSet.of(6, "Min special", MIN_SPECIAL),
+                SymbolSetsBlock.SymbolSet.of(7, "Ext special", EXT_SPECIAL),
+                SymbolSetsBlock.SymbolSet.of(8, "Space", SPACE)
         );
+
         SymbolSetsBlock storeSymbolSetsBlock = ImmutableSymbolSetsBlock.builder()
                 .blockId(2)
                 .version(2)

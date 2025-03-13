@@ -94,7 +94,7 @@
                                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                           </rowConstraints>
                                           <children>
-                                             <TextField fx:id="phraseTemplateIdTextField" GridPane.columnIndex="1">
+                                             <TextField fx:id="phraseNameTextField" onKeyPressed="#phraseNameChanged" onKeyTyped="#phraseNameChanged" GridPane.columnIndex="1">
                                                 <GridPane.margin>
                                                    <Insets right="10.0" />
                                                 </GridPane.margin>
@@ -119,7 +119,7 @@
                                                    <Insets left="10.0" />
                                                 </GridPane.margin>
                                              </Label>
-                                             <CheckBox mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                             <CheckBox fx:id="isTombstoneCheckBox" mnemonicParsing="false" onAction="#isTombstoneChanged" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                                              <ToolBar prefHeight="40.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                                <items>
                                                  <Button mnemonicParsing="false" onAction="#openFolder" text="..." />
@@ -185,9 +185,9 @@
                                                                                           <content>
                                                                                              <TableView fx:id="phraseHistoryWordsTableView" prefHeight="200.0" prefWidth="200.0">
                                                                                                <columns>
-                                                                                                   <TableColumn minWidth="100.0" prefWidth="100.0" text="Word Id">
+                                                                                                   <TableColumn minWidth="150.0" prefWidth="150.0" text="Word Template Id">
                                                                                                        <cellValueFactory>
-                                                                                                           <PropertyValueFactory property="wordId" />
+                                                                                                           <PropertyValueFactory property="wordTemplateId" />
                                                                                                        </cellValueFactory>
                                                                                                    </TableColumn>
                                                                                                    <TableColumn minWidth="150.0" prefWidth="150.0" text="Word Name">

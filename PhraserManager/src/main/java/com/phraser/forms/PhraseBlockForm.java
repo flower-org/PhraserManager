@@ -4,7 +4,10 @@ import com.phraser.JavaFxUtils;
 import com.phraser.ModalWindow;
 import com.phraser.db.Block;
 import com.phraser.db.FoldersBlock;
+import com.phraser.db.Icon;
 import com.phraser.db.ImmutablePhraseBlock;
+import com.phraser.db.ImmutablePhraseHistory;
+import com.phraser.db.ImmutableWord;
 import com.phraser.db.PhraseBlock;
 import com.phraser.db.PhraseTemplatesBlock;
 import com.phraser.db.PhraserDB;
@@ -18,6 +21,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -25,6 +29,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,12 +40,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.phraser.db.Block.DATA_BLOCK_SIZE;
+import static com.phraser.forms.DefaultDBCreator.DEFAULT_SYMBOL_SETS;
 import static com.phraser.forms.PhraserDbForm.NEW_BLOCK;
 import static com.phraser.forms.PhraseWordsDialog.DialogWord;
 
@@ -51,11 +59,13 @@ public class PhraseBlockForm extends AnchorPane {
         static AtomicInteger COUNTER = new AtomicInteger(0);
 
         /** 0 - newest history, actual value */
+        final int phraseTemplateId;
         final List<UIPhraseHistory> ownerList;
         final List<UIWord> words;
         final int ordinal = COUNTER.incrementAndGet();
 
-        public UIPhraseHistory(List<UIPhraseHistory> ownerList, List<UIWord> words) {
+        public UIPhraseHistory(int phraseTemplateId, List<UIPhraseHistory> ownerList, List<UIWord> words) {
+            this.phraseTemplateId = phraseTemplateId;
             this.ownerList = ownerList;
             this.words = words;
         }
@@ -70,23 +80,28 @@ public class PhraseBlockForm extends AnchorPane {
     }
 
     public static class UIWord {
-        public final int wordId;
+        public final int wordTemplateId;
         public final String wordName;
         public final String value;
+        public final byte permissions;
 
         public final boolean isTypeable;
         public final boolean isViewable;
+        public final Icon icon;
 
-        public UIWord(int wordId, String wordName, String value, boolean isTypeable, boolean isViewable) {
-            this.wordId = wordId;
+        public UIWord(int wordTemplateId, String wordName, String value, byte permissions,
+                      boolean isTypeable, boolean isViewable, Icon icon) {
+            this.wordTemplateId = wordTemplateId;
             this.wordName = wordName;
             this.value = value;
+            this.permissions = permissions;
             this.isTypeable = isTypeable;
             this.isViewable = isViewable;
+            this.icon = icon;
         }
 
-        public int getWordId() {
-            return wordId;
+        public int getWordTemplateId() {
+            return wordTemplateId;
         }
         public String getWordName() {
             return wordName;
@@ -105,8 +120,10 @@ public class PhraseBlockForm extends AnchorPane {
     @FXML @Nullable TextField blockSizeTextField;
     @FXML @Nullable TableView<UIPhraseHistory> phraseHistoryTableView;
     @FXML @Nullable TableView<UIWord> phraseHistoryWordsTableView;
+    @FXML @Nullable TextField phraseNameTextField;
     @FXML @Nullable TextField folderTextField;
     @FXML @Nullable TextField phraseTemplateTextField;
+    @FXML @Nullable CheckBox isTombstoneCheckBox;
     @FXML @Nullable TableColumn<UIWord, String> copyColumn;
 
     ObservableList<UIPhraseHistory> phraseHistoryList;
@@ -217,23 +234,31 @@ public class PhraseBlockForm extends AnchorPane {
 
     // ----------------------------------------------------------------------
 
-    protected PhraseTemplatesBlock.WordTemplate getWordTemplate(int wordTemplateId) {
+    protected Optional<PhraseTemplatesBlock.WordTemplate> getWordTemplateOpt(int wordTemplateId) {
         return phraseTemplatesBlock.wordTemplates().stream()
                 .filter(word -> wordTemplateId == word.wordTemplateId())
-                .findFirst()
-                .get();
+                .findFirst();
+    }
+
+    protected PhraseTemplatesBlock.WordTemplate getWordTemplate(int wordTemplateId) throws NoSuchElementException {
+        return getWordTemplateOpt(wordTemplateId).get();
     }
 
     protected List<char[]> getSymbolSets(PhraseTemplatesBlock.WordTemplate wordTemplate) {
-        return wordTemplate.symbolSetIds().stream().map(
+        List<char[]> symbolSets = wordTemplate.symbolSetIds().stream().map(
                 symbolSetId -> {
                     Optional<char[]> symbolSetOpt = symbolSetsBlock.symbolSets().stream()
                             .filter(symbolSet -> symbolSetId == symbolSet.symbolSetId() )
                             .map(SymbolSetsBlock.SymbolSet::symbolSet)
                             .findFirst();
-                    return symbolSetOpt.get();
+                    return symbolSetOpt.orElseGet(() -> new char[]{});
                 }
-        ).toList();
+        ).filter(ss -> ss.length > 0)
+        .toList();
+
+        if (symbolSets.isEmpty()) { symbolSets = DEFAULT_SYMBOL_SETS; }
+
+        return symbolSets;
     }
 
     public void newPhraseHistory() {
@@ -263,7 +288,7 @@ public class PhraseBlockForm extends AnchorPane {
                     }
             ).toList();
 
-            showPhraseWordsDialog(dialogWords);
+            showPhraseWordsDialog(phraseTemplate.phraseTemplateId(), dialogWords);
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding Phrase History: " + e, ButtonType.OK);
             LOGGER.error("Error adding Phrase History: ", e);
@@ -287,19 +312,34 @@ public class PhraseBlockForm extends AnchorPane {
 
             Map<Integer, Queue<DialogWord>> existingWords = new HashMap<>();
             for (UIWord word : selectedItem.words) {
-                Queue<DialogWord> queue = existingWords.computeIfAbsent(word.wordId, k -> new ArrayDeque<>());
+                Queue<DialogWord> queue = existingWords.computeIfAbsent(word.wordTemplateId, k -> new ArrayDeque<>());
 
-                PhraseTemplatesBlock.WordTemplate wordTemplate = getWordTemplate(word.wordId);
-                DialogWord dialogWord = new DialogWord(word.wordId,
+                Optional<PhraseTemplatesBlock.WordTemplate> wordTemplateOpt = getWordTemplateOpt(word.wordTemplateId);
+
+                int minLength;
+                int maxLength;
+                List<char[]> symbolSets;
+                if (wordTemplateOpt.isEmpty()) {
+                    minLength = 0;
+                    maxLength = 512;
+                    symbolSets = DEFAULT_SYMBOL_SETS;
+                } else {
+                    PhraseTemplatesBlock.WordTemplate wordTemplate = wordTemplateOpt.get();
+                    minLength = wordTemplate.minLength();
+                    maxLength = wordTemplate.maxLength();
+                    symbolSets = getSymbolSets(wordTemplate);
+                }
+
+                DialogWord dialogWord = new DialogWord(word.wordTemplateId,
                         word.wordName,
                         word.value,
-                        wordTemplate.minLength(),
-                        wordTemplate.maxLength(),
-                        PhraseTemplatesBlock.isUserEditable(wordTemplate.permissions()),
-                        PhraseTemplatesBlock.isGenerateable(wordTemplate.permissions()),
-                        PhraseTemplatesBlock.isViewable(wordTemplate.permissions()),
-                        getSymbolSets(wordTemplate),
-                        !checkNotNull(phraseTemplate).wordTemplateIds().contains(word.wordId));
+                        minLength,
+                        maxLength,
+                        PhraseTemplatesBlock.isUserEditable(word.permissions),
+                        PhraseTemplatesBlock.isGenerateable(word.permissions),
+                        PhraseTemplatesBlock.isViewable(word.permissions),
+                        symbolSets,
+                        !checkNotNull(phraseTemplate).wordTemplateIds().contains(word.wordTemplateId));
 
                 queue.add(dialogWord);
             }
@@ -334,7 +374,7 @@ public class PhraseBlockForm extends AnchorPane {
                 }
             }
 
-            showPhraseWordsDialog(dialogWords);
+            showPhraseWordsDialog(phraseTemplate.phraseTemplateId(), dialogWords);
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding Phrase History: " + e, ButtonType.OK);
             LOGGER.error("Error adding Phrase History: ", e);
@@ -342,7 +382,7 @@ public class PhraseBlockForm extends AnchorPane {
         }
     }
 
-    protected void showPhraseWordsDialog(List<DialogWord> dialogWords) {
+    protected void showPhraseWordsDialog(int phraseTemplateId, List<DialogWord> dialogWords) {
         PhraseWordsDialog phraseWordsDialog = new PhraseWordsDialog(dialogWords);
         Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
                 stage -> { phraseWordsDialog.setStage(stage); return phraseWordsDialog; },
@@ -368,26 +408,33 @@ public class PhraseBlockForm extends AnchorPane {
 
                                     String wordName;
                                     boolean isTypeable, isViewable;
+                                    byte permissions;
+                                    Icon icon;
 
                                     if (wordTemplateOpt.isEmpty()) {
                                         wordName = "Unrecognized";
                                         isTypeable = false;
                                         isViewable = false;
+                                        permissions = (byte)0xFF;
+                                        icon = Icon.QUESTION;
                                     } else {
                                         PhraseTemplatesBlock.WordTemplate wordTemplate = wordTemplateOpt.get();
                                         wordName = wordTemplate.wordTemplateName();
                                         isTypeable = PhraseTemplatesBlock.isTypeable(wordTemplate.permissions());
                                         isViewable = PhraseTemplatesBlock.isViewable(wordTemplate.permissions());
+                                        permissions = wordTemplate.permissions();
+                                        icon = wordTemplate.icon();
                                     }
 
-                                    UIWord uiWord = new UIWord(wordId, wordName, value, isTypeable, isViewable);
+                                    UIWord uiWord = new UIWord(wordId, wordName, value, permissions, isTypeable, isViewable, icon);
                                     words.add(uiWord);
                                 }
                             }
 
-                            UIPhraseHistory phraseHistory = new UIPhraseHistory(phraseHistoryList, words);
+                            UIPhraseHistory phraseHistory = new UIPhraseHistory(phraseTemplateId, phraseHistoryList, words);
                             phraseHistoryList.add(0, phraseHistory);
                         }
+                        updateBlockSize();
                     } catch (Exception e) {
                         Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding Phrase History: " + e, ButtonType.OK);
                         LOGGER.error("Error adding Phrase History: ", e);
@@ -403,6 +450,7 @@ public class PhraseBlockForm extends AnchorPane {
             if (item != null) {
                 phraseHistoryList.remove(item);
             }
+            updateBlockSize();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Error removing Phrase History: " + e, ButtonType.OK);
             LOGGER.error("Error removing Phrase History: ", e);
@@ -425,6 +473,7 @@ public class PhraseBlockForm extends AnchorPane {
                                 this.phraseTemplate = phraseTemplate;
                                 checkNotNull(phraseTemplateTextField).textProperty().set(phraseTemplate.phraseTemplateName());
                             }
+                            updateBlockSize();
                         } catch (Exception e) {
                             Alert alert = new Alert(Alert.AlertType.ERROR, "Error picking Phrase Template: " + e, ButtonType.OK);
                             LOGGER.error("Error picking Phrase Template: ", e);
@@ -454,6 +503,7 @@ public class PhraseBlockForm extends AnchorPane {
                                 this.folder = folder.folder;
                                 checkNotNull(folderTextField).textProperty().set("[" + folder.getId() + "] " + folder.getPath());
                             }
+                            updateBlockSize();
                         } catch (Exception e) {
                             Alert alert = new Alert(Alert.AlertType.ERROR, "Error picking folder: " + e, ButtonType.OK);
                             LOGGER.error("Error picking folder: ", e);
@@ -469,31 +519,92 @@ public class PhraseBlockForm extends AnchorPane {
     }
 
     protected PhraseBlock formPhraseBlock(boolean useRealEntropy) {
-        List<UIPhraseHistory> phraseHistoryList = new ArrayList<>(this.phraseHistoryList);
+        List<PhraseBlock.PhraseHistory> blockPhraseHistoryList = new ArrayList<>(this.phraseHistoryList.size());
+        for (UIPhraseHistory phraseHistory : this.phraseHistoryList) {
+            List<PhraseBlock.Word> phrase = new ArrayList<>();
+            for (UIWord word : phraseHistory.words) {
+                PhraseBlock.Word blockWord = ImmutableWord.builder()
+                        .wordTemplateId(word.wordTemplateId)
+                        .name(word.wordName)
+                        .word(word.value)
+                        .permissions(word.permissions)
+                        .icon(word.icon)
+                        .build();
+                phrase.add(blockWord);
+            }
+
+            PhraseBlock.PhraseHistory blockPhraseHistory =
+                    ImmutablePhraseHistory.builder()
+                            .phraseTemplateId(phraseHistory.phraseTemplateId)
+                            .phrase(phrase)
+                            .build();
+
+            blockPhraseHistoryList.add(blockPhraseHistory);
+        }
+
+        String phraseName = checkNotNull(phraseNameTextField).textProperty().get();
+        int phraseTemplateId = phraseTemplate == null ? 0 : phraseTemplate.getId();
+        int folderId = folder == null ? 0 : folder.folderId();
+        boolean isTombstone = checkNotNull(isTombstoneCheckBox).selectedProperty().get();
 
         return ImmutablePhraseBlock.builder()
                 .blockId(phraseBlock == null ? -1 : phraseBlock.getBlockId())
                 .version(123)
                 .entropy(useRealEntropy ? PhraserUtils.generateEntropy() : 123L)
 
-                /*
-                TODO:
-                    .phraseTemplateId(int)
-                    .folderId(int)
-                    .isTombstone(boolean)
-                    .phraseName(String)
-                    .history(phraseHistoryList)
-                */
+                .phraseTemplateId(phraseTemplateId)
+                .folderId(folderId)
+                .isTombstone(isTombstone)
+                .phraseName(phraseName)
 
-                .phraseTemplateId(0)
-                .folderId(0)
-                .isTombstone(true)
-                .phraseName("String")
+                .history(blockPhraseHistoryList)
 
                 .build();
     }
 
     public void saveToDb() {
+        if (phraseTemplate == null) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "PhraseTemplate not selected", ButtonType.OK);
+            alert.showAndWait();
+            return;
+        }
+        if (folder == null) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Folder not selected", ButtonType.OK);
+            alert.showAndWait();
+            return;
+        }
+        String phraseName = checkNotNull(phraseNameTextField).textProperty().get();
+        if (StringUtils.isBlank(phraseName)) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Phrase name can't be empty", ButtonType.OK);
+            alert.showAndWait();
+            return;
+        }
+        if (this.phraseHistoryList == null || this.phraseHistoryList.isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "PhraseHistory can't be empty", ButtonType.OK);
+            alert.showAndWait();
+            return;
+        }
 
+        PhraseBlock newPhraseBlock = formPhraseBlock(true);
+
+        Block block = Block.create(newPhraseBlock);
+        int bufferLength = BlockEncoder.toFlatBufBlock(block).length;
+
+        if (bufferLength > DATA_BLOCK_SIZE) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Block size can't exceed "+DATA_BLOCK_SIZE+" bytes", ButtonType.OK);
+            alert.showAndWait();
+            return;
+        }
+
+        // This call will close the form and process the formed block
+        phraseBlockCallback.accept(newPhraseBlock);
+    }
+
+    public void phraseNameChanged() {
+        updateBlockSize();
+    }
+
+    public void isTombstoneChanged() {
+        updateBlockSize();
     }
 }

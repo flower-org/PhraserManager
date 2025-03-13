@@ -4,6 +4,7 @@ import com.google.flatbuffers.FlatBufferBuilder;
 import com.phraser.db.Block;
 import com.phraser.db.BlockType;
 import com.phraser.db.FoldersBlock;
+import com.phraser.db.Icon;
 import com.phraser.db.KeyBlock;
 import com.phraser.db.PhraseBlock;
 import com.phraser.db.PhraseTemplatesBlock;
@@ -37,72 +38,66 @@ public class BlockEncoder {
         StoreBlock storeBlock = phraseBlock;
         FlatBufferBuilder builder = new FlatBufferBuilder(12000);
 
-        List<PhraseBlock.PhraseHistory> history = checkNotNull(phraseBlock).history();
-        return new byte[42];
+        List<PhraseBlock.PhraseHistory> phraseHistories = checkNotNull(phraseBlock).history();
 
-        //TODO: implement
-/*        int[] wordTemplateOffsets = new int[wordTemplates.size()];
-        for (int i = 0; i < wordTemplates.size(); i++) {
-            PhraseTemplatesBlock.WordTemplate wordTemplate = wordTemplates.get(i);
+        // Phrase History (array)
+        int[] phraseHistoryOffsets = new int[phraseHistories.size()];
+        for (int i = 0; i < phraseHistories.size(); i++) {
+            PhraseBlock.PhraseHistory phraseHistory = phraseHistories.get(i);
 
-            int wordTemplateId = wordTemplate.wordTemplateId();
-            byte permissions = wordTemplate.permissions();
-            byte icon = wordTemplate.icon().code;
-            int minLength = wordTemplate.minLength();
-            int maxLength = wordTemplate.maxLength();
+            int phraseTemplateId = phraseHistory.phraseTemplateId();
+            List<PhraseBlock.Word> phrase = phraseHistory.phrase();
 
-            int wordTemplateNameOffset = builder.createString(wordTemplate.wordTemplateName());
-            int[] symbolSetIds = toIdArray(wordTemplate.symbolSetIds());
-            int symbolSetIdsOffset = com.phraser.schema.phraser.WordTemplate.createSymbolSetIdsVector(builder, symbolSetIds);
+            // Phrase (word array)
+            int[] phraseWordOffsets = new int[phrase.size()];
+            for (int j = 0; j < phrase.size(); j++) {
+                PhraseBlock.Word phraseWord = phrase.get(j);
+                int wordTemplateId = phraseWord.wordTemplateId();
+                String name = phraseWord.name();
+                String word = phraseWord.word();
+                byte permissions = phraseWord.permissions();
+                Icon icon = phraseWord.icon();
 
-            int wordTemplateOffset = com.phraser.schema.phraser.WordTemplate.createWordTemplate(builder,
-                    wordTemplateId, permissions, icon, minLength, maxLength, wordTemplateNameOffset, symbolSetIdsOffset);
+                int nameOffset = builder.createString(name);
+                int wordOffset = builder.createString(word);
 
-            wordTemplateOffsets[i] = wordTemplateOffset;
+                int phraseWordOffset =
+                        com.phraser.schema.phraser.Word.createWord(builder, wordTemplateId, nameOffset, wordOffset,
+                                permissions, icon.code);
+                phraseWordOffsets[j] = phraseWordOffset;
+            }
+
+            int phraseOffset = com.phraser.schema.phraser.PhraseHistory.createPhraseVector(builder, phraseWordOffsets);
+            // Phrase END
+
+            int phraseHistoryOffset =
+                com.phraser.schema.phraser.PhraseHistory.createPhraseHistory(builder, phraseTemplateId, phraseOffset);
+            phraseHistoryOffsets[i] = phraseHistoryOffset;
         }
 
-        int wordTemplatesOffset =
-                com.phraser.schema.phraser.PhraseTemplatesBlock.createWordTemplatesVector(builder, wordTemplateOffsets);
+        int phraseHistoryArrayOffset =
+                com.phraser.schema.phraser.PhraseBlock.createHistoryVector(builder, phraseHistoryOffsets);
+        // Phrase History END
 
-        // -----------------------------------------------------------------------
+        //Phrase Block
+        int phraseNameOffset = builder.createString(phraseBlock.phraseName());
 
-        List<PhraseTemplatesBlock.PhraseTemplate> phraseTemplates =
-                checkNotNull(phraseTemplatesBlock).phraseTemplates();
-
-        int[] phraseTemplateOffsets = new int[phraseTemplates.size()];
-        for (int i = 0; i < phraseTemplates.size(); i++) {
-            PhraseTemplatesBlock.PhraseTemplate phraseTemplate = phraseTemplates.get(i);
-
-            int phraseTemplateId = phraseTemplate.phraseTemplateId();
-            int phraseTemplateNameOffset = builder.createString(phraseTemplate.phraseTemplateName());
-            int[] wordTemplateIds = toIdArray(phraseTemplate.wordTemplateIds());
-
-            int wordTemplateIdsOffset = com.phraser.schema.phraser.PhraseTemplate.createWordTemplateIdsVector(builder, wordTemplateIds);
-
-            int phraseTemplateOffset = com.phraser.schema.phraser.PhraseTemplate.createPhraseTemplate(builder,
-                    phraseTemplateId, phraseTemplateNameOffset, wordTemplateIdsOffset);
-
-            phraseTemplateOffsets[i] = phraseTemplateOffset;
-        }
-
-        int phraseTemplatesOffset =
-                com.phraser.schema.phraser.PhraseTemplatesBlock.createPhraseTemplatesVector(builder, phraseTemplateOffsets);
-
-        // -----------------------------------------------------------------------
-
-        com.phraser.schema.phraser.PhraseTemplatesBlock.startPhraseTemplatesBlock(builder);
+        com.phraser.schema.phraser.PhraseBlock.startPhraseBlock(builder);
 
         int storeBlockOffset = com.phraser.schema.phraser.StoreBlock.createStoreBlock(builder,
                 storeBlock.blockId(), storeBlock.version(), storeBlock.entropy());
+        com.phraser.schema.phraser.PhraseBlock.addBlock(builder, storeBlockOffset);
 
-        com.phraser.schema.phraser.PhraseTemplatesBlock.addBlock(builder, storeBlockOffset);
-        com.phraser.schema.phraser.PhraseTemplatesBlock.addPhraseTemplates(builder, phraseTemplatesOffset);
-        com.phraser.schema.phraser.PhraseTemplatesBlock.addWordTemplates(builder, wordTemplatesOffset);
-        int symbolSetsBlockOffset = com.phraser.schema.phraser.FoldersBlock.endFoldersBlock(builder);
+        com.phraser.schema.phraser.PhraseBlock.addPhraseTemplateId(builder, phraseBlock.phraseTemplateId());
+        com.phraser.schema.phraser.PhraseBlock.addFolderId(builder, phraseBlock.folderId());
+        com.phraser.schema.phraser.PhraseBlock.addIsTombstone(builder, phraseBlock.isTombstone());
+        com.phraser.schema.phraser.PhraseBlock.addPhraseName(builder, phraseNameOffset);
+        com.phraser.schema.phraser.PhraseBlock.addHistory(builder, phraseHistoryArrayOffset);
 
-        builder.finish(symbolSetsBlockOffset);
+        int phraseBlockOffset = com.phraser.schema.phraser.PhraseBlock.endPhraseBlock(builder);
+        builder.finish(phraseBlockOffset);
 
-        return builder.sizedByteArray();*/
+        return builder.sizedByteArray();
     }
 
     public static byte[] toKeyBlock(KeyBlock keyBlock) {

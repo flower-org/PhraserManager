@@ -108,13 +108,13 @@ public class MainForm {
     }
 
     public Tab openPhraseBlockForm(@Nullable Block phraseBlock, Block foldersDbBlock, Block phraseTemplatesDbBlock,
-                                   Block symbolSetsBlock, PhraserDB phraserDB, Consumer<PhraseBlock> phraseTemplatesBlockCallback) {
+                                   Block symbolSetsBlock, PhraserDB phraserDB, Consumer<PhraseBlock> phraseBlockCallback) {
         PhraseBlockForm phraseBlockForm = new PhraseBlockForm(phraseBlock,
                 checkNotNull(foldersDbBlock.foldersBlock()),
                 checkNotNull(phraseTemplatesDbBlock.phraseTemplatesBlock()),
                 checkNotNull(symbolSetsBlock.symbolSetsBlock()),
                 phraserDB,
-                phraseTemplatesBlockCallback);
+                phraseBlockCallback);
         phraseBlockForm.setStage(checkNotNull(mainStage));
         String phraseBlockTabName;
         if (phraseBlock != null) {

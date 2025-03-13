@@ -30,7 +30,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.phraser.db.PhraserDB.BLOCKS_IN_DB;
@@ -52,6 +55,7 @@ public class PhraserDbForm extends AnchorPane {
     @Nullable Tab symbolSetsBlockTab;
     @Nullable Tab foldersBlockTab;
     @Nullable Tab phraseTemplatesBlockTab;
+    Map<Integer, Tab> phraseBlockTabMap = new HashMap<>();
 
     public PhraserDbForm(MainForm mainForm, String defaultDbName, boolean initDefaultConfig) {
         this(mainForm, initDefaultConfig ? initDefaultBlockConfig(defaultDbName) : List.of(), defaultDbName);
@@ -290,6 +294,16 @@ public class PhraserDbForm extends AnchorPane {
     }
 
     public void openPhraseBlockForm(@Nullable Block existingPhraseBlock) {
+        if (existingPhraseBlock != null) {
+            Tab existingPhraseBlockTab = phraseBlockTabMap.get(existingPhraseBlock.getBlockId());
+            if (existingPhraseBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(existingPhraseBlockTab)) {
+                checkNotNull(mainForm.getTabs()).getSelectionModel().select(existingPhraseBlockTab);
+                return;
+            } else if (existingPhraseBlockTab != null) {
+                phraseBlockTabMap.remove(existingPhraseBlock.getBlockId());
+            }
+        }
+
         String error = null;
         Block foldersDbBlock = phraserDB.getLastFoldersBlock();
         if (foldersDbBlock == null) {
@@ -311,6 +325,7 @@ public class PhraserDbForm extends AnchorPane {
         }
 
         //TODO: map of those tabs by phrase block id to switch to if already open
+        AtomicReference<Tab> phraseBlockTabRef = new AtomicReference<>();
         Tab phraseBlockTab = mainForm.openPhraseBlockForm(existingPhraseBlock,
             checkNotNull(foldersDbBlock),
             checkNotNull(phraseTemplatesDbBlock),
@@ -320,7 +335,7 @@ public class PhraserDbForm extends AnchorPane {
                 int blockId;
                 long version = phraserDB.getNextVersion();
                 if (existingPhraseBlock != null) {
-                    blockId = checkNotNull(existingPhraseBlock.phraseTemplatesBlock()).blockId();
+                    blockId = checkNotNull(existingPhraseBlock.phraseBlock()).blockId();
                 } else {
                     blockId = phraserDB.getNextBlockId();
                 }
@@ -334,9 +349,18 @@ public class PhraserDbForm extends AnchorPane {
                 Block block = Block.create(blockWithVersionAndEntropy);
                 addBlock(block);
 
-                checkNotNull(mainForm.getTabs()).getTabs().remove(phraseTemplatesBlockTab);
-                phraseTemplatesBlockTab = null;
+                Tab phraseBlockTabFromMap = phraseBlockTabMap.get(blockId);
+                if (phraseBlockTabFromMap == null) {
+                    // e.g. new block
+                    phraseBlockTabFromMap = phraseBlockTabRef.get();
+                }
+                checkNotNull(mainForm.getTabs()).getTabs().remove(phraseBlockTabFromMap);
+                phraseBlockTabMap.remove(blockId);
             });
+        phraseBlockTabRef.set(phraseBlockTab);
+        if (existingPhraseBlock != null) {
+            phraseBlockTabMap.put(checkNotNull(existingPhraseBlock.phraseBlock()).blockId(), phraseBlockTab);
+        }
     }
 
     public void updateBlockAction() {
