@@ -1,7 +1,7 @@
 package com.phraser.forms;
 
-import com.phraser.JavaFxUtils;
-import com.phraser.ModalWindow;
+import com.flower.fxutils.JavaFxUtils;
+import com.flower.fxutils.ModalWindow;
 import com.phraser.db.BlockType;
 import com.phraser.db.FoldersBlock;
 import com.phraser.db.ImmutableFoldersBlock;
@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.phraser.JavaFxUtils.YesNo.NO;
+import static com.flower.fxutils.JavaFxUtils.YesNo.NO;
 import static com.phraser.db.BlockType.PHRASE_BLOCK;
 import static com.phraser.db.PhraserDB.BLOCKS_IN_DB;
 import static com.phraser.forms.DefaultDBCreator.initDefaultBlockConfig;

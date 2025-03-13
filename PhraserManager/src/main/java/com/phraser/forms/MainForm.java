@@ -1,6 +1,6 @@
 package com.phraser.forms;
 
-import com.phraser.JavaFxUtils;
+import com.flower.fxutils.JavaFxUtils;
 import com.phraser.db.Block;
 import com.phraser.db.KeyBlock;
 import com.phraser.db.PhraseBlock;
@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.phraser.JavaFxUtils.YesNo.YES;
+import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
 
 public class MainForm {
     @Nullable Stage mainStage;

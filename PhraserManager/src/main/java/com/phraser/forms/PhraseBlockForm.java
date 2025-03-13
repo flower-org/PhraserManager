@@ -1,7 +1,7 @@
 package com.phraser.forms;
 
-import com.phraser.JavaFxUtils;
-import com.phraser.ModalWindow;
+import com.flower.fxutils.JavaFxUtils;
+import com.flower.fxutils.ModalWindow;
 import com.phraser.db.Block;
 import com.phraser.db.FoldersBlock;
 import com.phraser.db.Icon;

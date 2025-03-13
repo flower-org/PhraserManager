@@ -1,6 +1,6 @@
 package com.phraser.forms;
 
-import com.phraser.ModalWindow;
+import com.flower.fxutils.ModalWindow;
 import com.phraser.db.Block;
 import com.phraser.db.ImmutableSymbolSet;
 import com.phraser.db.ImmutableSymbolSetsBlock;

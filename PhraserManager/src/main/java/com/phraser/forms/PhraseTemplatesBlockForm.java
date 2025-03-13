@@ -1,7 +1,7 @@
 package com.phraser.forms;
 
-import com.phraser.JavaFxUtils;
-import com.phraser.ModalWindow;
+import com.flower.fxutils.JavaFxUtils;
+import com.flower.fxutils.ModalWindow;
 import com.phraser.db.Block;
 import com.phraser.db.Icon;
 import com.phraser.db.ImmutablePhraseTemplate;
@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.phraser.JavaFxUtils.YesNo.YES;
+import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
 import static com.phraser.db.Block.DATA_BLOCK_SIZE;
 import static com.phraser.db.PhraseTemplatesBlock.*;
 import static com.phraser.forms.PhraserDbForm.NEW_BLOCK;

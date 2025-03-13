@@ -44,6 +44,8 @@ javafx {
 }
 
 dependencies {
+    implementation project(':JavaFxUtils')
+
     annotationProcessor "org.immutables:value:2.9.2"
     annotationProcessor "com.uber.nullaway:nullaway:0.7.9"
 
