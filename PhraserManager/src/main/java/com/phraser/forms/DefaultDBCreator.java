@@ -105,7 +105,7 @@ public class DefaultDBCreator {
                         getWordPermissions(false, true, false, true),
                         Icon.QUESTION,
                         0,
-                        512,
+                        256,
                         "question",
                         List.of()//empty since it's not generateable
                 ),

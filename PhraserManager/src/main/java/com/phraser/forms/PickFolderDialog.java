@@ -38,20 +38,7 @@ public class PickFolderDialog extends VBox {
 
         public int getId() { return folder.folderId(); }
         public String getPath() {
-            return getPath(folder, folders);
-        }
-
-        public static String getPath(FoldersBlock.Folder folder, List<FoldersBlock.Folder> folders) {
-            if (folder.parentFolderId() == 0) {
-                return "/" + folder.folderName();
-            } else {
-                FoldersBlock.Folder parentFolder = folders.stream()
-                    .filter(f -> f.folderId() == folder.parentFolderId()).findFirst()
-                    .get();
-
-                String parentPath = getPath(parentFolder, folders);
-                return parentPath + "/" + folder.folderName();
-            }
+            return FoldersBlock.getPath(folder, folders);
         }
     }
 

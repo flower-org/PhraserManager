@@ -61,6 +61,27 @@ public class JavaFxUtils {
     return YesNo.NO;
   }
 
+  public static @Nullable String showCustomDialog(String title, String header, String context, String... options) {
+    List<ButtonType> buttonTypeList = new ArrayList<>();
+    for (String option : options) {
+      ButtonType buttonType = new ButtonType(option);
+      buttonTypeList.add(buttonType);
+    }
+
+    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+    alert.setTitle(title);
+    alert.setHeaderText(header);
+    alert.setContentText(context);
+
+    // Init custom buttons
+    alert.getButtonTypes().setAll(buttonTypeList);
+    Optional<ButtonType> dialogResult = alert.showAndWait();
+    if (dialogResult.isPresent()) {
+      return dialogResult.get().getText();
+    }
+    return null;
+  }
+
   public static boolean isOnKeyPressedCtrlC(KeyEvent event) {
     return KEY_CODE_COPY1.match(event) || KEY_CODE_COPY2.match(event) || KEY_CODE_COPY3.match(event);
   }

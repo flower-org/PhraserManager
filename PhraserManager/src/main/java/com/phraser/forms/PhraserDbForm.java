@@ -36,12 +36,18 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.phraser.JavaFxUtils.YesNo.NO;
+import static com.phraser.db.BlockType.PHRASE_BLOCK;
 import static com.phraser.db.PhraserDB.BLOCKS_IN_DB;
 import static com.phraser.forms.DefaultDBCreator.initDefaultBlockConfig;
 
 public class PhraserDbForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraserDbForm.class);
     public final static String NEW_BLOCK = "[NEW BLOCK]";
+
+    public final static String OPEN_OLD = "Use old version";
+    public final static String OPEN_LATEST = "Use latest version";
+    public final static String CANCEL = "Cancel";
 
     @FXML @Nullable TableView<Block> dbBlocksTable;
     final ObservableList<Block> dbBlocks;
@@ -56,6 +62,7 @@ public class PhraserDbForm extends AnchorPane {
     @Nullable Tab foldersBlockTab;
     @Nullable Tab phraseTemplatesBlockTab;
     Map<Integer, Tab> phraseBlockTabMap = new HashMap<>();
+    Map<Integer, Long> lastVersionByBlockId = new HashMap<>();
 
     public PhraserDbForm(MainForm mainForm, String defaultDbName, boolean initDefaultConfig) {
         this(mainForm, initDefaultConfig ? initDefaultBlockConfig(defaultDbName) : List.of(), defaultDbName);
@@ -87,6 +94,7 @@ public class PhraserDbForm extends AnchorPane {
     public void addBlock(Block dbBlock) {
         dbBlocks.add(dbBlock);
         phraserDB.addBlock(dbBlock);
+        lastVersionByBlockId.put(dbBlock.getBlockId(), dbBlock.getVersion());
     }
 
     public void setStage(Stage stage) {
@@ -111,14 +119,14 @@ public class PhraserDbForm extends AnchorPane {
                             BlockType blockType = createNewBlockDialog.getBlockType();
                             if (blockType != null) {
                                 if (blockType == BlockType.KEY_BLOCK) {
-                                    openKeyBlockForm();
+                                    newKeyBlockForm();
                                 } else if (blockType == BlockType.SYMBOL_SETS_BLOCK) {
-                                    openSymbolSetsBlockForm();
+                                    newSymbolSetsBlockForm();
                                 } else if (blockType == BlockType.FOLDERS_BLOCK) {
-                                    openFoldersBlockForm();
+                                    newFoldersBlockForm();
                                 } else if (blockType == BlockType.PHRASE_TEMPLATES_BLOCK) {
-                                    openPhraseTemplatesBlockForm();
-                                } else if (blockType == BlockType.PHRASE_BLOCK) {
+                                    newPhraseTemplatesBlockForm();
+                                } else if (blockType == PHRASE_BLOCK) {
                                     newPhraseBlockForm();
                                 } else {
                                     Alert alert = new Alert(Alert.AlertType.ERROR, "Unsupported block type: " + blockType, ButtonType.OK);
@@ -140,153 +148,165 @@ public class PhraserDbForm extends AnchorPane {
         }
     }
 
-    public void openKeyBlockForm() {
+    public void newKeyBlockForm() {
         if (keyBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(keyBlockTab)) {
             checkNotNull(mainForm.getTabs()).getSelectionModel().select(keyBlockTab);
         } else {
             Block existingKeyBlock = phraserDB.getLastKeyBlock();
             if (existingKeyBlock != null) {
-                if (JavaFxUtils.showYesNoDialog("KeyBlock exists, edit?") == JavaFxUtils.YesNo.NO) {
+                if (JavaFxUtils.showYesNoDialog("KeyBlock exists, edit?") == NO) {
                     return;
                 }
             }
-
-            keyBlockTab = mainForm.openKeyBlockForm(existingKeyBlock, phraserDB,
-                    keyBlock -> {
-                        int blockId;
-                        long version = phraserDB.getNextVersion();
-                        Block lastKeyBlock = phraserDB.getLastKeyBlock();
-                        if (lastKeyBlock != null) {
-                            blockId = checkNotNull(lastKeyBlock.keyBlock()).blockId();
-                        } else {
-                            blockId = phraserDB.getNextBlockId();
-                        }
-
-                        KeyBlock blockWithVersionAndEntropy = ImmutableKeyBlock.builder()
-                                .from(keyBlock)
-                                .blockId(blockId)
-                                .version(version)
-                                .build();
-
-                        Block block = Block.create(blockWithVersionAndEntropy);
-                        addBlock(block);
-
-                        checkNotNull(mainForm.getTabs()).getTabs().remove(keyBlockTab);
-                        keyBlockTab = null;
-                    });
+            openKeyBlockForm(existingKeyBlock);
         }
     }
 
-    public void openSymbolSetsBlockForm() {
+    public void openKeyBlockForm(@Nullable Block existingKeyBlock) {
+        keyBlockTab = mainForm.openKeyBlockForm(existingKeyBlock, phraserDB,
+                keyBlock -> {
+                    int blockId;
+                    long version = phraserDB.getNextVersion();
+                    Block lastKeyBlock = phraserDB.getLastKeyBlock();
+                    if (lastKeyBlock != null) {
+                        blockId = checkNotNull(lastKeyBlock.keyBlock()).blockId();
+                    } else {
+                        blockId = phraserDB.getNextBlockId();
+                    }
+
+                    KeyBlock blockWithVersionAndEntropy = ImmutableKeyBlock.builder()
+                            .from(keyBlock)
+                            .blockId(blockId)
+                            .version(version)
+                            .build();
+
+                    Block block = Block.create(blockWithVersionAndEntropy);
+                    addBlock(block);
+
+                    checkNotNull(mainForm.getTabs()).getTabs().remove(keyBlockTab);
+                    keyBlockTab = null;
+                });
+    }
+
+    public void newSymbolSetsBlockForm() {
         if (symbolSetsBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(symbolSetsBlockTab)) {
             checkNotNull(mainForm.getTabs()).getSelectionModel().select(symbolSetsBlockTab);
         } else {
             Block existingSymbolSetBlock = phraserDB.getLastSymbolSetBlock();
             if (existingSymbolSetBlock != null) {
-                if (JavaFxUtils.showYesNoDialog("SymbolSetBlock exists, edit?") == JavaFxUtils.YesNo.NO) {
+                if (JavaFxUtils.showYesNoDialog("SymbolSetBlock exists, edit?") == NO) {
                     return;
                 }
             }
-
-            symbolSetsBlockTab = mainForm.openSymbolSetsBlockForm(existingSymbolSetBlock, phraserDB,
-                    symbolSetsBlock -> {
-                        int blockId;
-                        long version = phraserDB.getNextVersion();
-                        Block lastSymbolSetsBlock = phraserDB.getLastSymbolSetBlock();
-                        if (lastSymbolSetsBlock != null) {
-                            blockId = checkNotNull(lastSymbolSetsBlock.symbolSetsBlock()).blockId();
-                        } else {
-                            blockId = phraserDB.getNextBlockId();
-                        }
-
-                        SymbolSetsBlock blockWithVersionAndEntropy = ImmutableSymbolSetsBlock.builder()
-                                .from(symbolSetsBlock)
-                                .blockId(blockId)
-                                .version(version)
-                                .build();
-
-                        Block block = Block.create(blockWithVersionAndEntropy);
-                        addBlock(block);
-
-                        checkNotNull(mainForm.getTabs()).getTabs().remove(symbolSetsBlockTab);
-                        symbolSetsBlockTab = null;
-                    });
+            openSymbolSetsBlockForm(existingSymbolSetBlock);
         }
     }
 
-    public void openFoldersBlockForm() {
+    public void openSymbolSetsBlockForm(@Nullable Block existingSymbolSetBlock) {
+        symbolSetsBlockTab = mainForm.openSymbolSetsBlockForm(existingSymbolSetBlock, phraserDB,
+                symbolSetsBlock -> {
+                    int blockId;
+                    long version = phraserDB.getNextVersion();
+                    Block lastSymbolSetsBlock = phraserDB.getLastSymbolSetBlock();
+                    if (lastSymbolSetsBlock != null) {
+                        blockId = checkNotNull(lastSymbolSetsBlock.symbolSetsBlock()).blockId();
+                    } else {
+                        blockId = phraserDB.getNextBlockId();
+                    }
+
+                    SymbolSetsBlock blockWithVersionAndEntropy = ImmutableSymbolSetsBlock.builder()
+                            .from(symbolSetsBlock)
+                            .blockId(blockId)
+                            .version(version)
+                            .build();
+
+                    Block block = Block.create(blockWithVersionAndEntropy);
+                    addBlock(block);
+
+                    checkNotNull(mainForm.getTabs()).getTabs().remove(symbolSetsBlockTab);
+                    symbolSetsBlockTab = null;
+                });
+    }
+
+    public void newFoldersBlockForm() {
         if (foldersBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(foldersBlockTab)) {
             checkNotNull(mainForm.getTabs()).getSelectionModel().select(foldersBlockTab);
         } else {
             Block existingFoldersBlock = phraserDB.getLastFoldersBlock();
             if (existingFoldersBlock != null) {
-                if (JavaFxUtils.showYesNoDialog("FoldersBlock exists, edit?") == JavaFxUtils.YesNo.NO) {
+                if (JavaFxUtils.showYesNoDialog("FoldersBlock exists, edit?") == NO) {
                     return;
                 }
             }
-
-            foldersBlockTab = mainForm.openFoldersBlockForm(existingFoldersBlock, phraserDB,
-                    foldersBlock -> {
-                        int blockId;
-                        long version = phraserDB.getNextVersion();
-                        Block lastFoldersBlock = phraserDB.getLastFoldersBlock();
-                        if (lastFoldersBlock != null) {
-                            blockId = checkNotNull(lastFoldersBlock.foldersBlock()).blockId();
-                        } else {
-                            blockId = phraserDB.getNextBlockId();
-                        }
-
-                        FoldersBlock blockWithVersionAndEntropy = ImmutableFoldersBlock.builder()
-                                .from(foldersBlock)
-                                .blockId(blockId)
-                                .version(version)
-                                .build();
-
-                        Block block = Block.create(blockWithVersionAndEntropy);
-                        addBlock(block);
-
-                        checkNotNull(mainForm.getTabs()).getTabs().remove(foldersBlockTab);
-                        foldersBlockTab = null;
-                    });
+            openFoldersBlockForm(existingFoldersBlock);
         }
     }
 
-    public void openPhraseTemplatesBlockForm() {
+    public void openFoldersBlockForm(@Nullable Block existingFoldersBlock) {
+        foldersBlockTab = mainForm.openFoldersBlockForm(existingFoldersBlock, phraserDB,
+                foldersBlock -> {
+                    int blockId;
+                    long version = phraserDB.getNextVersion();
+                    Block lastFoldersBlock = phraserDB.getLastFoldersBlock();
+                    if (lastFoldersBlock != null) {
+                        blockId = checkNotNull(lastFoldersBlock.foldersBlock()).blockId();
+                    } else {
+                        blockId = phraserDB.getNextBlockId();
+                    }
+
+                    FoldersBlock blockWithVersionAndEntropy = ImmutableFoldersBlock.builder()
+                            .from(foldersBlock)
+                            .blockId(blockId)
+                            .version(version)
+                            .build();
+
+                    Block block = Block.create(blockWithVersionAndEntropy);
+                    addBlock(block);
+
+                    checkNotNull(mainForm.getTabs()).getTabs().remove(foldersBlockTab);
+                    foldersBlockTab = null;
+                });
+    }
+
+    public void newPhraseTemplatesBlockForm() {
         if (phraseTemplatesBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(phraseTemplatesBlockTab)) {
             checkNotNull(mainForm.getTabs()).getSelectionModel().select(phraseTemplatesBlockTab);
         } else {
             Block existingPhraseTemplatesBlock = phraserDB.getLastPhraseTemplatesBlock();
             if (existingPhraseTemplatesBlock != null) {
-                if (JavaFxUtils.showYesNoDialog("PhraseTemplatesBlock exists, edit?") == JavaFxUtils.YesNo.NO) {
+                if (JavaFxUtils.showYesNoDialog("PhraseTemplatesBlock exists, edit?") == NO) {
                     return;
                 }
             }
-
-            phraseTemplatesBlockTab = mainForm.openPhraseTemplatesBlockForm(existingPhraseTemplatesBlock,
-                    phraserDB,
-                    phraseTemplatesBlock -> {
-                        int blockId;
-                        long version = phraserDB.getNextVersion();
-                        Block lastPhraseTemplatesBlock = phraserDB.getLastPhraseTemplatesBlock();
-                        if (lastPhraseTemplatesBlock != null) {
-                            blockId = checkNotNull(lastPhraseTemplatesBlock.phraseTemplatesBlock()).blockId();
-                        } else {
-                            blockId = phraserDB.getNextBlockId();
-                        }
-
-                        PhraseTemplatesBlock blockWithVersionAndEntropy = ImmutablePhraseTemplatesBlock.builder()
-                                .from(phraseTemplatesBlock)
-                                .blockId(blockId)
-                                .version(version)
-                                .build();
-
-                        Block block = Block.create(blockWithVersionAndEntropy);
-                        addBlock(block);
-
-                        checkNotNull(mainForm.getTabs()).getTabs().remove(phraseTemplatesBlockTab);
-                        phraseTemplatesBlockTab = null;
-                    });
+            openPhraseTemplatesBlockForm(existingPhraseTemplatesBlock);
         }
+    }
+
+    public void openPhraseTemplatesBlockForm(@Nullable Block existingPhraseTemplatesBlock) {
+        phraseTemplatesBlockTab = mainForm.openPhraseTemplatesBlockForm(existingPhraseTemplatesBlock,
+                phraserDB,
+                phraseTemplatesBlock -> {
+                    int blockId;
+                    long version = phraserDB.getNextVersion();
+                    Block lastPhraseTemplatesBlock = phraserDB.getLastPhraseTemplatesBlock();
+                    if (lastPhraseTemplatesBlock != null) {
+                        blockId = checkNotNull(lastPhraseTemplatesBlock.phraseTemplatesBlock()).blockId();
+                    } else {
+                        blockId = phraserDB.getNextBlockId();
+                    }
+
+                    PhraseTemplatesBlock blockWithVersionAndEntropy = ImmutablePhraseTemplatesBlock.builder()
+                            .from(phraseTemplatesBlock)
+                            .blockId(blockId)
+                            .version(version)
+                            .build();
+
+                    Block block = Block.create(blockWithVersionAndEntropy);
+                    addBlock(block);
+
+                    checkNotNull(mainForm.getTabs()).getTabs().remove(phraseTemplatesBlockTab);
+                    phraseTemplatesBlockTab = null;
+                });
     }
 
     public void newPhraseBlockForm() {
@@ -294,16 +314,6 @@ public class PhraserDbForm extends AnchorPane {
     }
 
     public void openPhraseBlockForm(@Nullable Block existingPhraseBlock) {
-        if (existingPhraseBlock != null) {
-            Tab existingPhraseBlockTab = phraseBlockTabMap.get(existingPhraseBlock.getBlockId());
-            if (existingPhraseBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(existingPhraseBlockTab)) {
-                checkNotNull(mainForm.getTabs()).getSelectionModel().select(existingPhraseBlockTab);
-                return;
-            } else if (existingPhraseBlockTab != null) {
-                phraseBlockTabMap.remove(existingPhraseBlock.getBlockId());
-            }
-        }
-
         String error = null;
         Block foldersDbBlock = phraserDB.getLastFoldersBlock();
         if (foldersDbBlock == null) {
@@ -324,7 +334,6 @@ public class PhraserDbForm extends AnchorPane {
             return;
         }
 
-        //TODO: map of those tabs by phrase block id to switch to if already open
         AtomicReference<Tab> phraseBlockTabRef = new AtomicReference<>();
         Tab phraseBlockTab = mainForm.openPhraseBlockForm(existingPhraseBlock,
             checkNotNull(foldersDbBlock),
@@ -364,14 +373,126 @@ public class PhraserDbForm extends AnchorPane {
     }
 
     public void updateBlockAction() {
-        //
+        try {
+            Block block = checkNotNull(dbBlocksTable).selectionModelProperty().get().getSelectedItem();
+            if (block == null) { return; }
+
+            BlockType blockType = block.blockType();
+
+            //1. If tab for the block exists, switch to existing tab
+            switch (blockType) {
+                case FOLDERS_BLOCK:
+                    if (foldersBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(foldersBlockTab)) {
+                        checkNotNull(mainForm.getTabs()).getSelectionModel().select(foldersBlockTab);
+                        return;
+                    }
+                    break;
+                case SYMBOL_SETS_BLOCK:
+                    if (symbolSetsBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(symbolSetsBlockTab)) {
+                        checkNotNull(mainForm.getTabs()).getSelectionModel().select(symbolSetsBlockTab);
+                        return;
+                    }
+                    break;
+                case PHRASE_TEMPLATES_BLOCK:
+                    if (phraseTemplatesBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(phraseTemplatesBlockTab)) {
+                        checkNotNull(mainForm.getTabs()).getSelectionModel().select(phraseTemplatesBlockTab);
+                        return;
+                    }
+                    break;
+                case PHRASE_BLOCK:
+                    Tab existingPhraseBlockTab = phraseBlockTabMap.get(block.getBlockId());
+                    if (existingPhraseBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(existingPhraseBlockTab)) {
+                        checkNotNull(mainForm.getTabs()).getSelectionModel().select(existingPhraseBlockTab);
+                        return;
+                    } else if (existingPhraseBlockTab != null) {
+                        phraseBlockTabMap.remove(block.getBlockId());
+                    }
+                    break;
+                case KEY_BLOCK:
+                    if (keyBlockTab != null && checkNotNull(mainForm.getTabs()).getTabs().contains(keyBlockTab)) {
+                        checkNotNull(mainForm.getTabs()).getSelectionModel().select(keyBlockTab);
+                        return;
+                    }
+                    break;
+                default: throw new RuntimeException("Unknown Block Type " + block.blockType());
+            }
+
+            //2. If there is no tab open for the block, open a new tab
+            //Make sure we're opening the desired version
+            long lastBlockVersion = checkNotNull(lastVersionByBlockId.get(block.getBlockId()));
+            boolean findLatestVersion;
+            if (lastBlockVersion > block.getVersion()) {
+                String result = JavaFxUtils.showCustomDialog("Old Block", "Old Block",
+                        "You're updating a block off its old version.",
+                        OPEN_OLD, OPEN_LATEST, CANCEL
+                        );
+                if (result == null) { throw new RuntimeException("Unknown dialog result: " + result); }
+                switch (result) {
+                    case CANCEL: return;
+                    case OPEN_OLD: findLatestVersion = false; break;
+                    case OPEN_LATEST: findLatestVersion = true; break;
+                    default: throw new RuntimeException("Unknown dialog result: " + result);
+                }
+            } else { findLatestVersion = false; }
+
+            // Get latest version if needed and warn if it's tombstoned (PhraseBlock only)
+            if ((findLatestVersion) || (blockType == PHRASE_BLOCK)) {
+                Block latestBlock = dbBlocks.stream().filter(b -> b.getVersion() == lastBlockVersion).findFirst().get();
+                if (findLatestVersion) {
+                    block = latestBlock;
+                }
+                if (blockType == PHRASE_BLOCK) {
+                    if (checkNotNull(latestBlock.phraseBlock()).isTombstone()) {
+                        if (NO == JavaFxUtils.showYesNoDialog("Tombstoned PhraseBlock", "The latest version of this PhraseBlock is tombstoned. Proceed?")) {
+                            return;
+                        }
+                    }
+                }
+            }
+
+            //Open the block form
+            switch (block.blockType()) {
+                case FOLDERS_BLOCK:
+                    openFoldersBlockForm(block);
+                    break;
+                case SYMBOL_SETS_BLOCK:
+                    openSymbolSetsBlockForm(block);
+                    break;
+                case PHRASE_TEMPLATES_BLOCK:
+                    openPhraseTemplatesBlockForm(block);
+                    break;
+                case PHRASE_BLOCK:
+                    openPhraseBlockForm(block);
+                    break;
+                case KEY_BLOCK:
+                    openKeyBlockForm(block);
+                    break;
+                default: throw new RuntimeException("Unknown Block Type " + block.blockType());
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error updating Block: " + e, ButtonType.OK);
+            LOGGER.error("Error updating Block: ", e);
+            alert.showAndWait();
+        }
     }
 
     public void defragmentDBAction() {
-        //
+        try {
+            throw new UnsupportedOperationException();
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error defragmenting DB: " + e, ButtonType.OK);
+            LOGGER.error("Error defragmenting DB: ", e);
+            alert.showAndWait();
+        }
     }
 
     public void exportDBAction() {
-        //
+        try {
+            throw new UnsupportedOperationException();
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error exporting DB: " + e, ButtonType.OK);
+            LOGGER.error("Error exporting DB: ", e);
+            alert.showAndWait();
+        }
     }
 }

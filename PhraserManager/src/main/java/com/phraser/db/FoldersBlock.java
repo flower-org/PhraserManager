@@ -25,4 +25,21 @@ public interface FoldersBlock extends StoreBlock {
     }
 
     List<Folder> folders();
+
+    default String getPath(FoldersBlock.Folder folder) {
+        return getPath(folder, folders());
+    }
+
+    static String getPath(FoldersBlock.Folder folder, List<FoldersBlock.Folder> folders) {
+        if (folder.parentFolderId() == 0) {
+            return "/" + folder.folderName();
+        } else {
+            FoldersBlock.Folder parentFolder = folders.stream()
+                    .filter(f -> f.folderId() == folder.parentFolderId()).findFirst()
+                    .get();
+
+            String parentPath = getPath(parentFolder, folders);
+            return parentPath + "/" + folder.folderName();
+        }
+    }
 }

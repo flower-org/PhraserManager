@@ -54,20 +54,20 @@ import static com.phraser.forms.PhraseWordsDialog.DialogWord;
 
 public class PhraseBlockForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraseBlockForm.class);
+    final AtomicInteger COUNTER = new AtomicInteger(0);
 
-    public static class UIPhraseHistory {
-        static AtomicInteger COUNTER = new AtomicInteger(0);
-
+    public class UIPhraseHistory {
         /** 0 - newest history, actual value */
         final int phraseTemplateId;
         final List<UIPhraseHistory> ownerList;
         final List<UIWord> words;
-        final int ordinal = COUNTER.incrementAndGet();
+        final int ordinal;
 
         public UIPhraseHistory(int phraseTemplateId, List<UIPhraseHistory> ownerList, List<UIWord> words) {
             this.phraseTemplateId = phraseTemplateId;
             this.ownerList = ownerList;
             this.words = words;
+            ordinal = COUNTER.incrementAndGet();
         }
 
         public int getIndex() {
@@ -166,8 +166,8 @@ public class PhraseBlockForm extends AnchorPane {
             checkNotNull(blockIdTextField).setText(NEW_BLOCK);
             checkNotNull(versionTextField).setText(NEW_BLOCK);
         } else {
-            checkNotNull(blockIdTextField).setText(Integer.toString(checkNotNull(phraseBlock.phraseTemplatesBlock()).blockId()));
-            checkNotNull(versionTextField).setText(Long.toString(checkNotNull(phraseBlock.phraseTemplatesBlock()).version()));
+            checkNotNull(blockIdTextField).setText(Integer.toString(checkNotNull(phraseBlock.phraseBlock()).blockId()));
+            checkNotNull(versionTextField).setText(Long.toString(checkNotNull(phraseBlock.phraseBlock()).version()));
         }
 
         this.phraserDB = phraserDB;
@@ -216,9 +216,56 @@ public class PhraseBlockForm extends AnchorPane {
             }
         });
 
-        // TODO: Init Form from phraseBlock
+        if (phraseBlock != null) {
+            initForm(phraseBlock);
+        }
 
         updateBlockSize();
+    }
+
+    protected void initForm(Block phraseBlockMain) {
+        PhraseBlock phraseBlock = checkNotNull(phraseBlockMain.phraseBlock());
+
+        checkNotNull(phraseNameTextField).textProperty().set(phraseBlock.phraseName());
+        checkNotNull(isTombstoneCheckBox).selectedProperty().set(phraseBlock.isTombstone());
+
+        Optional<PhraseTemplatesBlock.PhraseTemplate> phraseTemplateOpt = phraseTemplatesBlock.phraseTemplates().stream()
+                .filter(p -> phraseBlock.phraseTemplateId() == p.phraseTemplateId()).findAny();
+        if (phraseTemplateOpt.isPresent()) {
+            this.phraseTemplate = phraseTemplateOpt.get();
+            checkNotNull(phraseTemplateTextField).textProperty().set(phraseTemplate.phraseTemplateName());
+        }
+
+        Optional<FoldersBlock.Folder> folderOpt = foldersBlock.folders().stream()
+                .filter(f -> phraseBlock.folderId() == f.folderId()).findAny();
+        if (folderOpt.isPresent()) {
+            this.folder = folderOpt.get();
+            checkNotNull(folderTextField).textProperty().set("[" + folder.folderId() + "] " +
+                    FoldersBlock.getPath(folder, foldersBlock.folders()));
+        }
+
+        //Backwards order, oldest is ordinal 1, newest index 0
+        for (int i = phraseBlock.history().size()-1; i >= 0; i--) {
+            PhraseBlock.PhraseHistory historyEntry = phraseBlock.history().get(i);
+
+            List<UIWord> words = new ArrayList<>();
+            for (PhraseBlock.Word retWord : historyEntry.phrase()) {
+                int wordId = retWord.wordTemplateId();
+                String value = retWord.word();
+                String wordName = retWord.name();
+                byte permissions = retWord.permissions();
+                Icon icon = retWord.icon();
+                boolean isTypeable = PhraseTemplatesBlock.isTypeable(permissions);
+                boolean isViewable = PhraseTemplatesBlock.isViewable(permissions);
+
+                UIWord uiWord = new UIWord(wordId, wordName, value, permissions, isTypeable, isViewable, icon);
+                words.add(uiWord);
+            }
+
+            UIPhraseHistory phraseHistory = new UIPhraseHistory(historyEntry.phraseTemplateId(), phraseHistoryList, words);
+            phraseHistoryList.add(0, phraseHistory);
+            checkNotNull(phraseHistoryTableView).getSelectionModel().select(0);
+        }
     }
 
     protected void updateBlockSize() {
@@ -321,7 +368,7 @@ public class PhraseBlockForm extends AnchorPane {
                 List<char[]> symbolSets;
                 if (wordTemplateOpt.isEmpty()) {
                     minLength = 0;
-                    maxLength = 512;
+                    maxLength = 64;
                     symbolSets = DEFAULT_SYMBOL_SETS;
                 } else {
                     PhraseTemplatesBlock.WordTemplate wordTemplate = wordTemplateOpt.get();
@@ -433,6 +480,7 @@ public class PhraseBlockForm extends AnchorPane {
 
                             UIPhraseHistory phraseHistory = new UIPhraseHistory(phraseTemplateId, phraseHistoryList, words);
                             phraseHistoryList.add(0, phraseHistory);
+                            checkNotNull(phraseHistoryTableView).getSelectionModel().select(0);
                         }
                         updateBlockSize();
                     } catch (Exception e) {
