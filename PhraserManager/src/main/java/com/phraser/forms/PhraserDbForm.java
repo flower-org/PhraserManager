@@ -22,9 +22,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tab;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,14 +89,45 @@ public class PhraserDbForm extends AnchorPane {
             }
         }
 
+        checkNotNull(dbBlocksTable).setRowFactory(new Callback<>() {
+            @Override
+            public TableRow<Block> call(TableView<Block> blockTableView) {
+                return new TableRow<>() {
+                    @Override
+                    protected void updateItem(Block block, boolean empty) {
+                        super.updateItem(block, empty);
+                        if (block != null) {
+                            if (!isLatest(block)) {
+                                    styleProperty().setValue("-fx-background-color: salmon");
+                            } else {
+                                if (block.blockType() == PHRASE_BLOCK && checkNotNull(block.phraseBlock()).isTombstone()) {
+                                    styleProperty().setValue("-fx-background-color: crimson");
+                                } else {
+                                    styleProperty().setValue("-fx-background-color: lightgreen");
+                                }
+                            }
+                        }
+                    }
+                };
+            }
+        });
         checkNotNull(dbBlocksTable).itemsProperty().set(dbBlocks);
         this.mainForm = mainForm;
+    }
+
+    protected boolean isLatest(Block dbBlock) {
+        Long version = lastVersionByBlockId.get(dbBlock.getBlockId());
+        if (version != null) {
+            return version == dbBlock.getVersion();
+        }
+        return true;
     }
 
     public void addBlock(Block dbBlock) {
         dbBlocks.add(dbBlock);
         phraserDB.addBlock(dbBlock);
         lastVersionByBlockId.put(dbBlock.getBlockId(), dbBlock.getVersion());
+        checkNotNull(dbBlocksTable).refresh();
     }
 
     public void setStage(Stage stage) {
