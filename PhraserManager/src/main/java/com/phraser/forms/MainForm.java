@@ -54,7 +54,7 @@ public class MainForm {
             initDefaultConfig = true;
         }
 
-        String dbName = "New DB #" + (++newDbCount);
+        String dbName = "New DB #" + ++newDbCount;
 
         PhraserDbForm phraserDbForm = new PhraserDbForm(this, dbName, initDefaultConfig);
         phraserDbForm.setStage(checkNotNull(mainStage));

@@ -194,6 +194,7 @@ public class PhraseBlockForm extends AnchorPane {
             @Override
             public TableCell<UIWord, String> call(TableColumn<UIWord, String> tableColumn) {
                 return new TableCell<>() {
+                    @Override
                     protected void updateItem(String item, boolean empty) {
                         super.updateItem(item, empty);
                         int index = getIndex();

@@ -19,7 +19,7 @@ public class HexTool {
         for (int i = 0; i < len; i += 2) {
             int d1 = Character.digit(hex.charAt(i), 16);
             int d2 = Character.digit(hex.charAt(i + 1), 16);
-            data[i / 2] = (byte)((d1 << 4) + (d2));
+            data[i / 2] = (byte)((d1 << 4) + d2);
         }
         return data;
     }

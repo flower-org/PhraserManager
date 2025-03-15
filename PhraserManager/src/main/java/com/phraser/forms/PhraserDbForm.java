@@ -464,7 +464,7 @@ public class PhraserDbForm extends AnchorPane {
             } else { findLatestVersion = false; }
 
             // Get latest version if needed and warn if it's tombstoned (PhraseBlock only)
-            if ((findLatestVersion) || (blockType == PHRASE_BLOCK)) {
+            if (findLatestVersion || blockType == PHRASE_BLOCK) {
                 Block latestBlock = checkNotNull(phraserDB.getLastBlock(block.getBlockId()));
                 if (findLatestVersion) {
                     block = latestBlock;

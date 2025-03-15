@@ -57,7 +57,7 @@ public class FoldersBlockForm extends AnchorPane {
 
     int maxFolderId = 0;
 
-    static class FolderStruct {
+    public static class FolderStruct {
         final int folderId;
         String folderName;
 

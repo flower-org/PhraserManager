@@ -235,7 +235,9 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
             try {
                 PhraseTemplatesBlock.PhraseTemplate newPhraseTemplate = formPhraseTemplate();
                 return !newPhraseTemplate.equals(phraseTemplate);
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                LOGGER.error("phraseTemplateChanged error", e);
+            }
         }
         return false;
     }
@@ -245,7 +247,9 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
             try {
                 PhraseTemplatesBlock.WordTemplate newWordTemplate = formWordTemplate();
                 return !newWordTemplate.equals(oldWordTemplate);
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                LOGGER.error("wordTemplateChanged error", e);
+            }
         }
         return false;
     }
