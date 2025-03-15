@@ -10,6 +10,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.AnchorPane;
@@ -28,6 +29,9 @@ import static com.phraser.forms.PhraserDbForm.NEW_BLOCK;
 public class KeyBlockForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(KeyBlockForm.class);
 
+    final static int MIN_BUCKET_COUNT = 10;
+    final static int MAX_BUCKET_COUNT = 384;
+
     @Nullable final Block keyBlock;
     @Nullable @FXML TextField keyTextField;
     @Nullable @FXML TextField ivTextField;
@@ -36,6 +40,7 @@ public class KeyBlockForm extends AnchorPane {
     @Nullable @FXML TextField bucketCountTextField;
 
     @Nullable @FXML TextField dbNameTextField;
+    @Nullable @FXML Label bucketCountLabel;
 
     final PhraserDB phraserDB;
     @Nullable volatile byte[] aes256Key;
@@ -53,6 +58,8 @@ public class KeyBlockForm extends AnchorPane {
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
+
+        checkNotNull(bucketCountLabel).setText("Bucket count (" + MIN_BUCKET_COUNT + "-" + MAX_BUCKET_COUNT + "):");
 
         checkNotNull(keyTextField).setTextFormatter(new TextFormatter<>(change -> {
                 String newText = change.getControlNewText();
@@ -128,13 +135,15 @@ public class KeyBlockForm extends AnchorPane {
         int bucketCount;
         try {
             bucketCount = Integer.parseInt(checkNotNull(bucketCountTextField).textProperty().get());
-            if (bucketCount < 50 || bucketCount > 384) {
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Bucket count should be between 50 and 384 (inclusive)", ButtonType.OK);
+            if (bucketCount < MIN_BUCKET_COUNT || bucketCount > MAX_BUCKET_COUNT) {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Bucket count should be between "
+                        + MIN_BUCKET_COUNT + " and " + MAX_BUCKET_COUNT + " (inclusive)", ButtonType.OK);
                 alert.showAndWait();
                 return;
             }
         } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Bucket count should be between 50 and 384 (inclusive)", ButtonType.OK);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "saveToDb Error " + e, ButtonType.OK);
+            LOGGER.error("saveToDb Error", e);
             alert.showAndWait();
             return;
         }

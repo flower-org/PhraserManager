@@ -79,10 +79,10 @@ public class DbEncoder {
     }
 
     void encodeDb(PhraserDB phraserDB, byte[] aesKey) {
-        for (Block block : phraserDB.blocks()) {
+        /*for (Block block : phraserDB.blocks()) {
             byte[] encodedBlock = encodeBlock(block, aesKey);
-        }
-        //TODO: concatenate?
+        }*/
+        //TODO: implement?
     }
 
     public static byte[] encrypt(byte[] data, byte[] key, byte[] iv) {

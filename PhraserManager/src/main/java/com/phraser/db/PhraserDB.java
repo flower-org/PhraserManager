@@ -1,13 +1,17 @@
 package com.phraser.db;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 import javax.annotation.Nullable;
-import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.phraser.db.Block.FLASH_SECTOR_SIZE;
+import static com.phraser.db.BlockType.KEY_BLOCK;
 
 public class PhraserDB {
   static final byte[] DEFAULT_IV =
@@ -18,28 +22,28 @@ public class PhraserDB {
     new byte[] { 0x60, 0x3d, (byte)0xeb, 0x10, 0x15, (byte)0xca, 0x71, (byte)0xbe, 0x2b, 0x73, (byte)0xae, (byte)0xf0, (byte)0x85, 0x7d, 0x77, (byte)0x81,
         0x1f, 0x35, 0x2c, 0x07, 0x3b, 0x61, 0x08, (byte)0xd7, 0x2d, (byte)0x98, 0x10, (byte)0xa3, 0x09, 0x14, (byte)0xdf, (byte)0xf4 };
 
-  public static final int BLOCKS_IN_DB = (1024 * 1024) / FLASH_SECTOR_SIZE; // 256 blocks
+  public static final int BLOCKS_IN_DB = (1024 * 1024) / FLASH_SECTOR_SIZE; // 256 blocks in 1 mb
 
   @Nullable Block lastKeyBlock = null;
   @Nullable Block lastSymbolSetBlock = null;
   @Nullable Block lastFoldersBlock = null;
   @Nullable Block lastPhraseTemplatesBlock = null;
-  final Map<Integer, Block> lastPhraseBlocks;
+
+  Map<Integer, Block> lastBlockByBlockId = new HashMap<>();
+  final ObservableList<Block> dbBlocks;
+
   @Nullable String dbName;
 
-  final long bucketCount;
+  long bucketCount;
 
   int lastBlockId = 0;
   long lastVersion = 0;
-  int bucketCursor = 0;
 
   @Nullable Consumer<String> dbNameListener;
 
   public static PhraserDB createNewDb(int bucketCount, String dbName, @Nullable Consumer<String> dbNameListener) {
     return new PhraserDB(List.of(Block.create(KeyBlock.createFirstKeyBlock(DEFAULT_KEY, DEFAULT_IV, 1))), bucketCount, dbName, dbNameListener);
   }
-
-  final Block[] blocks;
 
   public PhraserDB(List<Block> blocks, int bucketCount, @Nullable String defaultDbName, @Nullable Consumer<String> dbNameListener) {
     if (blocks.size() > bucketCount) {
@@ -48,22 +52,109 @@ public class PhraserDB {
     this.dbName = defaultDbName;
     this.dbNameListener = dbNameListener;
     this.bucketCount = bucketCount;
-    this.blocks = new Block[bucketCount];
-    this.lastPhraseBlocks = new HashMap<>();
+    dbBlocks = FXCollections.observableArrayList();
 
     for (Block block : blocks) {
       addBlock(block);
     }
   }
 
-  public Block[] blocks() {
-    return blocks;
+  public ObservableList<Block> blocksObservableArray() {
+    return dbBlocks;
+  }
+
+  protected @Nullable Integer getNextOverwritableBlockIndex() {
+    if (!dbBlocks.isEmpty()) {
+      // 1. If we still have space in our blocks, use next available spot
+      if (dbBlocks.size() < bucketCount) {
+        return dbBlocks.size();
+      }
+
+      // 2. Otherwise, we start with finding the latest block (index)
+      Block latestBlock = dbBlocks.get(0);
+      int latestBlockIndex = 0;
+      for (int i = 0; i < dbBlocks.size(); i++) {
+        Block dbBlock = dbBlocks.get(i);
+        if (dbBlock.getVersion() > latestBlock.getVersion()) {
+          latestBlock = dbBlock;
+          latestBlockIndex = i;
+        }
+      }
+
+      // 3. Find the next over-writable block "to the right" from the latest block
+      for (int i = 0; i < dbBlocks.size(); i++) {
+        int nextWritableBlockIndex = (i + 1 + latestBlockIndex) % dbBlocks.size();
+        Block overwriteCandidate = dbBlocks.get(nextWritableBlockIndex);
+        Block candidateLatestVersion = checkNotNull(getLastBlock(overwriteCandidate.getBlockId()));
+
+        boolean isOldVersion = overwriteCandidate.getVersion() < candidateLatestVersion.getVersion();
+        boolean isTombstone = candidateLatestVersion.blockType() == BlockType.PHRASE_BLOCK &&
+                checkNotNull(candidateLatestVersion.phraseBlock()).isTombstone();
+        if (isOldVersion || isTombstone) {
+          return nextWritableBlockIndex;
+        }
+      }
+
+      // 4. If not found, it means that we're out of space
+      return null;
+    } else {
+      // 0. If dbBlocks list is empty, use index 0
+      return 0;
+    }
   }
 
   public void addBlock(Block block) {
+    if (block.blockType() == KEY_BLOCK) {
+      int newBucketCount = checkNotNull(block.keyBlock()).bucketCount();
+      if (newBucketCount < dbBlocks.size()) {
+        throw new RuntimeException("Can't reduce bucket count to " + block.keyBlock().bucketCount() +
+                ", db currently contains " + dbBlocks.size() + "buckets. Try defragmenting.");
+      }
+      bucketCount = newBucketCount;
+
+      if (dbNameListener != null) {
+        dbNameListener.accept(block.keyBlock().dbName());
+      }
+     }
+
+    // 1. add block to dbBlocks list
+    Integer nextOverwritableBlockIndex = getNextOverwritableBlockIndex();
+
+    // If there are no overwritable blocks, the only way to do this is to overwrite in-place
+    if (nextOverwritableBlockIndex == null) {
+      Block blocksLatestVersion = getLastBlock(block.getBlockId());
+      // Find index of block's last version
+      if (blocksLatestVersion != null) {
+        for (int i = 0; i < dbBlocks.size(); i++) {
+          Block dbBlock = dbBlocks.get(i);
+          if (blocksLatestVersion.getVersion() == dbBlock.getVersion()) {
+           nextOverwritableBlockIndex = i;
+           break;
+          }
+        }
+      }
+    }
+
+    // If there are no overwritable blocks, and it's a new block, we throw Out Of Capacity error
+    if (nextOverwritableBlockIndex == null) {
+      throw new RuntimeException("No spare blocks left (" + dbBlocks.size() + "/" + bucketCount + ")");
+    }
+
+    // Write to the blocklist index
+    if (dbBlocks.size() < bucketCount) {
+      dbBlocks.add(block);
+    } else {
+      dbBlocks.set(nextOverwritableBlockIndex, block);
+    }
+
+    // 2. Update DB stats
     lastBlockId = Math.max(lastBlockId, block.getBlockId());
-    blocks[bucketCursor++] = block;
     lastVersion = Math.max(lastVersion, block.getVersion());
+
+    Block previousBlock = lastBlockByBlockId.get(block.getBlockId());
+    if (previousBlock == null || previousBlock.getVersion() < block.getVersion()) {
+      lastBlockByBlockId.put(block.getBlockId(), block);
+    }
 
     if (block.foldersBlock() != null) {
       com.phraser.db.FoldersBlock foldersBlock = block.foldersBlock();
@@ -79,12 +170,6 @@ public class PhraserDB {
       com.phraser.db.PhraseTemplatesBlock phraseTemplatesBlock = block.phraseTemplatesBlock();
       if (lastPhraseTemplatesBlock == null || phraseTemplatesBlock.version() > lastPhraseTemplatesBlock.getVersion()) {
         lastPhraseTemplatesBlock = block;
-      }
-    } else if (block.phraseBlock() != null) {
-      com.phraser.db.PhraseBlock phraseBlock = block.phraseBlock();
-      Block oldPhraseBlock = lastPhraseBlocks.get(phraseBlock.blockId());
-      if (oldPhraseBlock == null || phraseBlock.version() > oldPhraseBlock.getVersion()) {
-        lastPhraseBlocks.put(phraseBlock.blockId(), block);
       }
     } else if (block.keyBlock() != null) {
       com.phraser.db.KeyBlock keyBlock = block.keyBlock();
@@ -104,28 +189,6 @@ public class PhraserDB {
 
   public void setDbNameListener(@Nullable Consumer<String> dbNameListener) {
     this.dbNameListener = dbNameListener;
-  }
-
-  public int totalBlockCountIncludingEmpty() {
-    return blocks.length;
-  }
-
-  public int nonEmptyBlockCountIncludingOldVersions() { throw new UnsupportedOperationException(); }
-
-  public int uniqueBlockCount() {
-    throw new UnsupportedOperationException();
-  }
-
-  public void loadFromFile(File file) {
-    throw new UnsupportedOperationException();
-  }
-
-  public void saveToFile(File file) {
-    throw new UnsupportedOperationException();
-  }
-
-  public void defragment() {
-    throw new UnsupportedOperationException();
   }
 
   @Nullable
@@ -148,10 +211,6 @@ public class PhraserDB {
     return lastPhraseTemplatesBlock;
   }
 
-  public Map<Integer, Block> getLastPhraseBlocks() {
-    return lastPhraseBlocks;
-  }
-
   @Nullable
   public String dbName() {
     return dbName;
@@ -165,5 +224,21 @@ public class PhraserDB {
   public long getNextVersion() {
     lastVersion++;
     return lastVersion;
+  }
+
+  public boolean isLatest(Block dbBlock) {
+    Block block = lastBlockByBlockId.get(dbBlock.getBlockId());
+    if (block != null) {
+      return dbBlock.getVersion() >= block.getVersion();
+    }
+    return true;
+  }
+
+  public long getLastBlockVersion(int blockId) {
+    return checkNotNull(lastBlockByBlockId.get(blockId)).getVersion();
+  }
+
+  public @Nullable Block getLastBlock(int blockId) {
+    return lastBlockByBlockId.get(blockId);
   }
 }

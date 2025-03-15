@@ -15,8 +15,6 @@ import com.phraser.db.PhraserDB;
 import com.phraser.db.PhraseTemplatesBlock;
 import com.phraser.db.Block;
 import com.phraser.db.SymbolSetsBlock;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
@@ -52,19 +50,21 @@ public class PhraserDbForm extends AnchorPane {
     public final static String CANCEL = "Cancel";
 
     @FXML @Nullable TableView<Block> dbBlocksTable;
-    final ObservableList<Block> dbBlocks;
 
-    final PhraserDB phraserDB;
     @Nullable Stage stage;
     final MainForm mainForm;
+    // Own tab - contains DB name
     @Nullable Tab tab;
 
+    // Related opened block tabs
     @Nullable Tab keyBlockTab;
     @Nullable Tab symbolSetsBlockTab;
     @Nullable Tab foldersBlockTab;
     @Nullable Tab phraseTemplatesBlockTab;
     Map<Integer, Tab> phraseBlockTabMap = new HashMap<>();
-    Map<Integer, Long> lastVersionByBlockId = new HashMap<>();
+
+    // DB structure
+    final PhraserDB phraserDB;
 
     public PhraserDbForm(MainForm mainForm, String defaultDbName, boolean initDefaultConfig) {
         this(mainForm, initDefaultConfig ? initDefaultBlockConfig(defaultDbName) : List.of(), defaultDbName);
@@ -81,7 +81,6 @@ public class PhraserDbForm extends AnchorPane {
             throw new RuntimeException(exception);
         }
 
-        dbBlocks = FXCollections.observableArrayList();
         phraserDB = new PhraserDB(List.of(), BLOCKS_IN_DB, defaultDbName, null);
         if (blocks != null) {
             for (Block dbBlock : blocks) {
@@ -97,7 +96,7 @@ public class PhraserDbForm extends AnchorPane {
                     protected void updateItem(Block block, boolean empty) {
                         super.updateItem(block, empty);
                         if (block != null) {
-                            if (!isLatest(block)) {
+                            if (!phraserDB.isLatest(block)) {
                                     styleProperty().setValue("-fx-background-color: salmon");
                             } else {
                                 if (block.blockType() == PHRASE_BLOCK && checkNotNull(block.phraseBlock()).isTombstone()) {
@@ -111,23 +110,19 @@ public class PhraserDbForm extends AnchorPane {
                 };
             }
         });
-        checkNotNull(dbBlocksTable).itemsProperty().set(dbBlocks);
+        checkNotNull(dbBlocksTable).itemsProperty().set(phraserDB.blocksObservableArray());
         this.mainForm = mainForm;
     }
 
-    protected boolean isLatest(Block dbBlock) {
-        Long version = lastVersionByBlockId.get(dbBlock.getBlockId());
-        if (version != null) {
-            return version == dbBlock.getVersion();
-        }
-        return true;
-    }
-
     public void addBlock(Block dbBlock) {
-        dbBlocks.add(dbBlock);
-        phraserDB.addBlock(dbBlock);
-        lastVersionByBlockId.put(dbBlock.getBlockId(), dbBlock.getVersion());
-        checkNotNull(dbBlocksTable).refresh();
+        try {
+            phraserDB.addBlock(dbBlock);
+            checkNotNull(dbBlocksTable).refresh();
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error saving Block: " + e.getMessage(), ButtonType.OK);
+            LOGGER.error("Error saving Block: ", e);
+            alert.showAndWait();
+        }
     }
 
     public void setStage(Stage stage) {
@@ -452,7 +447,7 @@ public class PhraserDbForm extends AnchorPane {
 
             //2. If there is no tab open for the block, open a new tab
             //Make sure we're opening the desired version
-            long lastBlockVersion = checkNotNull(lastVersionByBlockId.get(block.getBlockId()));
+            long lastBlockVersion = phraserDB.getLastBlockVersion(block.getBlockId());
             boolean findLatestVersion;
             if (lastBlockVersion > block.getVersion()) {
                 String result = JavaFxUtils.showCustomDialog("Old Block", "Old Block",
@@ -470,7 +465,7 @@ public class PhraserDbForm extends AnchorPane {
 
             // Get latest version if needed and warn if it's tombstoned (PhraseBlock only)
             if ((findLatestVersion) || (blockType == PHRASE_BLOCK)) {
-                Block latestBlock = dbBlocks.stream().filter(b -> b.getVersion() == lastBlockVersion).findFirst().get();
+                Block latestBlock = checkNotNull(phraserDB.getLastBlock(block.getBlockId()));
                 if (findLatestVersion) {
                     block = latestBlock;
                 }
