@@ -38,6 +38,7 @@ public class SymbolSetsBlockForm extends AnchorPane {
     @FXML @Nullable TextField blockIdTextField;
     @FXML @Nullable TextField versionTextField;
     @FXML @Nullable TextField blockSizeTextField;
+    @FXML @Nullable TextField entropyTextField;
     @Nullable Stage stage;
     @Nullable final Block symbolSetsBlock;
     final PhraserDB phraserDB;
@@ -65,9 +66,11 @@ public class SymbolSetsBlockForm extends AnchorPane {
             for (SymbolSetsBlock.SymbolSet symbolSet : checkNotNull(symbolSetsBlock.symbolSetsBlock()).symbolSets()) {
                 addSymbolSetToList(symbolSet);
             }
+            checkNotNull(entropyTextField).textProperty().set(Long.toString(symbolSetsBlock.getEntropy()));
         } else {
             checkNotNull(blockIdTextField).textProperty().set(NEW_BLOCK);
             checkNotNull(versionTextField).textProperty().set(NEW_BLOCK);
+            checkNotNull(entropyTextField).textProperty().set(NEW_BLOCK);
         }
 
         checkNotNull(symbolSetTableView).itemsProperty().set(symbolSets);

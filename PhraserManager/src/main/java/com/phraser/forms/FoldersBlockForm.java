@@ -47,6 +47,7 @@ public class FoldersBlockForm extends AnchorPane {
     @FXML @Nullable TextField blockSizeTextField;
     @FXML @Nullable TextField folderNameTextField;
     @FXML @Nullable TextField subFolderNameTextField;
+    @FXML @Nullable TextField entropyTextField;
 
     @Nullable Stage stage;
     final PhraserDB phraserDB;
@@ -97,11 +98,13 @@ public class FoldersBlockForm extends AnchorPane {
         if (foldersBlock != null) {
             checkNotNull(blockIdTextField).textProperty().set(Integer.toString(foldersBlock.getBlockId()));
             checkNotNull(versionTextField).textProperty().set(Long.toString(foldersBlock.getVersion()));
+            checkNotNull(entropyTextField).textProperty().set(Long.toString(foldersBlock.getEntropy()));
 
             fillFolders(foldersBlock);
         } else {
             checkNotNull(blockIdTextField).textProperty().set(NEW_BLOCK);
             checkNotNull(versionTextField).textProperty().set(NEW_BLOCK);
+            checkNotNull(entropyTextField).textProperty().set(NEW_BLOCK);
         }
 
         this.phraserDB = phraserDB;

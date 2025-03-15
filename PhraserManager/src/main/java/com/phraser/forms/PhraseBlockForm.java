@@ -125,6 +125,7 @@ public class PhraseBlockForm extends AnchorPane {
     @FXML @Nullable TextField phraseTemplateTextField;
     @FXML @Nullable CheckBox isTombstoneCheckBox;
     @FXML @Nullable TableColumn<UIWord, String> copyColumn;
+    @FXML @Nullable TextField entropyTextField;
 
     ObservableList<UIPhraseHistory> phraseHistoryList;
     ObservableList<UIWord> phraseHistoryWordList;
@@ -165,9 +166,11 @@ public class PhraseBlockForm extends AnchorPane {
         if (phraseBlock == null) {
             checkNotNull(blockIdTextField).setText(NEW_BLOCK);
             checkNotNull(versionTextField).setText(NEW_BLOCK);
+            checkNotNull(entropyTextField).textProperty().set(NEW_BLOCK);
         } else {
             checkNotNull(blockIdTextField).setText(Integer.toString(checkNotNull(phraseBlock.phraseBlock()).blockId()));
             checkNotNull(versionTextField).setText(Long.toString(checkNotNull(phraseBlock.phraseBlock()).version()));
+            checkNotNull(entropyTextField).textProperty().set(Long.toString(phraseBlock.getEntropy()));
         }
 
         this.phraserDB = phraserDB;

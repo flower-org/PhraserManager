@@ -39,6 +39,7 @@
                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                  </rowConstraints>
                   <children>
                      <TextField fx:id="blockIdTextField" editable="false" GridPane.columnIndex="1">
@@ -98,6 +99,19 @@
                         </GridPane.margin>
                      </Label>
                      <TextField fx:id="bucketCountTextField" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                        <GridPane.margin>
+                           <Insets right="10.0" />
+                        </GridPane.margin>
+                     </TextField>
+                     <Label text="Entropy:" GridPane.rowIndex="6">
+                        <GridPane.margin>
+                           <Insets left="10.0" />
+                        </GridPane.margin>
+                     </Label>
+                     <TextField fx:id="entropyTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="6">
+                        <opaqueInsets>
+                           <Insets />
+                        </opaqueInsets>
                         <GridPane.margin>
                            <Insets right="10.0" />
                         </GridPane.margin>

@@ -95,6 +95,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
 
     @FXML @Nullable Button addWordTemplateSymbolSetButton;
     @FXML @Nullable Button removeWordTemplateSymbolSetButton;
+    @FXML @Nullable TextField entropyTextField;
 
     @Nullable Stage stage;
 
@@ -143,9 +144,11 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
         if (phraseTemplatesBlock == null) {
             checkNotNull(blockIdTextField).setText(NEW_BLOCK);
             checkNotNull(versionTextField).setText(NEW_BLOCK);
+            checkNotNull(entropyTextField).textProperty().set(NEW_BLOCK);
         } else {
             checkNotNull(blockIdTextField).setText(Integer.toString(checkNotNull(phraseTemplatesBlock.phraseTemplatesBlock()).blockId()));
             checkNotNull(versionTextField).setText(Long.toString(checkNotNull(phraseTemplatesBlock.phraseTemplatesBlock()).version()));
+            checkNotNull(entropyTextField).textProperty().set(Long.toString(phraseTemplatesBlock.getEntropy()));
         }
 
         this.phraserDB = phraserDB;

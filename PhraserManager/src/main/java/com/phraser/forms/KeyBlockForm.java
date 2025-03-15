@@ -38,6 +38,7 @@ public class KeyBlockForm extends AnchorPane {
     @Nullable @FXML TextField blockIdTextField;
     @Nullable @FXML TextField versionTextField;
     @Nullable @FXML TextField bucketCountTextField;
+    @FXML @Nullable TextField entropyTextField;
 
     @Nullable @FXML TextField dbNameTextField;
     @Nullable @FXML Label bucketCountLabel;
@@ -95,6 +96,7 @@ public class KeyBlockForm extends AnchorPane {
         if (keyBlock == null) {
             checkNotNull(blockIdTextField).setText(NEW_BLOCK);
             checkNotNull(versionTextField).setText(NEW_BLOCK);
+            checkNotNull(entropyTextField).textProperty().set(NEW_BLOCK);
             checkNotNull(dbNameTextField).setText(phraserDB.dbName());
             checkNotNull(bucketCountTextField).textProperty().set("384");
         } else {
@@ -102,6 +104,7 @@ public class KeyBlockForm extends AnchorPane {
             checkNotNull(versionTextField).setText(Long.toString(checkNotNull(keyBlock.keyBlock()).version()));
             checkNotNull(dbNameTextField).setText(keyBlock.keyBlock().dbName());
             checkNotNull(bucketCountTextField).textProperty().set(Integer.toString(checkNotNull(keyBlock.keyBlock()).bucketCount()));
+            checkNotNull(entropyTextField).textProperty().set(Long.toString(keyBlock.getEntropy()));
 
             checkNotNull(keyTextField).setText(HexTool.bytesToHex(keyBlock.keyBlock().key()));
             checkNotNull(ivTextField).setText(HexTool.bytesToHex(keyBlock.keyBlock().iv()));

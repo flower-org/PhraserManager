@@ -87,6 +87,10 @@ public interface Block {
     return storeBlock().blockId();
   }
 
+  default long getEntropy() {
+    return storeBlock().entropy();
+  }
+
   // --------------------------------------------------
 
   static Block create(StoreBlock storeBlock) {
