@@ -5,9 +5,13 @@ import com.phraser.db.FoldersBlock;
 import com.phraser.db.Icon;
 import com.phraser.db.ImmutableFoldersBlock;
 import com.phraser.db.ImmutableKeyBlock;
+import com.phraser.db.ImmutablePhraseBlock;
+import com.phraser.db.ImmutablePhraseHistory;
 import com.phraser.db.ImmutablePhraseTemplatesBlock;
 import com.phraser.db.ImmutableSymbolSetsBlock;
+import com.phraser.db.ImmutableWord;
 import com.phraser.db.KeyBlock;
+import com.phraser.db.PhraseBlock;
 import com.phraser.db.PhraseTemplatesBlock;
 import com.phraser.db.SymbolSetsBlock;
 import com.phraser.utils.PhraserUtils;
@@ -15,7 +19,7 @@ import com.phraser.utils.PhraserUtils;
 import javax.crypto.SecretKey;
 import java.util.List;
 
-import static com.phraser.db.PhraseTemplatesBlock.getWordPermissions;
+import static com.phraser.utils.PhraserUtils.getWordPermissions;
 
 public class DefaultDBCreator {
     public static final char[] DIGITS = "0123456789".toCharArray();
@@ -29,7 +33,16 @@ public class DefaultDBCreator {
 
     public static final List<char[]> DEFAULT_SYMBOL_SETS = List.of(DIGITS, LETTERS, MIN_SPECIAL);
 
-    static List<Block> initDefaultBlockConfig(String dbName) {
+    public static List<Block> initDefaultBlockConfig(String dbName) {
+        Block keyBlock = getKeyBlock(dbName);
+        Block symbolSetsBlock = getSymbolSetsBlock();
+        Block foldersBlock = getFoldersBlock();
+        Block phraseTemplatesBlock = getPhraseTemplatesBlock();
+
+        return List.of(keyBlock, symbolSetsBlock, foldersBlock, phraseTemplatesBlock);
+    }
+
+    public static Block getKeyBlock(String dbName) {
         // 1. KeyBlock
         int bucketCount = 256;
         SecretKey aesKey = PhraserUtils.getAes256Key();
@@ -38,14 +51,16 @@ public class DefaultDBCreator {
         KeyBlock storeKeyBlock = ImmutableKeyBlock.builder()
                 .blockId(1)
                 .version(1)
-                .bucketCount(bucketCount)
                 .entropy(PhraserUtils.generateEntropy())
+                .bucketCount(bucketCount)
                 .key(key)
                 .iv(iv)
                 .dbName(dbName)
                 .build();
-        Block keyBlock = Block.create(storeKeyBlock);
+        return Block.create(storeKeyBlock);
+    }
 
+    public static Block getSymbolSetsBlock() {
         // 2. SymbolSetsBlock
         List<SymbolSetsBlock.SymbolSet> symbolSets = List.of(
                 SymbolSetsBlock.SymbolSet.of(1, "Digits", DIGITS),
@@ -64,8 +79,10 @@ public class DefaultDBCreator {
                 .entropy(PhraserUtils.generateEntropy())
                 .addAllSymbolSets(symbolSets)
                 .build();
-        Block symbolSetsBlock = Block.create(storeSymbolSetsBlock);
+        return Block.create(storeSymbolSetsBlock);
+    }
 
+    public static Block getFoldersBlock() {
         // 3. FoldersBlock
         List<FoldersBlock.Folder> folders = List.of(
                 FoldersBlock.Folder.of(1, 0, "Websites"),
@@ -81,8 +98,10 @@ public class DefaultDBCreator {
                 .entropy(PhraserUtils.generateEntropy())
                 .addAllFolders(folders)
                 .build();
-        Block foldersBlock = Block.create(storeFoldersBlock);
+        return Block.create(storeFoldersBlock);
+    }
 
+    public static Block getPhraseTemplatesBlock() {
         // 4. PhraseTemplatesBlock
         List<PhraseTemplatesBlock.WordTemplate> wordTemplates = List.of(
                 PhraseTemplatesBlock.WordTemplate.of(1,
@@ -157,8 +176,104 @@ public class DefaultDBCreator {
                 .addAllPhraseTemplates(phraseTemplates)
                 .addAllWordTemplates(wordTemplates)
                 .build();
-        Block phraseTemplatesBlock = Block.create(storePhraseTemplatesBlock);
+        return Block.create(storePhraseTemplatesBlock);
+    }
 
-        return List.of(keyBlock, symbolSetsBlock, foldersBlock, phraseTemplatesBlock);
+    public static Block getPhraseBlock() {
+        // 5. Phrase (optional)
+        List<PhraseBlock.PhraseHistory> history = List.of(
+                ImmutablePhraseHistory.builder()
+                        .phraseTemplateId(3)//"3 Security questions"
+                        .phrase(List.of(
+                                ImmutableWord.builder()
+                                        .wordTemplateId(1)
+                                        .name("username")
+                                        .word("admin")
+                                        .permissions(getWordPermissions(false, true, true, true))
+                                        .icon(Icon.LOGIN)
+                                        .build(),
+                                ImmutableWord.builder()
+                                        .wordTemplateId(2)
+                                        .name("password")
+                                        .word("qwerty")
+                                        .permissions(getWordPermissions(true, false, true, false))
+                                        .icon(Icon.KEY)
+                                        .build(),
+                                ImmutableWord.builder()
+                                        .wordTemplateId(3)
+                                        .name("question")
+                                        .word("Question 1")
+                                        .permissions(getWordPermissions(false, true, false, true))
+                                        .icon(Icon.QUESTION)
+                                        .build(),
+                                ImmutableWord.builder()
+                                        .wordTemplateId(4)
+                                        .name("answer")
+                                        .word("Answer 1")
+                                        .permissions(getWordPermissions(true, false, true, false))
+                                        .icon(Icon.MESSAGE)
+                                        .build(),
+                                ImmutableWord.builder()
+                                        .wordTemplateId(3)
+                                        .name("question")
+                                        .word("Question 2")
+                                        .permissions(getWordPermissions(false, true, false, true))
+                                        .icon(Icon.QUESTION)
+                                        .build(),
+                                ImmutableWord.builder()
+                                        .wordTemplateId(4)
+                                        .name("answer")
+                                        .word("Answer 2")
+                                        .permissions(getWordPermissions(true, false, true, false))
+                                        .icon(Icon.MESSAGE)
+                                        .build(),
+                                ImmutableWord.builder()
+                                        .wordTemplateId(3)
+                                        .name("question")
+                                        .word("Question 3")
+                                        .permissions(getWordPermissions(false, true, false, true))
+                                        .icon(Icon.QUESTION)
+                                        .build(),
+                                ImmutableWord.builder()
+                                        .wordTemplateId(4)
+                                        .name("answer")
+                                        .word("Answer 3")
+                                        .permissions(getWordPermissions(true, false, true, false))
+                                        .icon(Icon.MESSAGE)
+                                        .build()
+                        ))
+                        .build(),
+                ImmutablePhraseHistory.builder()
+                        .phraseTemplateId(1)//Login/Pass
+                        .phrase(List.of(
+                                ImmutableWord.builder()
+                                        .wordTemplateId(1)
+                                        .name("username")
+                                        .word("admin")
+                                        .permissions(getWordPermissions(false, true, true, true))
+                                        .icon(Icon.LOGIN)
+                                        .build(),
+                                ImmutableWord.builder()
+                                        .wordTemplateId(2)
+                                        .name("password")
+                                        .word("qwerty")
+                                        .permissions(getWordPermissions(true, false, true, false))
+                                        .icon(Icon.KEY)
+                                        .build()
+                        ))
+                        .build()
+        );
+
+        PhraseBlock storePhraseBlock = ImmutablePhraseBlock.builder()
+                .blockId(3)
+                .version(3)
+                .entropy(PhraserUtils.generateEntropy())
+                .phraseTemplateId(3)//"3 Security questions"
+                .folderId(2)// \Computers
+                .isTombstone(false)
+                .phraseName("Gosuslugi")
+                .history(history)
+                .build();
+        return Block.create(storePhraseBlock);
     }
 }

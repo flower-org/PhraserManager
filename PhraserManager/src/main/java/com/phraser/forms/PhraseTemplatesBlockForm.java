@@ -44,6 +44,7 @@ import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
 import static com.phraser.db.Block.DATA_BLOCK_SIZE;
 import static com.phraser.db.PhraseTemplatesBlock.*;
 import static com.phraser.forms.PhraserDbForm.NEW_BLOCK;
+import static com.phraser.utils.PhraserUtils.*;
 
 public class PhraseTemplatesBlockForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraseTemplatesBlockForm.class);

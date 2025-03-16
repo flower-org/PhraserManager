@@ -259,8 +259,8 @@ public class PhraseBlockForm extends AnchorPane {
                 String wordName = retWord.name();
                 byte permissions = retWord.permissions();
                 Icon icon = retWord.icon();
-                boolean isTypeable = PhraseTemplatesBlock.isTypeable(permissions);
-                boolean isViewable = PhraseTemplatesBlock.isViewable(permissions);
+                boolean isTypeable = PhraserUtils.isTypeable(permissions);
+                boolean isViewable = PhraserUtils.isViewable(permissions);
 
                 UIWord uiWord = new UIWord(wordId, wordName, value, permissions, isTypeable, isViewable, icon);
                 words.add(uiWord);
@@ -330,9 +330,9 @@ public class PhraseBlockForm extends AnchorPane {
                                 "",
                                 wordTemplate.minLength(),
                                 wordTemplate.maxLength(),
-                                PhraseTemplatesBlock.isUserEditable(wordTemplate.permissions()),
-                                PhraseTemplatesBlock.isGenerateable(wordTemplate.permissions()),
-                                PhraseTemplatesBlock.isViewable(wordTemplate.permissions()),
+                                PhraserUtils.isUserEditable(wordTemplate.permissions()),
+                                PhraserUtils.isGenerateable(wordTemplate.permissions()),
+                                PhraserUtils.isViewable(wordTemplate.permissions()),
                                 getSymbolSets(wordTemplate),
                                 false
                             );
@@ -386,9 +386,9 @@ public class PhraseBlockForm extends AnchorPane {
                         word.value,
                         minLength,
                         maxLength,
-                        PhraseTemplatesBlock.isUserEditable(word.permissions),
-                        PhraseTemplatesBlock.isGenerateable(word.permissions),
-                        PhraseTemplatesBlock.isViewable(word.permissions),
+                        PhraserUtils.isUserEditable(word.permissions),
+                        PhraserUtils.isGenerateable(word.permissions),
+                        PhraserUtils.isViewable(word.permissions),
                         symbolSets,
                         !checkNotNull(phraseTemplate).wordTemplateIds().contains(word.wordTemplateId));
 
@@ -409,9 +409,9 @@ public class PhraseBlockForm extends AnchorPane {
                             "",
                             wordTemplate.minLength(),
                             wordTemplate.maxLength(),
-                            PhraseTemplatesBlock.isUserEditable(wordTemplate.permissions()),
-                            PhraseTemplatesBlock.isGenerateable(wordTemplate.permissions()),
-                            PhraseTemplatesBlock.isViewable(wordTemplate.permissions()),
+                            PhraserUtils.isUserEditable(wordTemplate.permissions()),
+                            PhraserUtils.isGenerateable(wordTemplate.permissions()),
+                            PhraserUtils.isViewable(wordTemplate.permissions()),
                             getSymbolSets(wordTemplate),
                             false
                     );
@@ -471,8 +471,8 @@ public class PhraseBlockForm extends AnchorPane {
                                     } else {
                                         PhraseTemplatesBlock.WordTemplate wordTemplate = wordTemplateOpt.get();
                                         wordName = wordTemplate.wordTemplateName();
-                                        isTypeable = PhraseTemplatesBlock.isTypeable(wordTemplate.permissions());
-                                        isViewable = PhraseTemplatesBlock.isViewable(wordTemplate.permissions());
+                                        isTypeable = PhraserUtils.isTypeable(wordTemplate.permissions());
+                                        isViewable = PhraserUtils.isViewable(wordTemplate.permissions());
                                         permissions = wordTemplate.permissions();
                                         icon = wordTemplate.icon();
                                     }

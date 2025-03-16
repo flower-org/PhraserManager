@@ -6,6 +6,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 public class PhraserUtils {
+    public static final byte GENERATEABLE = 1;
+    public static final byte TYPEABLE = 2;
+    public static final byte VIEWABLE = 4;
+    public static final byte USER_EDITABLE = 8;
+
     static final SecureRandom SECURE_RANDOM = new SecureRandom();
     static final KeyGenerator KEY_GEN;
     static {
@@ -67,4 +72,35 @@ public class PhraserUtils {
         }
         return result;
     }
+
+    public static byte getWordPermissions(boolean isGenerateable, boolean isUserEditable,
+                                   boolean isTypeable, boolean isViewable) {
+        if (!isGenerateable && !isUserEditable) {
+            throw new RuntimeException("Word should be either Generateable or UserEditable or both");
+        }
+        if (!isTypeable && !isViewable) {
+            throw new RuntimeException("Word should be either Typeable or Viewable or both");
+        }
+
+        int getWordPermissions = 0;
+        if (isGenerateable) {
+            getWordPermissions = getWordPermissions | GENERATEABLE;
+        }
+        if (isTypeable) {
+            getWordPermissions = getWordPermissions | TYPEABLE;
+        }
+        if (isViewable) {
+            getWordPermissions = getWordPermissions | VIEWABLE;
+        }
+        if (isUserEditable) {
+            getWordPermissions = getWordPermissions | USER_EDITABLE;
+        }
+
+        return (byte)getWordPermissions;
+    }
+
+    public static boolean isGenerateable(byte permissions) { return (permissions & GENERATEABLE) == GENERATEABLE; }
+    public static boolean isUserEditable(byte permissions) { return (permissions & USER_EDITABLE) == USER_EDITABLE; }
+    public static boolean isTypeable(byte permissions) { return (permissions & TYPEABLE) == TYPEABLE; }
+    public static boolean isViewable(byte permissions) { return (permissions & VIEWABLE) == VIEWABLE; }
 }

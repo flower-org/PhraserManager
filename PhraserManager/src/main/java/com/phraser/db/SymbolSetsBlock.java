@@ -16,7 +16,7 @@ public interface SymbolSetsBlock extends StoreBlock {
 
         default int getId() { return symbolSetId(); }
         default String getName() { return symbolSetName(); }
-        default String getSymbolSet() { return Arrays.toString(symbolSet()); }
+        default String getSymbolSet() { return new String(symbolSet()); }
 
         static SymbolSet of(int symbolSetId, String symbolSetName, char[] symbolSet) {
             return ImmutableSymbolSet.builder()

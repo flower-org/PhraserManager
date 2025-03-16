@@ -6,11 +6,6 @@ import java.util.List;
 
 @Value.Immutable
 public interface PhraseTemplatesBlock extends StoreBlock {
-    byte GENERATEABLE = 1;
-    byte TYPEABLE = 2;
-    byte VIEWABLE = 4;
-    byte USER_EDITABLE = 8;
-
     @Value.Immutable
     interface WordTemplate {
         /** 16 bit */
@@ -74,35 +69,4 @@ public interface PhraseTemplatesBlock extends StoreBlock {
 
     List<PhraseTemplate> phraseTemplates();
     List<WordTemplate> wordTemplates();
-
-    static byte getWordPermissions(boolean isGenerateable, boolean isUserEditable,
-                                   boolean isTypeable, boolean isViewable) {
-        if (!isGenerateable && !isUserEditable) {
-            throw new RuntimeException("Word should be either Generateable or UserEditable or both");
-        }
-        if (!isTypeable && !isViewable) {
-            throw new RuntimeException("Word should be either Typeable or Viewable or both");
-        }
-
-        int getWordPermissions = 0;
-        if (isGenerateable) {
-            getWordPermissions = getWordPermissions | GENERATEABLE;
-        }
-        if (isTypeable) {
-            getWordPermissions = getWordPermissions | TYPEABLE;
-        }
-        if (isViewable) {
-            getWordPermissions = getWordPermissions | VIEWABLE;
-        }
-        if (isUserEditable) {
-            getWordPermissions = getWordPermissions | USER_EDITABLE;
-        }
-
-        return (byte)getWordPermissions;
-    }
-
-    static boolean isGenerateable(byte permissions) { return (permissions & GENERATEABLE) == GENERATEABLE; }
-    static boolean isUserEditable(byte permissions) { return (permissions & USER_EDITABLE) == USER_EDITABLE; }
-    static boolean isTypeable(byte permissions) { return (permissions & TYPEABLE) == TYPEABLE; }
-    static boolean isViewable(byte permissions) { return (permissions & VIEWABLE) == VIEWABLE; }
 }
