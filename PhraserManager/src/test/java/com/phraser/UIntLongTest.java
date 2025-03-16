@@ -1,6 +1,6 @@
 package com.phraser;
 
-import com.phraser.dbcodec.UnsignedConverter;
+import com.phraser.utils.UnsignedConverter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

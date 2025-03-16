@@ -1,9 +1,7 @@
-package com.phraser.dbcodec;
+package com.phraser.utils;
 
 public class UnsignedConverter {
-    public static int longToInt(long l) {
-        return (int)(l & 0xFFFFFFFFL);
-    }
+    public static int longToInt(long l) { return (int)(l & 0xFFFFFFFFL); }
 
     public static long intToLong(int i) {
         return i & 0xFFFFFFFFL;

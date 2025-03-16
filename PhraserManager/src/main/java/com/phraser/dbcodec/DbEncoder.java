@@ -3,6 +3,7 @@ package com.phraser.dbcodec;
 import com.phraser.db.Block;
 import com.phraser.db.BlockType;
 import com.phraser.utils.PhraserUtils;
+import com.phraser.utils.UnsignedConverter;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
