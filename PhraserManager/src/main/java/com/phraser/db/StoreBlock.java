@@ -12,4 +12,12 @@ public interface StoreBlock {
 
     /** 64 bit */
     long entropy();//64 bit
+
+    static StoreBlock of(int blockId, long version, long entropy) {
+        return ImmutableStoreBlock.builder()
+            .blockId(blockId)
+            .version(version)
+            .entropy(entropy)
+            .build();
+    }
 }

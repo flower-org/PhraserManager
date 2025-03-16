@@ -16,9 +16,10 @@ public class DbEncoder {
     public final static String AES_ALGORITHM = "AES";
     public final static String AES_CBC_TRANSFORM = "AES/CBC/NoPadding";
 
-    public static byte[] encodeBlock(Block block, byte[] aesKey, byte[] ivMask) {
-        byte[] blockFlatBufData = FlatBufBlockEncoder.toFlatBufBlock(block);
-        return encodeBlock(blockFlatBufData, block.blockType().code, aesKey, ivMask);
+    public static byte[] dummyBlock() {
+        byte[] block = new byte[FLASH_SECTOR_SIZE];
+        PhraserUtils.fillRandomBytes(block, 0, FLASH_SECTOR_SIZE);
+        return block;
     }
 
     public static byte[] encodeBlock(byte[] blockFlatBufData, byte blockType, byte[] aesKey, byte[] ivMask) {

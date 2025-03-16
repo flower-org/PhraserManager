@@ -42,6 +42,16 @@ public class DefaultDBCreator {
         return List.of(keyBlock, symbolSetsBlock, foldersBlock, phraseTemplatesBlock);
     }
 
+    public static List<Block> initDefaultBlockConfigWithPhrase(String dbName) {
+        Block keyBlock = getKeyBlock(dbName);
+        Block symbolSetsBlock = getSymbolSetsBlock();
+        Block foldersBlock = getFoldersBlock();
+        Block phraseTemplatesBlock = getPhraseTemplatesBlock();
+        Block phraseBlock = getPhraseBlock();
+
+        return List.of(keyBlock, symbolSetsBlock, foldersBlock, phraseTemplatesBlock, phraseBlock);
+    }
+
     public static Block getKeyBlock(String dbName) {
         // 1. KeyBlock
         int bucketCount = 256;

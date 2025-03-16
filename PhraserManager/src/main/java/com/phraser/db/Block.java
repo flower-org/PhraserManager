@@ -15,6 +15,8 @@ public interface Block {
   int ENCRYPTED_BLOCK_SIZE_NO_ADLER = FLASH_SECTOR_SIZE - (IV_SIZE + ADLER_32_CHECKSUM_SIZE);
   int ENCRYPTED_BLOCK_SIZE = FLASH_SECTOR_SIZE - IV_SIZE;
 
+  Block DUMMY = ImmutableBlock.builder().storeBlock(StoreBlock.of(0,0,0)).build();
+
   StoreBlock storeBlock();
 
   default BlockType blockType() {

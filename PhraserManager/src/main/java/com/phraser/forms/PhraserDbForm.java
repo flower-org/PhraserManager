@@ -15,6 +15,7 @@ import com.phraser.db.PhraserDB;
 import com.phraser.db.PhraseTemplatesBlock;
 import com.phraser.db.Block;
 import com.phraser.db.SymbolSetsBlock;
+import com.phraser.dbcodec.DbFileManager;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
@@ -23,12 +24,14 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -516,7 +519,36 @@ public class PhraserDbForm extends AnchorPane {
 
     public void exportDBAction() {
         try {
-            throw new UnsupportedOperationException();
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Phraser Database files (*.phr)", "*.phr"));
+            fileChooser.setTitle("Save Database");
+            File saveFile = fileChooser.showSaveDialog(checkNotNull(stage));
+            if (saveFile == null) { return; }
+
+            if (!saveFile.getName().endsWith(".phr")) {
+                saveFile = new File(saveFile.getPath()  + ".phr");
+            }
+
+            EnterPasswordDialog enterPasswordDialog = new EnterPasswordDialog();
+            Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
+                    stage -> { enterPasswordDialog.setStage(stage); return enterPasswordDialog; },
+                    "Set Database Password");
+
+            final File finalSaveFile = saveFile;
+            workspaceStage.setOnHidden(
+                    ev -> {
+                        try {
+                            String password = enterPasswordDialog.getPassword();
+                            if (password != null) {
+                                DbFileManager.writeBlocksToFile(phraserDB.blocksObservableArray(), password, finalSaveFile);
+                            }
+                        } catch (Exception e) {
+                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error exporting DB: " + e, ButtonType.OK);
+                            LOGGER.error("Error exporting DB: ", e);
+                            alert.showAndWait();
+                        }
+                    }
+            );
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Error exporting DB: " + e, ButtonType.OK);
             LOGGER.error("Error exporting DB: ", e);
