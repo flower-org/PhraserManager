@@ -95,7 +95,7 @@ public interface Block {
 
   // --------------------------------------------------
 
-  static Block create(StoreBlock storeBlock) {
+  static Block of(StoreBlock storeBlock) {
     if (!(storeBlock instanceof FoldersBlock) &&
             !(storeBlock instanceof SymbolSetsBlock) &&
             !(storeBlock instanceof PhraseTemplatesBlock) &&

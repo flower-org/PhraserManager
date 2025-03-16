@@ -179,7 +179,7 @@ public class FoldersBlockForm extends AnchorPane {
 
     public void saveToDb() {
         FoldersBlock newFoldersBlock = formFoldersBlock(true);
-        Block block = Block.create(newFoldersBlock);
+        Block block = Block.of(newFoldersBlock);
 
         int bufferLength = FlatBufBlockEncoder.toFlatBufBlock(block).length;
 
@@ -244,7 +244,7 @@ public class FoldersBlockForm extends AnchorPane {
     }
 
     void updateBlockSize() {
-        Block block = Block.create(formFoldersBlock(false));
+        Block block = Block.of(formFoldersBlock(false));
 
         int bufferLength = FlatBufBlockEncoder.toFlatBufBlock(block).length;
         checkNotNull(blockSizeTextField).textProperty().set(Integer.toString(bufferLength));

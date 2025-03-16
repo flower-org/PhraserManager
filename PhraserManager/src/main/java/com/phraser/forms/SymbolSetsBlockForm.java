@@ -83,7 +83,7 @@ public class SymbolSetsBlockForm extends AnchorPane {
 
     public void saveToDb() {
         SymbolSetsBlock newSymbolSetsBlock = formSymbolSetsBlock(true);
-        Block block = Block.create(newSymbolSetsBlock);
+        Block block = Block.of(newSymbolSetsBlock);
 
         int bufferLength = FlatBufBlockEncoder.toFlatBufBlock(block).length;
 
@@ -176,7 +176,7 @@ public class SymbolSetsBlockForm extends AnchorPane {
     }
 
     void updateBlockSize() {
-        Block block = Block.create(formSymbolSetsBlock(false));
+        Block block = Block.of(formSymbolSetsBlock(false));
 
         int bufferLength = FlatBufBlockEncoder.toFlatBufBlock(block).length;
         checkNotNull(blockSizeTextField).textProperty().set(Integer.toString(bufferLength));

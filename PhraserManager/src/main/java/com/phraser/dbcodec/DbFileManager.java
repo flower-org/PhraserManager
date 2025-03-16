@@ -2,7 +2,6 @@ package com.phraser.dbcodec;
 
 import com.phraser.db.Block;
 import com.phraser.db.BlockType;
-import com.phraser.db.KeyBlock;
 import com.phraser.forms.PhraserDbForm;
 import com.phraser.utils.Pbkdf2Tool;
 import org.slf4j.Logger;
@@ -121,7 +120,7 @@ public class DbFileManager {
                 }
                 if (blockData != null) {
                     if (blockData.blockType == BlockType.KEY_BLOCK) {
-                        Block keyBlock = Block.create(FlatBufBlockDecoder.fromFlatBufKeyBlock(blockData.blockData));
+                        Block keyBlock = Block.of(FlatBufBlockDecoder.fromFlatBufKeyBlock(blockData.blockData));
                         blocks.add(keyBlock);
                         if (latestKeyBlock == null || latestKeyBlock.getVersion() < checkNotNull(keyBlock.keyBlock()).version()) {
                             latestKeyBlock = keyBlock;
@@ -156,16 +155,16 @@ public class DbFileManager {
                 if (blockData != null) {
                     switch (blockData.blockType) {
                         case FOLDERS_BLOCK:
-                            blocks.add(Block.create(FlatBufBlockDecoder.fromFlatBufFoldersBlock(blockData.blockData)));
+                            blocks.add(Block.of(FlatBufBlockDecoder.fromFlatBufFoldersBlock(blockData.blockData)));
                             break;
                         case SYMBOL_SETS_BLOCK:
-                            blocks.add(Block.create(FlatBufBlockDecoder.fromFlatBufSymbolSetsBlock(blockData.blockData)));
+                            blocks.add(Block.of(FlatBufBlockDecoder.fromFlatBufSymbolSetsBlock(blockData.blockData)));
                             break;
                         case PHRASE_TEMPLATES_BLOCK:
-                            blocks.add(Block.create(FlatBufBlockDecoder.fromFlatBufPhraseTemplatesBlock(blockData.blockData)));
+                            blocks.add(Block.of(FlatBufBlockDecoder.fromFlatBufPhraseTemplatesBlock(blockData.blockData)));
                             break;
                         case PHRASE_BLOCK:
-                            blocks.add(Block.create(FlatBufBlockDecoder.fromFlatBufPhraseBlock(blockData.blockData)));
+                            blocks.add(Block.of(FlatBufBlockDecoder.fromFlatBufPhraseBlock(blockData.blockData)));
                             break;
                         default:
                             throw new RuntimeException("Unexpected block type " + blockData.blockType);

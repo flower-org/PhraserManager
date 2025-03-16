@@ -273,7 +273,7 @@ public class PhraseBlockForm extends AnchorPane {
     }
 
     protected void updateBlockSize() {
-        Block block = Block.create(formPhraseBlock(false));
+        Block block = Block.of(formPhraseBlock(false));
 
         int bufferLength = FlatBufBlockEncoder.toFlatBufBlock(block).length;
         checkNotNull(blockSizeTextField).textProperty().set(Integer.toString(bufferLength));
@@ -639,7 +639,7 @@ public class PhraseBlockForm extends AnchorPane {
 
         PhraseBlock newPhraseBlock = formPhraseBlock(true);
 
-        Block block = Block.create(newPhraseBlock);
+        Block block = Block.of(newPhraseBlock);
         int bufferLength = FlatBufBlockEncoder.toFlatBufBlock(block).length;
 
         if (bufferLength > DATA_BLOCK_SIZE) {

@@ -211,7 +211,7 @@ public class PhraserDbForm extends AnchorPane {
                             .version(version)
                             .build();
 
-                    Block block = Block.create(blockWithVersionAndEntropy);
+                    Block block = Block.of(blockWithVersionAndEntropy);
                     addBlock(block);
 
                     checkNotNull(mainForm.getTabs()).getTabs().remove(keyBlockTab);
@@ -251,7 +251,7 @@ public class PhraserDbForm extends AnchorPane {
                             .version(version)
                             .build();
 
-                    Block block = Block.create(blockWithVersionAndEntropy);
+                    Block block = Block.of(blockWithVersionAndEntropy);
                     addBlock(block);
 
                     checkNotNull(mainForm.getTabs()).getTabs().remove(symbolSetsBlockTab);
@@ -291,7 +291,7 @@ public class PhraserDbForm extends AnchorPane {
                             .version(version)
                             .build();
 
-                    Block block = Block.create(blockWithVersionAndEntropy);
+                    Block block = Block.of(blockWithVersionAndEntropy);
                     addBlock(block);
 
                     checkNotNull(mainForm.getTabs()).getTabs().remove(foldersBlockTab);
@@ -332,7 +332,7 @@ public class PhraserDbForm extends AnchorPane {
                             .version(version)
                             .build();
 
-                    Block block = Block.create(blockWithVersionAndEntropy);
+                    Block block = Block.of(blockWithVersionAndEntropy);
                     addBlock(block);
 
                     checkNotNull(mainForm.getTabs()).getTabs().remove(phraseTemplatesBlockTab);
@@ -386,7 +386,7 @@ public class PhraserDbForm extends AnchorPane {
                         .version(version)
                         .build();
 
-                Block block = Block.create(blockWithVersionAndEntropy);
+                Block block = Block.of(blockWithVersionAndEntropy);
                 addBlock(block);
 
                 Tab phraseBlockTabFromMap = phraseBlockTabMap.get(blockId);

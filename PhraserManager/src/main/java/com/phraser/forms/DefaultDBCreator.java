@@ -67,7 +67,7 @@ public class DefaultDBCreator {
                 .iv(iv)
                 .dbName(dbName)
                 .build();
-        return Block.create(storeKeyBlock);
+        return Block.of(storeKeyBlock);
     }
 
     public static Block getSymbolSetsBlock() {
@@ -89,7 +89,7 @@ public class DefaultDBCreator {
                 .entropy(PhraserUtils.generateEntropy())
                 .addAllSymbolSets(symbolSets)
                 .build();
-        return Block.create(storeSymbolSetsBlock);
+        return Block.of(storeSymbolSetsBlock);
     }
 
     public static Block getFoldersBlock() {
@@ -108,7 +108,7 @@ public class DefaultDBCreator {
                 .entropy(PhraserUtils.generateEntropy())
                 .addAllFolders(folders)
                 .build();
-        return Block.create(storeFoldersBlock);
+        return Block.of(storeFoldersBlock);
     }
 
     public static Block getPhraseTemplatesBlock() {
@@ -186,7 +186,7 @@ public class DefaultDBCreator {
                 .addAllPhraseTemplates(phraseTemplates)
                 .addAllWordTemplates(wordTemplates)
                 .build();
-        return Block.create(storePhraseTemplatesBlock);
+        return Block.of(storePhraseTemplatesBlock);
     }
 
     public static Block getPhraseBlock() {
@@ -284,6 +284,6 @@ public class DefaultDBCreator {
                 .phraseName("Gosuslugi")
                 .history(history)
                 .build();
-        return Block.create(storePhraseBlock);
+        return Block.of(storePhraseBlock);
     }
 }
