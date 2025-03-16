@@ -15,7 +15,7 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class BlockEncoder {
+public class FlatBufBlockEncoder {
     public static byte[] toFlatBufBlock(Block block) {
         BlockType blockType = block.blockType();
         switch (blockType) {

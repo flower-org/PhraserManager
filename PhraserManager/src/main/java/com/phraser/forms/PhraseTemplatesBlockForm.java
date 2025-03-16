@@ -11,7 +11,7 @@ import com.phraser.db.ImmutableWordTemplate;
 import com.phraser.db.PhraseTemplatesBlock;
 import com.phraser.db.PhraserDB;
 import com.phraser.db.SymbolSetsBlock;
-import com.phraser.dbcodec.BlockEncoder;
+import com.phraser.dbcodec.FlatBufBlockEncoder;
 import com.phraser.utils.PhraserUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -226,7 +226,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
     void updateBlockSize() {
         Block block = Block.create(formPhraseTemplatesBlock(false));
 
-        int bufferLength = BlockEncoder.toFlatBufBlock(block).length;
+        int bufferLength = FlatBufBlockEncoder.toFlatBufBlock(block).length;
         checkNotNull(blockSizeTextField).textProperty().set(Integer.toString(bufferLength));
     }
 
@@ -275,7 +275,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
         }
 
         Block block = Block.create(newPhraseTemplatesBlock);
-        int bufferLength = BlockEncoder.toFlatBufBlock(block).length;
+        int bufferLength = FlatBufBlockEncoder.toFlatBufBlock(block).length;
 
         if (bufferLength > DATA_BLOCK_SIZE) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Block size can't exceed "+DATA_BLOCK_SIZE+" bytes", ButtonType.OK);

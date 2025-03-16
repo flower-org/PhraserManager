@@ -2,94 +2,157 @@ package com.phraser.dbcodec;
 
 import com.phraser.db.Block;
 import com.phraser.db.BlockType;
-import com.phraser.db.PhraserDB;
 import com.phraser.utils.PhraserUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.security.SecureRandom;
 import java.util.zip.Adler32;
 
 import static com.phraser.db.Block.*;
-import static com.phraser.utils.PhraserUtils.reverseArray;
 
-/*
-  TODO: I guess we can just keep this as an export-only thing
-
-  /** 1 byte * /
-  BlockType blockType();
-
-  /** 16 bytes - matches AES data block size, not AES key size * /
-  byte[] iv();
-  /** 4 byte unsigned - Adler32 checksum * /
-  long checksum();
-*/
 public class DbEncoder {
-    static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    public final static String AES_ALGORITHM = "AES";
+    public final static String AES_CBC_TRANSFORM = "AES/CBC/NoPadding";
 
-    //TODO: extract `encodeFullBlock()` method
-    byte[] encodeBlock(Block block, byte[] aesKey) {
-        byte[] blockBytes = BlockEncoder.toFlatBufBlock(block);
-        assert blockBytes.length <= DATA_BLOCK_SIZE;
+    public static byte[] encodeBlock(Block block, byte[] aesKey, byte[] ivMask) {
+        byte[] blockFlatBufData = FlatBufBlockEncoder.toFlatBufBlock(block);
+        return encodeBlock(blockFlatBufData, block.blockType().code, aesKey, ivMask);
+    }
 
-        byte[] fullDataBytes = new byte[ENCRYPTED_BLOCK_SIZE_NO_ADLER];
+    public static byte[] encodeBlock(byte[] blockFlatBufData, byte blockType, byte[] aesKey, byte[] ivMask) {
+        assert blockFlatBufData.length <= DATA_BLOCK_SIZE;
 
-        BlockType blockType = block.blockType();
+        // Create a single array to hold the block data and checksum
+        byte[] fullDataBytesWithAdler = new byte[ENCRYPTED_BLOCK_SIZE];
 
-        fullDataBytes[0] = blockType.code;
-        ByteBuffer.wrap(fullDataBytes, 1,2)
-                .order(ByteOrder.BIG_ENDIAN)
-                .putShort(UnsignedConverter.intToShort(blockBytes.length));
+        // Set block type and length
+        fullDataBytesWithAdler[0] = blockType;
+
+        int length = UnsignedConverter.intToShort(blockFlatBufData.length);
+        fullDataBytesWithAdler[1] = (byte) (length >> 8); // High byte
+        fullDataBytesWithAdler[2] = (byte) (length & 0xFF); // Low byte
+
+//        System.out.println("block type " + blockType);
+//        System.out.println("data length " + length);
 
         //fill data
-        System.arraycopy(blockBytes, 0, fullDataBytes, 3, blockBytes.length);
+        System.arraycopy(blockFlatBufData, 0, fullDataBytesWithAdler, 3, blockFlatBufData.length);
 
         //fill randomness
-        fillRandomBytes(fullDataBytes, blockBytes.length + 3, fullDataBytes.length);
-        reverseArray(fullDataBytes);
+        PhraserUtils.fillRandomBytes(fullDataBytesWithAdler, blockFlatBufData.length + 3, ENCRYPTED_BLOCK_SIZE_NO_ADLER);
+        PhraserUtils.reverseArrayInPlace(fullDataBytesWithAdler, 0, ENCRYPTED_BLOCK_SIZE_NO_ADLER);
 
-        //TODO: the on-disk block structure has change since
         //calculate adler32
         Adler32 adler32 = new Adler32();
-        adler32.update(fullDataBytes);
+        adler32.update(fullDataBytesWithAdler, 0, ENCRYPTED_BLOCK_SIZE_NO_ADLER);
         long checksum = adler32.getValue();
+//        System.out.println("checksum " + checksum);
 
-        //TODO: remove unnecessary copy
-        byte[] fullDataBytesWithAdler = new byte[ENCRYPTED_BLOCK_SIZE];
-        System.arraycopy(fullDataBytes, 0, fullDataBytesWithAdler, 0, fullDataBytes.length);
+        // Directly assign the checksum bytes in big-endian order
+        int checksumInt = UnsignedConverter.longToInt(checksum);
+//        System.out.println("checksumInt " + checksumInt);
+        fullDataBytesWithAdler[ENCRYPTED_BLOCK_SIZE_NO_ADLER] = (byte) (checksumInt >> 24); // High byte
+        fullDataBytesWithAdler[ENCRYPTED_BLOCK_SIZE_NO_ADLER + 1] = (byte) (checksumInt >> 16); // Second byte
+        fullDataBytesWithAdler[ENCRYPTED_BLOCK_SIZE_NO_ADLER + 2] = (byte) (checksumInt >> 8); // Third byte
+        fullDataBytesWithAdler[ENCRYPTED_BLOCK_SIZE_NO_ADLER + 3] = (byte) (checksumInt & 0xFF); // Low byte
 
-        ByteBuffer.wrap(fullDataBytes, ENCRYPTED_BLOCK_SIZE_NO_ADLER,4)
-                .order(ByteOrder.BIG_ENDIAN)
-                .putInt(UnsignedConverter.longToInt(checksum));
+//        System.out.println("decrypted " + HexTool.bytesToHex(fullDataBytesWithAdler));
+//        System.out.println("decrypted size " + fullDataBytesWithAdler.length);
 
-        //generate iv
-        byte[] iv = PhraserUtils.generateAesIv(); //16 bytes
-        byte[] encrypted = encrypt(fullDataBytesWithAdler, aesKey, iv);
+        //generate iv and encrypt
+        byte[] ivPart = PhraserUtils.generateAesIv(); //16 bytes
+        byte[] iv = PhraserUtils.xorByteArrays(ivMask, ivPart);
+        byte[] encrypted = aes256CbcEncrypt(fullDataBytesWithAdler, aesKey, iv);
+
+//        System.out.println("encrypted " + HexTool.bytesToHex(encrypted));
+//        System.out.println("encrypted size " + encrypted.length);
 
         byte[] encodedBlock = new byte[FLASH_SECTOR_SIZE];
         System.arraycopy(encrypted, 0, encodedBlock, 0, encrypted.length);
-        for (int i = ENCRYPTED_BLOCK_SIZE; i < FLASH_SECTOR_SIZE; i++) {
-            encodedBlock[i] = iv[i-ENCRYPTED_BLOCK_SIZE];
-        }
+        System.arraycopy(ivPart, 0, encodedBlock, ENCRYPTED_BLOCK_SIZE, ivPart.length);
+
+//        System.out.println("IvPart " + HexTool.bytesToHex(ivPart));
+//        System.out.println("IvMask " + HexTool.bytesToHex(ivMask));
+//        System.out.println("IV " + HexTool.bytesToHex(iv));
 
         return encodedBlock;
     }
 
-    void encodeDb(PhraserDB phraserDB, byte[] aesKey) {
-        /*for (Block block : phraserDB.blocks()) {
-            byte[] encodedBlock = encodeBlock(block, aesKey);
-        }*/
-        //TODO: implement?
+    public static BlockData decodeBlock(byte[] encoded, byte[] aesKey, byte[] ivMask) throws ChecksumException {
+        // Ensure the encoded data is of the expected size
+        if (encoded.length != FLASH_SECTOR_SIZE) {
+            throw new IllegalArgumentException("Invalid encoded block size, got " + encoded.length +
+                    " bytes, expected " + FLASH_SECTOR_SIZE + " bytes" );
+        }
+
+        // Extract the IV part from the encoded data
+        byte[] ivPart = new byte[16]; // Assuming IV is 16 bytes for AES
+        System.arraycopy(encoded, ENCRYPTED_BLOCK_SIZE, ivPart, 0, ivPart.length);
+
+        // Generate the actual IV by XORing with the ivMask
+        byte[] iv = PhraserUtils.xorByteArrays(ivMask, ivPart);
+
+//        System.out.println("IvPart " + HexTool.bytesToHex(ivPart));
+//        System.out.println("IvMask " + HexTool.bytesToHex(ivMask));
+//        System.out.println("IV " + HexTool.bytesToHex(iv));
+
+        // Extract the encrypted data
+        byte[] encrypted = new byte[ENCRYPTED_BLOCK_SIZE];
+        System.arraycopy(encoded, 0, encrypted, 0, ENCRYPTED_BLOCK_SIZE);
+
+//        System.out.println("encrypted " + HexTool.bytesToHex(encrypted));
+//        System.out.println("encrypted size " + encrypted.length);
+
+        // Decrypt the data
+        byte[] decrypted = aes256CbcDecrypt(encrypted, aesKey, iv);
+
+//        System.out.println("decrypted " + HexTool.bytesToHex(decrypted));
+//        System.out.println("decrypted size " + decrypted.length);
+
+        // Verify the checksum
+        int checksumInt = ((decrypted[ENCRYPTED_BLOCK_SIZE_NO_ADLER] & 0xFF) << 24) |
+                ((decrypted[ENCRYPTED_BLOCK_SIZE_NO_ADLER + 1] & 0xFF) << 16) |
+                ((decrypted[ENCRYPTED_BLOCK_SIZE_NO_ADLER + 2] & 0xFF) << 8) |
+                (decrypted[ENCRYPTED_BLOCK_SIZE_NO_ADLER + 3] & 0xFF);
+
+//        System.out.println("decr checksumInt " + checksumInt);
+
+        // Calculate the Adler32 checksum of the decrypted data (excluding the checksum bytes)
+        Adler32 adler32 = new Adler32();
+        adler32.update(decrypted, 0, ENCRYPTED_BLOCK_SIZE_NO_ADLER);
+        long calculatedChecksum = adler32.getValue();
+        int calculatedChecksumInt = UnsignedConverter.longToInt(calculatedChecksum);
+
+//        System.out.println("calc checksum " + calculatedChecksum);
+//        System.out.println("calc checksumInt " + calculatedChecksumInt);
+
+        // Verify the checksum
+        if (calculatedChecksumInt != checksumInt) {
+            throw new ChecksumException("Checksum verification failed");
+        }
+
+        PhraserUtils.reverseArrayInPlace(decrypted, 0, ENCRYPTED_BLOCK_SIZE_NO_ADLER);
+
+        // Extract the original block data length
+        byte blockType = decrypted[0];
+        int length = ((decrypted[1] & 0xFF) << 8) | (decrypted[2] & 0xFF);
+        byte[] blockFlatBufData = new byte[length];
+
+//        System.out.println("block type " + blockType);
+//        System.out.println("data length " + length);
+
+        // Copy the original block data
+        System.arraycopy(decrypted, 3, blockFlatBufData, 0, length);
+
+        return new BlockData(BlockType.fromCode(blockType), blockFlatBufData);
     }
 
-    public static byte[] encrypt(byte[] data, byte[] key, byte[] iv) {
+    public static byte[] aes256CbcEncrypt(byte[] data, byte[] key, byte[] iv) {
         try {
-            SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
+            SecretKeySpec secretKey = new SecretKeySpec(key, AES_ALGORITHM);
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            Cipher cipher = Cipher.getInstance(AES_CBC_TRANSFORM);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
             return cipher.doFinal(data);
         } catch (Exception e) {
@@ -98,15 +161,16 @@ public class DbEncoder {
         }
     }
 
-    /**
-     * @param arr array to fill
-     * @param start startIndex inclusive
-     * @param end endIndex exclusive
-     */
-    void fillRandomBytes(byte[] arr, int start, int end) {
-        byte[] tmp = new byte[end - start];
-        SECURE_RANDOM.nextBytes(tmp);
-
-        System.arraycopy(tmp, 0, arr, start, tmp.length);
+    public static byte[] aes256CbcDecrypt(byte[] data, byte[] key, byte[] iv) {
+        try {
+            SecretKeySpec secretKey = new SecretKeySpec(key, AES_ALGORITHM);
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+            Cipher cipher = Cipher.getInstance(AES_CBC_TRANSFORM);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec);
+            return cipher.doFinal(data);
+        } catch(Exception e) {
+            if (e instanceof RuntimeException) { throw (RuntimeException)e; }
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -6,12 +6,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 public class PhraserUtils {
+    static final SecureRandom SECURE_RANDOM = new SecureRandom();
     static final KeyGenerator KEY_GEN;
-    static final SecureRandom SECURE_RANDOM;
     static {
         try {
-            SECURE_RANDOM = new SecureRandom();
-
             KEY_GEN = KeyGenerator.getInstance("AES");
             KEY_GEN.init(256);
         } catch (NoSuchAlgorithmException e) {
@@ -33,11 +31,40 @@ public class PhraserUtils {
         return iv;
     }
 
-    public static void reverseArray(byte[] arr) {
-        for (int i = 0; i < arr.length/2; i++) {
-            byte tmp = arr[i];
-            arr[i] = arr[arr.length - 1 - i];
-            arr[arr.length - 1 - i] = tmp;
+    public static void reverseArrayInPlace(byte[] arr, int start, int end) {
+        if (start < 0 || end > arr.length || start > end) {
+            throw new IndexOutOfBoundsException("Invalid start or end index");
         }
+        int length = end-start;
+        for (int i = 0; i < length/2; i++) {
+            byte tmp = arr[start + i];
+            arr[start + i] = arr[end - 1 - i];
+            arr[end - 1 - i] = tmp;
+        }
+    }
+
+    public static void fillRandomBytes(byte[] arr) {
+        fillRandomBytes(arr, 0, arr.length);
+    }
+
+    /**
+     * @param arr array to fill
+     * @param start startIndex inclusive
+     * @param end endIndex non-inclusive
+     */
+    public static void fillRandomBytes(byte[] arr, int start, int end) {
+        byte[] tmp = new byte[end - start];
+        SECURE_RANDOM.nextBytes(tmp);
+//        System.out.println("random bytes " + HexTool.bytesToHex(tmp));
+
+        System.arraycopy(tmp, 0, arr, start, tmp.length);
+    }
+
+    public static byte[] xorByteArrays(byte[] array1, byte[] array2) {
+        byte[] result = new byte[array1.length];
+        for (int i = 0; i < array1.length; i++) {
+            result[i] = (byte) (array1[i] ^ array2[i]);
+        }
+        return result;
     }
 }
