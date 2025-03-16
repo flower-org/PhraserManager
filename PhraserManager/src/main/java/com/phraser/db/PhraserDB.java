@@ -2,6 +2,7 @@ package com.phraser.db;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -41,15 +42,10 @@ public class PhraserDB {
 
   @Nullable Consumer<String> dbNameListener;
 
-  public static PhraserDB createNewDb(int bucketCount, String dbName, @Nullable Consumer<String> dbNameListener) {
-    return new PhraserDB(List.of(Block.of(KeyBlock.createFirstKeyBlock(DEFAULT_KEY, DEFAULT_IV, 1))), bucketCount, dbName, dbNameListener);
-  }
-
-  public PhraserDB(List<Block> blocks, int bucketCount, @Nullable String defaultDbName, @Nullable Consumer<String> dbNameListener) {
+  public PhraserDB(List<Block> blocks, int bucketCount, @Nullable Consumer<String> dbNameListener) {
     if (blocks.size() > bucketCount) {
       throw new RuntimeException("blocks.length > bucketCount");
     }
-    this.dbName = defaultDbName;
     this.dbNameListener = dbNameListener;
     this.bucketCount = bucketCount;
     dbBlocks = FXCollections.observableArrayList();
@@ -112,9 +108,7 @@ public class PhraserDB {
       }
       bucketCount = newBucketCount;
 
-      if (dbNameListener != null) {
-        dbNameListener.accept(block.keyBlock().dbName());
-      }
+      notifyDbName();
      }
 
     // 1. add block to dbBlocks list
@@ -180,15 +174,24 @@ public class PhraserDB {
     }
   }
 
-  void setDbName(@Nullable String newDbName) {
-    dbName = newDbName;
+  protected void notifyDbName() {
     if (dbNameListener != null) {
-      dbNameListener.accept(dbName);
+      if (!StringUtils.isBlank(dbName)) {
+        dbNameListener.accept(dbName);
+      } else {
+        dbNameListener.accept("Untitled");
+      }
     }
+  }
+
+  protected void setDbName(@Nullable String newDbName) {
+    dbName = newDbName;
+    notifyDbName();
   }
 
   public void setDbNameListener(@Nullable Consumer<String> dbNameListener) {
     this.dbNameListener = dbNameListener;
+    notifyDbName();
   }
 
   @Nullable
@@ -216,13 +219,17 @@ public class PhraserDB {
     return dbName;
   }
 
-  public int getNextBlockId() {
+  public int incrementAndGetBlockId() {
     lastBlockId++;
     return lastBlockId;
   }
 
-  public long getNextVersion() {
+  public long incrementAndGetVersion() {
     lastVersion++;
+    return lastVersion;
+  }
+
+  public long getLastVersion() {
     return lastVersion;
   }
 

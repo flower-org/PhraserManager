@@ -13,7 +13,7 @@
     <MenuBar VBox.vgrow="NEVER">
         <Menu mnemonicParsing="false" text="File">
             <MenuItem mnemonicParsing="false" onAction="#newDb" text="New DB" />
-            <MenuItem mnemonicParsing="false" text="Import DB" />
+            <MenuItem mnemonicParsing="false" onAction="#importDb" text="Import DB" />
             <SeparatorMenuItem />
             <MenuItem mnemonicParsing="false" onAction="#closeAllTabs" text="Close all tabs" />
             <MenuItem mnemonicParsing="false" onAction="#quit" text="Quit" />

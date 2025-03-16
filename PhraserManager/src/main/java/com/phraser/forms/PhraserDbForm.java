@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.flower.fxutils.JavaFxUtils.YesNo.NO;
 import static com.phraser.db.BlockType.PHRASE_BLOCK;
@@ -48,8 +49,8 @@ public class PhraserDbForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraserDbForm.class);
     public final static String NEW_BLOCK = "[NEW BLOCK]";
 
-    public final static String OPEN_OLD = "Use old version";
-    public final static String OPEN_LATEST = "Use latest version";
+    public final static String OPEN_OLD = "View old version";
+    public final static String OPEN_LATEST = "View latest version";
     public final static String CANCEL = "Cancel";
 
     @FXML @Nullable TableView<Block> dbBlocksTable;
@@ -68,12 +69,13 @@ public class PhraserDbForm extends AnchorPane {
 
     // DB structure
     final PhraserDB phraserDB;
+    long dbExportVersion;
 
     public PhraserDbForm(MainForm mainForm, String defaultDbName, boolean initDefaultConfig) {
-        this(mainForm, initDefaultConfig ? initDefaultBlockConfig(defaultDbName) : List.of(), defaultDbName);
+        this(mainForm, initDefaultConfig ? initDefaultBlockConfig(defaultDbName) : List.of());
     }
 
-    public PhraserDbForm(MainForm mainForm, List<Block> blocks, String defaultDbName) {
+    public PhraserDbForm(MainForm mainForm, List<Block> blocks) {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("PhraserDbForm.fxml"));
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);
@@ -84,12 +86,13 @@ public class PhraserDbForm extends AnchorPane {
             throw new RuntimeException(exception);
         }
 
-        phraserDB = new PhraserDB(List.of(), BLOCKS_IN_DB, defaultDbName, null);
+        phraserDB = new PhraserDB(List.of(), BLOCKS_IN_DB, null);
         if (blocks != null) {
             for (Block dbBlock : blocks) {
                 addBlock(dbBlock);
             }
         }
+        dbExportVersion = phraserDB.getLastVersion();
 
         checkNotNull(dbBlocksTable).setRowFactory(new Callback<>() {
             @Override
@@ -135,6 +138,15 @@ public class PhraserDbForm extends AnchorPane {
     public void setTab(Tab tab) {
         this.tab = tab;
         phraserDB.setDbNameListener(s -> checkNotNull(tab).setText(s));
+        // Intercept the close request for the tab
+        tab.setOnCloseRequest(event -> {
+            if (phraserDB.getLastVersion() > dbExportVersion) {
+                if (YES != JavaFxUtils.showYesNoDialog("DB not exported", "DB was last exported at version ["
+                        + dbExportVersion + "]; current version [" + phraserDB.getLastVersion() + "]. Your updates will be lost. Close anyway?")) {
+                    event.consume(); // Prevent the tab from closing
+                }
+            }
+        });
     }
 
     public void newBlockAction() {
@@ -197,12 +209,12 @@ public class PhraserDbForm extends AnchorPane {
         keyBlockTab = mainForm.openKeyBlockForm(existingKeyBlock, phraserDB,
                 keyBlock -> {
                     int blockId;
-                    long version = phraserDB.getNextVersion();
+                    long version = phraserDB.incrementAndGetVersion();
                     Block lastKeyBlock = phraserDB.getLastKeyBlock();
                     if (lastKeyBlock != null) {
                         blockId = checkNotNull(lastKeyBlock.keyBlock()).blockId();
                     } else {
-                        blockId = phraserDB.getNextBlockId();
+                        blockId = phraserDB.incrementAndGetBlockId();
                     }
 
                     KeyBlock blockWithVersionAndEntropy = ImmutableKeyBlock.builder()
@@ -237,12 +249,12 @@ public class PhraserDbForm extends AnchorPane {
         symbolSetsBlockTab = mainForm.openSymbolSetsBlockForm(existingSymbolSetBlock, phraserDB,
                 symbolSetsBlock -> {
                     int blockId;
-                    long version = phraserDB.getNextVersion();
+                    long version = phraserDB.incrementAndGetVersion();
                     Block lastSymbolSetsBlock = phraserDB.getLastSymbolSetBlock();
                     if (lastSymbolSetsBlock != null) {
                         blockId = checkNotNull(lastSymbolSetsBlock.symbolSetsBlock()).blockId();
                     } else {
-                        blockId = phraserDB.getNextBlockId();
+                        blockId = phraserDB.incrementAndGetBlockId();
                     }
 
                     SymbolSetsBlock blockWithVersionAndEntropy = ImmutableSymbolSetsBlock.builder()
@@ -277,12 +289,12 @@ public class PhraserDbForm extends AnchorPane {
         foldersBlockTab = mainForm.openFoldersBlockForm(existingFoldersBlock, phraserDB,
                 foldersBlock -> {
                     int blockId;
-                    long version = phraserDB.getNextVersion();
+                    long version = phraserDB.incrementAndGetVersion();
                     Block lastFoldersBlock = phraserDB.getLastFoldersBlock();
                     if (lastFoldersBlock != null) {
                         blockId = checkNotNull(lastFoldersBlock.foldersBlock()).blockId();
                     } else {
-                        blockId = phraserDB.getNextBlockId();
+                        blockId = phraserDB.incrementAndGetBlockId();
                     }
 
                     FoldersBlock blockWithVersionAndEntropy = ImmutableFoldersBlock.builder()
@@ -318,12 +330,12 @@ public class PhraserDbForm extends AnchorPane {
                 phraserDB,
                 phraseTemplatesBlock -> {
                     int blockId;
-                    long version = phraserDB.getNextVersion();
+                    long version = phraserDB.incrementAndGetVersion();
                     Block lastPhraseTemplatesBlock = phraserDB.getLastPhraseTemplatesBlock();
                     if (lastPhraseTemplatesBlock != null) {
                         blockId = checkNotNull(lastPhraseTemplatesBlock.phraseTemplatesBlock()).blockId();
                     } else {
-                        blockId = phraserDB.getNextBlockId();
+                        blockId = phraserDB.incrementAndGetBlockId();
                     }
 
                     PhraseTemplatesBlock blockWithVersionAndEntropy = ImmutablePhraseTemplatesBlock.builder()
@@ -373,11 +385,11 @@ public class PhraserDbForm extends AnchorPane {
             phraserDB,
             phraseBlock -> {
                 int blockId;
-                long version = phraserDB.getNextVersion();
+                long version = phraserDB.incrementAndGetVersion();
                 if (existingPhraseBlock != null) {
                     blockId = checkNotNull(existingPhraseBlock.phraseBlock()).blockId();
                 } else {
-                    blockId = phraserDB.getNextBlockId();
+                    blockId = phraserDB.incrementAndGetBlockId();
                 }
 
                 PhraseBlock blockWithVersionAndEntropy = ImmutablePhraseBlock.builder()
@@ -454,7 +466,7 @@ public class PhraserDbForm extends AnchorPane {
             boolean findLatestVersion;
             if (lastBlockVersion > block.getVersion()) {
                 String result = JavaFxUtils.showCustomDialog("Old Block", "Old Block",
-                        "You're updating a block off its old version.",
+                        "You're viewing/updating a block off its old version.",
                         OPEN_OLD, OPEN_LATEST, CANCEL
                         );
                 if (result == null) { throw new RuntimeException("Unknown dialog result: " + result); }
@@ -541,6 +553,13 @@ public class PhraserDbForm extends AnchorPane {
                             String password = enterPasswordDialog.getPassword();
                             if (password != null) {
                                 DbFileManager.writeBlocksToFile(phraserDB.blocksObservableArray(), password, finalSaveFile);
+
+                                String successfulMessage = "DB `" + phraserDB.dbName() + "` exported to " + finalSaveFile.getPath() + ".";
+                                Alert alert = new Alert(Alert.AlertType.INFORMATION, successfulMessage, ButtonType.OK);
+                                LOGGER.info(successfulMessage);
+                                alert.showAndWait();
+
+                                dbExportVersion = phraserDB.getLastVersion();
                             }
                         } catch (Exception e) {
                             Alert alert = new Alert(Alert.AlertType.ERROR, "Error exporting DB: " + e, ButtonType.OK);

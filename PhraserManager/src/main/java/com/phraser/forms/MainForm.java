@@ -1,6 +1,7 @@
 package com.phraser.forms;
 
 import com.flower.fxutils.JavaFxUtils;
+import com.flower.fxutils.ModalWindow;
 import com.phraser.db.Block;
 import com.phraser.db.KeyBlock;
 import com.phraser.db.PhraseBlock;
@@ -8,27 +9,35 @@ import com.phraser.db.PhraseTemplatesBlock;
 import com.phraser.db.SymbolSetsBlock;
 import com.phraser.db.FoldersBlock;
 import com.phraser.db.PhraserDB;
+import com.phraser.dbcodec.DbFileManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
+import java.io.File;
+import java.util.List;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
 
 public class MainForm {
+    final static Logger LOGGER = LoggerFactory.getLogger(MainForm.class);
+
+    final static String UNTITLED_DB = "Untitled";
+
     @Nullable Stage mainStage;
     @FXML @Nullable Label infoLabel;
     @FXML @Nullable TabPane tabs;
-    int testFormCount = 0;
-    int newDbCount = 0;
 
     public MainForm() {
         //This form is created automatically.
@@ -54,15 +63,55 @@ public class MainForm {
             initDefaultConfig = true;
         }
 
-        String dbName = "New DB #" + ++newDbCount;
-
-        PhraserDbForm phraserDbForm = new PhraserDbForm(this, dbName, initDefaultConfig);
+        PhraserDbForm phraserDbForm = new PhraserDbForm(this, UNTITLED_DB, initDefaultConfig);
         phraserDbForm.setStage(checkNotNull(mainStage));
-        final Tab tab = new Tab(dbName, phraserDbForm);
+        final Tab tab = new Tab(UNTITLED_DB, phraserDbForm);
         tab.setClosable(true);
         phraserDbForm.setTab(tab);
 
         addTab(tab);
+    }
+
+    public void importDb() {
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Phraser Database files (*.phr)", "*.phr"));
+            fileChooser.setTitle("Save Database");
+            File dbFile = fileChooser.showOpenDialog(checkNotNull(mainStage));
+            if (dbFile == null) { return; }
+
+            EnterPasswordDialog enterPasswordDialog = new EnterPasswordDialog();
+            Stage workspaceStage = ModalWindow.showModal(checkNotNull(mainStage),
+                    stage -> { enterPasswordDialog.setStage(stage); return enterPasswordDialog; },
+                    "Get Database Password");
+
+            workspaceStage.setOnHidden(
+                    ev -> {
+                        try {
+                            String password = enterPasswordDialog.getPassword();
+                            if (password != null) {
+                                List<Block> db = DbFileManager.loadBlocksFromFile(password, dbFile);
+
+                                PhraserDbForm phraserDbForm = new PhraserDbForm(this, db);
+                                phraserDbForm.setStage(checkNotNull(mainStage));
+                                final Tab tab = new Tab(UNTITLED_DB, phraserDbForm);
+                                tab.setClosable(true);
+                                phraserDbForm.setTab(tab);
+
+                                addTab(tab);
+                            }
+                        } catch (Exception e) {
+                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error exporting DB: " + e, ButtonType.OK);
+                            LOGGER.error("Error exporting DB: ", e);
+                            alert.showAndWait();
+                        }
+                    }
+            );
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error exporting DB: " + e, ButtonType.OK);
+            LOGGER.error("Error exporting DB: ", e);
+            alert.showAndWait();
+        }
     }
 
     public Tab openKeyBlockForm(@Nullable Block keyBlock, PhraserDB phraserDB, Consumer<KeyBlock> keyBlockCallback) {
