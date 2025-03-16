@@ -35,19 +35,19 @@ public class PhraserDB {
 
   @Nullable String dbName;
 
-  long bucketCount;
+  long blockCount;
 
   int lastBlockId = 0;
   long lastVersion = 0;
 
   @Nullable Consumer<String> dbNameListener;
 
-  public PhraserDB(List<Block> blocks, int bucketCount, @Nullable Consumer<String> dbNameListener) {
-    if (blocks.size() > bucketCount) {
-      throw new RuntimeException("blocks.length > bucketCount");
+  public PhraserDB(List<Block> blocks, int blockCount, @Nullable Consumer<String> dbNameListener) {
+    if (blocks.size() > blockCount) {
+      throw new RuntimeException("blocks.length > blockCount");
     }
     this.dbNameListener = dbNameListener;
-    this.bucketCount = bucketCount;
+    this.blockCount = blockCount;
     dbBlocks = FXCollections.observableArrayList();
 
     for (Block block : blocks) {
@@ -62,7 +62,7 @@ public class PhraserDB {
   protected @Nullable Integer getNextOverwritableBlockIndex() {
     if (!dbBlocks.isEmpty()) {
       // 1. If we still have space in our blocks, use next available spot
-      if (dbBlocks.size() < bucketCount) {
+      if (dbBlocks.size() < blockCount) {
         return dbBlocks.size();
       }
 
@@ -101,12 +101,12 @@ public class PhraserDB {
 
   public void addBlock(Block block) {
     if (block.blockType() == KEY_BLOCK) {
-      int newBucketCount = checkNotNull(block.keyBlock()).bucketCount();
-      if (newBucketCount < dbBlocks.size()) {
-        throw new RuntimeException("Can't reduce bucket count to " + block.keyBlock().bucketCount() +
-                ", db currently contains " + dbBlocks.size() + "buckets. Try defragmenting.");
+      int newBlockCount = checkNotNull(block.keyBlock()).blockCount();
+      if (newBlockCount < dbBlocks.size()) {
+        throw new RuntimeException("Can't reduce block count to " + block.keyBlock().blockCount() +
+                ", db currently contains " + dbBlocks.size() + "blocks. Try defragmenting.");
       }
-      bucketCount = newBucketCount;
+      blockCount = newBlockCount;
 
       notifyDbName();
      }
@@ -131,11 +131,11 @@ public class PhraserDB {
 
     // If there are no overwritable blocks, and it's a new block, we throw Out Of Capacity error
     if (nextOverwritableBlockIndex == null) {
-      throw new RuntimeException("No spare blocks left (" + dbBlocks.size() + "/" + bucketCount + ")");
+      throw new RuntimeException("No spare blocks left (" + dbBlocks.size() + "/" + blockCount + ")");
     }
 
     // Write to the blocklist index
-    if (dbBlocks.size() < bucketCount) {
+    if (dbBlocks.size() < blockCount) {
       dbBlocks.add(block);
     } else {
       dbBlocks.set(nextOverwritableBlockIndex, block);

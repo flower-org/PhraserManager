@@ -50,8 +50,8 @@ public final class KeyBlock extends Table {
   public ByteBuffer ivAsByteBuffer() { return __vector_as_bytebuffer(10, 1); }
   public ByteBuffer ivInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 10, 1); }
   public boolean mutateIv(int j, byte iv) { int o = __offset(10); if (o != 0) { bb.put(__vector(o) + j * 1, iv); return true; } else { return false; } }
-  public int bucketCount() { int o = __offset(12); return o != 0 ? bb.getShort(o + bb_pos) & 0xFFFF : 0; }
-  public boolean mutateBucketCount(int bucket_count) { int o = __offset(12); if (o != 0) { bb.putShort(o + bb_pos, (short) bucket_count); return true; } else { return false; } }
+  public int blockCount() { int o = __offset(12); return o != 0 ? bb.getShort(o + bb_pos) & 0xFFFF : 0; }
+  public boolean mutateBlockCount(int block_count) { int o = __offset(12); if (o != 0) { bb.putShort(o + bb_pos, (short) block_count); return true; } else { return false; } }
 
   public static void startKeyBlock(FlatBufferBuilder builder) { builder.startTable(5); }
   public static void addBlock(FlatBufferBuilder builder, int blockOffset) { builder.addStruct(0, blockOffset, 0); }
@@ -67,7 +67,7 @@ public final class KeyBlock extends Table {
   public static int createIvVector(FlatBufferBuilder builder, byte[] data) { return builder.createByteVector(data); }
   public static int createIvVector(FlatBufferBuilder builder, ByteBuffer data) { return builder.createByteVector(data); }
   public static void startIvVector(FlatBufferBuilder builder, int numElems) { builder.startVector(1, numElems, 1); }
-  public static void addBucketCount(FlatBufferBuilder builder, int bucketCount) { builder.addShort(4, (short) bucketCount, (short) 0); }
+  public static void addBlockCount(FlatBufferBuilder builder, int blockCount) { builder.addShort(4, (short) blockCount, (short) 0); }
   public static int endKeyBlock(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;

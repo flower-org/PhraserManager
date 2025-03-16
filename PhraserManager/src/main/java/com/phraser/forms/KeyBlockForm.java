@@ -29,19 +29,19 @@ import static com.phraser.forms.PhraserDbForm.NEW_BLOCK;
 public class KeyBlockForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(KeyBlockForm.class);
 
-    final static int MIN_BUCKET_COUNT = 10;
-    final static int MAX_BUCKET_COUNT = 384;
+    final static int MIN_BLOCK_COUNT = 10;
+    final static int MAX_BLOCK_COUNT = 384;
 
     @Nullable final Block keyBlock;
     @Nullable @FXML TextField keyTextField;
     @Nullable @FXML TextField ivTextField;
     @Nullable @FXML TextField blockIdTextField;
     @Nullable @FXML TextField versionTextField;
-    @Nullable @FXML TextField bucketCountTextField;
+    @Nullable @FXML TextField blockCountTextField;
     @FXML @Nullable TextField entropyTextField;
 
     @Nullable @FXML TextField dbNameTextField;
-    @Nullable @FXML Label bucketCountLabel;
+    @Nullable @FXML Label blockCountLabel;
 
     final PhraserDB phraserDB;
     @Nullable volatile byte[] aes256Key;
@@ -60,7 +60,7 @@ public class KeyBlockForm extends AnchorPane {
             throw new RuntimeException(exception);
         }
 
-        checkNotNull(bucketCountLabel).setText("Bucket count (" + MIN_BUCKET_COUNT + "-" + MAX_BUCKET_COUNT + "):");
+        checkNotNull(blockCountLabel).setText("Block count (" + MIN_BLOCK_COUNT + "-" + MAX_BLOCK_COUNT + "):");
 
         checkNotNull(keyTextField).setTextFormatter(new TextFormatter<>(change -> {
                 String newText = change.getControlNewText();
@@ -82,7 +82,7 @@ public class KeyBlockForm extends AnchorPane {
             }
         ));
 
-        checkNotNull(bucketCountTextField).setTextFormatter(new TextFormatter<>(change -> {
+        checkNotNull(blockCountTextField).setTextFormatter(new TextFormatter<>(change -> {
                 String newText = change.getControlNewText();
                 if (newText.length() <= 32 && newText.matches("[0-9]*")) {
                     change.setText(change.getText().toLowerCase());
@@ -98,12 +98,12 @@ public class KeyBlockForm extends AnchorPane {
             checkNotNull(versionTextField).setText(NEW_BLOCK);
             checkNotNull(entropyTextField).textProperty().set(NEW_BLOCK);
             checkNotNull(dbNameTextField).setText(phraserDB.dbName());
-            checkNotNull(bucketCountTextField).textProperty().set("384");
+            checkNotNull(blockCountTextField).textProperty().set("384");
         } else {
             checkNotNull(blockIdTextField).setText(Integer.toString(checkNotNull(keyBlock.keyBlock()).blockId()));
             checkNotNull(versionTextField).setText(Long.toString(checkNotNull(keyBlock.keyBlock()).version()));
             checkNotNull(dbNameTextField).setText(keyBlock.keyBlock().dbName());
-            checkNotNull(bucketCountTextField).textProperty().set(Integer.toString(checkNotNull(keyBlock.keyBlock()).bucketCount()));
+            checkNotNull(blockCountTextField).textProperty().set(Integer.toString(checkNotNull(keyBlock.keyBlock()).blockCount()));
             checkNotNull(entropyTextField).textProperty().set(Long.toString(keyBlock.getEntropy()));
 
             checkNotNull(keyTextField).setText(HexTool.bytesToHex(keyBlock.keyBlock().key()));
@@ -135,12 +135,12 @@ public class KeyBlockForm extends AnchorPane {
             alert.showAndWait();
             return;
         }
-        int bucketCount;
+        int blockCount;
         try {
-            bucketCount = Integer.parseInt(checkNotNull(bucketCountTextField).textProperty().get());
-            if (bucketCount < MIN_BUCKET_COUNT || bucketCount > MAX_BUCKET_COUNT) {
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Bucket count should be between "
-                        + MIN_BUCKET_COUNT + " and " + MAX_BUCKET_COUNT + " (inclusive)", ButtonType.OK);
+            blockCount = Integer.parseInt(checkNotNull(blockCountTextField).textProperty().get());
+            if (blockCount < MIN_BLOCK_COUNT || blockCount > MAX_BLOCK_COUNT) {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Block count should be between "
+                        + MIN_BLOCK_COUNT + " and " + MAX_BLOCK_COUNT + " (inclusive)", ButtonType.OK);
                 alert.showAndWait();
                 return;
             }
@@ -154,7 +154,7 @@ public class KeyBlockForm extends AnchorPane {
         KeyBlock newKeyBlock = ImmutableKeyBlock.builder()
                 .blockId(keyBlock == null ? -1 : checkNotNull(keyBlock.keyBlock()).blockId())
                 .version(-1)
-                .bucketCount(bucketCount)
+                .blockCount(blockCount)
                 .entropy(PhraserUtils.generateEntropy())
                 .key(key)
                 .iv(iv)

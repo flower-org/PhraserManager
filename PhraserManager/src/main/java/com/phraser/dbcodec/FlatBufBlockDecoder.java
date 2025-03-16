@@ -61,7 +61,7 @@ public class FlatBufBlockDecoder {
                 .blockId(keyBlock.block().blockId())
                 .version(keyBlock.block().version())
                 .entropy(keyBlock.block().entropy())
-                .bucketCount(keyBlock.bucketCount())
+                .blockCount(keyBlock.blockCount())
                 .dbName(dbName)
                 .key(key)
                 .iv(iv)

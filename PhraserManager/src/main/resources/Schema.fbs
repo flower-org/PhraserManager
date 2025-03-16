@@ -151,5 +151,5 @@ table KeyBlock {
   key: [byte];
   db_name: [byte];//encrypted DB name
   iv: [byte];
-  bucket_count: uint16;
+  block_count: uint16;
 }

@@ -65,9 +65,9 @@ public class DbFileManager {
         byte[] ivMask = checkNotNull(latestKeyBlock.keyBlock()).iv();
 
         // 4. If we have less blocks than our capacity, complement with dummys
-        int bucketCount = latestKeyBlock.keyBlock().bucketCount();
-        if (blocks.size() < bucketCount) {
-            for (int i = blocks.size(); i < bucketCount; i++) {
+        int blockCount = latestKeyBlock.keyBlock().blockCount();
+        if (blocks.size() < blockCount) {
+            for (int i = blocks.size(); i < blockCount; i++) {
                 blocks.add(Block.DUMMY);
             }
         }

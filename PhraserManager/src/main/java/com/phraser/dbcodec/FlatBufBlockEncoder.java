@@ -56,7 +56,7 @@ public class FlatBufBlockEncoder {
                 storeBlock.blockId(), storeBlock.version(), storeBlock.entropy());
 
         com.phraser.schema.phraser.KeyBlock.addBlock(builder, storeBlockOffset);
-        com.phraser.schema.phraser.KeyBlock.addBucketCount(builder, keyBlock.bucketCount());
+        com.phraser.schema.phraser.KeyBlock.addBlockCount(builder, keyBlock.blockCount());
         com.phraser.schema.phraser.KeyBlock.addDbName(builder, dbNameOffset);
         com.phraser.schema.phraser.KeyBlock.addKey(builder, keyOffset);
         com.phraser.schema.phraser.KeyBlock.addIv(builder, ivOffset);

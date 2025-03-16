@@ -12,7 +12,7 @@ public interface KeyBlock extends StoreBlock {
     byte[] key();
     byte[] iv();
     String dbName();
-    int bucketCount();
+    int blockCount();
 
     static com.phraser.schema.phraser.KeyBlock createKeyBlock(byte[] key_256, byte[] iv_128) {
         assert(key_256.length == 32);

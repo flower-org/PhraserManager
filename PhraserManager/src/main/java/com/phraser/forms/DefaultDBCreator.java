@@ -54,7 +54,7 @@ public class DefaultDBCreator {
 
     public static Block getKeyBlock(String dbName) {
         // 1. KeyBlock
-        int bucketCount = 256;
+        int blockCount = 256;
         SecretKey aesKey = PhraserUtils.getAes256Key();
         byte[] key = aesKey.getEncoded();
         byte[] iv = PhraserUtils.generateAesIv();
@@ -62,7 +62,7 @@ public class DefaultDBCreator {
                 .blockId(1)
                 .version(1)
                 .entropy(PhraserUtils.generateEntropy())
-                .bucketCount(bucketCount)
+                .blockCount(blockCount)
                 .key(key)
                 .iv(iv)
                 .dbName(dbName)
