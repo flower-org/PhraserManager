@@ -49,7 +49,7 @@ public class PhraserDbForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraserDbForm.class);
     public final static String NEW_BLOCK = "[NEW BLOCK]";
 
-    public final static String OPEN_OLD = "View old version";
+    public final static String OPEN_OLD = "View this version";
     public final static String OPEN_LATEST = "View latest version";
     public final static String CANCEL = "Cancel";
 

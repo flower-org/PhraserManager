@@ -10,12 +10,16 @@ import com.phraser.db.SymbolSetsBlock;
 import com.phraser.db.FoldersBlock;
 import com.phraser.db.PhraserDB;
 import com.phraser.dbcodec.DbFileManager;
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.skin.TabPaneSkin;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -24,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -192,6 +197,22 @@ public class MainForm {
     public void quit() { checkNotNull(mainStage).close(); }
 
     public void closeAllTabs() {
-        checkNotNull(tabs).getTabs().clear();
+        List<Tab> tabsToClose = new ArrayList<>(checkNotNull(tabs).getTabs());
+        for (Tab tab : tabsToClose) {
+            closeTab(tab);
+        }
+    }
+
+    protected void closeTab(Tab tab) {
+        EventHandler<Event> handler = tab.getOnCloseRequest();
+        if (null != handler) {
+            Event event = new Event(Tab.TAB_CLOSE_REQUEST_EVENT);
+            handler.handle(event);
+            if (!event.isConsumed()) {
+                tab.getTabPane().getTabs().remove(tab);
+            }
+        } else {
+            tab.getTabPane().getTabs().remove(tab);
+        }
     }
 }
