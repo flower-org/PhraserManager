@@ -8,6 +8,7 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.AnchorPane?>
 
 <fx:root prefHeight="738.0" prefWidth="872.0" type="AnchorPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
@@ -44,7 +45,7 @@
                                              </AnchorPane>
                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
                                                 <children>
-                                                   <TableView prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                   <TableView fx:id="phraseTableView" onMouseClicked="#phraseTableViewClicked" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                      <columns>
                                                        <TableColumn prefWidth="75.0" text="C1" />
                                                        <TableColumn prefWidth="75.0" text="C2" />
@@ -68,21 +69,34 @@
                                                 <children>
                                                    <ToolBar prefHeight="40.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                      <items>
-                                                       <Button mnemonicParsing="false" text="Add" />
-                                                         <Button mnemonicParsing="false" text="Rename" />
-                                                         <Button mnemonicParsing="false" text="Delete" />
+                                                       <Button mnemonicParsing="false" text="Add Folder" />
+                                                         <Button mnemonicParsing="false" text="Rename Folder" />
+                                                         <Button mnemonicParsing="false" text="Delete Folder" />
                                                          <Separator orientation="VERTICAL" prefHeight="200.0" />
-                                                         <Button mnemonicParsing="false" text="New Phrase" />
+                                                         <Button mnemonicParsing="false" text="Add Phrase" />
                                                      </items>
                                                    </ToolBar>
                                                 </children>
                                              </AnchorPane>
                                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
                                                 <children>
-                                                   <TableView prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                   <TableView fx:id="foldersTableView" onMouseClicked="#foldersTableViewClicked" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                      <columns>
-                                                       <TableColumn prefWidth="75.0" text="C1" />
-                                                       <TableColumn prefWidth="75.0" text="C2" />
+                                                         <TableColumn minWidth="150.0" prefWidth="150.0" text="Id">
+                                                             <cellValueFactory>
+                                                                 <PropertyValueFactory property="id" />
+                                                             </cellValueFactory>
+                                                         </TableColumn>
+                                                         <TableColumn minWidth="150.0" prefWidth="150.0" text="Name">
+                                                             <cellValueFactory>
+                                                                 <PropertyValueFactory property="name" />
+                                                             </cellValueFactory>
+                                                         </TableColumn>
+                                                         <TableColumn minWidth="150.0" prefWidth="150.0" text="Type">
+                                                             <cellValueFactory>
+                                                                 <PropertyValueFactory property="type" />
+                                                             </cellValueFactory>
+                                                         </TableColumn>
                                                      </columns>
                                                    </TableView>
                                                 </children>
@@ -110,7 +124,7 @@
                                              </AnchorPane>
                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
                                                 <children>
-                                                   <TableView prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                   <TableView fx:id="phraseHistoryTableView" onMouseClicked="#phraseHistoryTableViewClicked" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                      <columns>
                                                        <TableColumn prefWidth="75.0" text="C1" />
                                                        <TableColumn prefWidth="75.0" text="C2" />

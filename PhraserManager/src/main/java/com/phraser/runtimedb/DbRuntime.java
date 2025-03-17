@@ -20,12 +20,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.phraser.db.Block.FLASH_SECTOR_SIZE;
+import static com.phraser.db.FoldersBlock.Folder;
 import static com.phraser.db.PhraseTemplatesBlock.PhraseTemplate;
 import static com.phraser.db.PhraseTemplatesBlock.WordTemplate;
 import static com.phraser.db.SymbolSetsBlock.SymbolSet;
@@ -43,6 +45,7 @@ public class DbRuntime {
             this.version = version;
         }
     }
+
     public static class PhraseFolderAndName {
         public final int phraseBlockId;
         public final int folderId;
@@ -52,6 +55,15 @@ public class DbRuntime {
             this.phraseBlockId = phraseBlockId;
             this.folderId = folderId;
             this.name = name;
+        }
+    }
+
+    public static class FolderContent {
+        public final List<Folder> subFolders;
+        public final List<PhraseFolderAndName> phrases;
+        public FolderContent(List<Folder> subFolders, List<PhraseFolderAndName> phrases) {
+            this.subFolders = subFolders;
+            this.phrases = phrases;
         }
     }
 
@@ -78,9 +90,10 @@ public class DbRuntime {
     final Map<Integer, PhraseTemplate> phraseTemplates;
     final Map<Integer, WordTemplate> wordTemplates;
     final Map<Integer, SymbolSet> symbolSets;
-    final Map<Integer, String> folders;
+    final Map<Integer, Folder> folders;
     final Map<Integer, Set<Integer>> subFoldersByFolder;
-    final Map<Integer, Set<PhraseFolderAndName>> phrasesByFolder;
+    final Map<Integer, PhraseFolderAndName> phrases;
+    final Map<Integer, Set<Integer>> phrasesByFolder;
 
     static void readFileAtPos(byte[] bytes, RandomAccessFile f, int positionInFile) throws IOException {
         f.seek(positionInFile);
@@ -177,7 +190,7 @@ public class DbRuntime {
                     int blockNumber = i / FLASH_SECTOR_SIZE;
 
                     //Ignore tombstoned phrase blocks
-                    if (newBlock.blockType() == BlockType.PHRASE_BLOCK && !checkNotNull(newBlock.phraseBlock()).isTombstone()) {
+                    if (newBlock.blockType() == BlockType.PHRASE_BLOCK && checkNotNull(newBlock.phraseBlock()).isTombstone()) {
                         tombstonedPhraseBlocks.add(newBlockId);
                         blockNumberAndVersionByBlockId.remove(newBlockId);
                         phraseFolders.remove(newBlockId);
@@ -218,11 +231,17 @@ public class DbRuntime {
         phraseTemplatesBlockId = localPhraseTemplatesBlockId;
         symbolSetsBlockId = localSymbolSetsBlockId;
 
-        // 3. Fill phrasesByFolder
+        // 3. Fill phrases and phrasesByFolder
+        phrases = new HashMap<>();
         phrasesByFolder = new HashMap<>();
         phraseFolders.forEach(
             (phraseIdAndName, phraseFolderAndName)
-                -> phrasesByFolder.computeIfAbsent(phraseFolderAndName.folderId, k -> new HashSet<>()).add(phraseFolderAndName));
+                -> {
+                    phrasesByFolder
+                            .computeIfAbsent(phraseFolderAndName.folderId, k -> new HashSet<>())
+                            .add(phraseFolderAndName.phraseBlockId);
+                    phrases.put(phraseFolderAndName.phraseBlockId, phraseFolderAndName);
+            });
 
         // 4. Fill occupied blocks
         for (BlockNumberAndVersion bnv : blockNumberAndVersionByBlockId.values()) {
@@ -274,12 +293,36 @@ public class DbRuntime {
             subFoldersByFolder = new HashMap<>();
             checkNotNull(foldersBlock.foldersBlock()).folders()
                     .forEach(f -> {
-                        folders.put(f.folderId(), f.folderName());
+                        folders.put(f.folderId(), f);
                         subFoldersByFolder.computeIfAbsent(f.parentFolderId(), k -> new HashSet<>())
                                 .add(f.folderId());
                     });
         }
     }
+
+    public String getDbName() {
+        return dbName;
+    }
+
+    public FolderContent getFolderContent(int folderId) {
+        Set<Integer> subFolderIds = subFoldersByFolder.get(folderId);
+        List<Folder> subFolders = subFolderIds == null ? List.of() :
+                subFolderIds.stream()
+                    .map(fid -> checkNotNull(folders.get(fid)))
+                    .toList();
+        Set<Integer> phraseIds = phrasesByFolder.get(folderId);
+        List<PhraseFolderAndName> phraseList = phraseIds == null ? List.of() :
+                phraseIds.stream()
+                    .map(pid -> checkNotNull(phrases.get(pid)))
+                    .toList();
+        return new FolderContent(subFolders, phraseList);
+    }
+
+    public @Nullable Folder getFolder(int folderId) {
+        return folders.get(folderId);
+    }
+
+    // -------------------------------------------------------------------------------------
 
     public @Nullable PhraseBlock getPhrase(int phraseBlockId) {
         throw new UnsupportedOperationException();
@@ -295,9 +338,5 @@ public class DbRuntime {
 
     public @Nullable SymbolSet getSymbolSet(int symbolSetId) {
         return symbolSets.get(symbolSetId);
-    }
-
-    public String getDbName() {
-        return dbName;
     }
 }
