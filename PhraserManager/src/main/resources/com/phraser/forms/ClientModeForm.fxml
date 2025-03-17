@@ -39,6 +39,8 @@
                                                    <ToolBar prefHeight="40.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                       <items>
                                                          <Button fx:id="deletePhrasePhrasePaneButton" mnemonicParsing="false" text="Delete Phrase (tombstone)" />
+                                                         <Button fx:id="changeTemplatePhrasePaneButton" mnemonicParsing="false" text="Change Template" />
+                                                         <Button fx:id="changeFolderPhrasePaneButton" mnemonicParsing="false" text="Change Folder" />
                                                       </items>
                                                    </ToolBar>
                                                 </children>

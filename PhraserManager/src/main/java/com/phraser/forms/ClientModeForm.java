@@ -82,7 +82,7 @@ public class ClientModeForm extends AnchorPane {
 
         public ExplorerNodeType getType() { return type; }
         public String getName() { return name; }
-        public String getId() { return type == ExplorerNodeType.UP ? "" : Integer.toString(id); }
+        public String getId() { return type == ExplorerNodeType.UP || type == ExplorerNodeType.HISTORY ? "" : Integer.toString(id); }
         public String getValue() {
             return word == null ? "" : word.getValue();
         }
@@ -140,6 +140,8 @@ public class ClientModeForm extends AnchorPane {
     final ObservableList<ExplorerNode> phraseHistoryContent;
 
     @FXML @Nullable Button deletePhrasePhrasePaneButton;
+    @FXML @Nullable Button changeTemplatePhrasePaneButton;
+    @FXML @Nullable Button changeFolderPhrasePaneButton;
 
     @FXML @Nullable TableColumn<ExplorerNode, String> copyColumn;
     @FXML @Nullable TableColumn<ExplorerNode, String> generateColumn;
@@ -418,8 +420,14 @@ public class ClientModeForm extends AnchorPane {
         return mergeSymbolSets(symbolSets);
     }
 
+    public void switchPhraseContext(boolean on) {
+        checkNotNull(deletePhrasePhrasePaneButton).visibleProperty().set(on);
+        checkNotNull(changeTemplatePhrasePaneButton).visibleProperty().set(on);
+        checkNotNull(changeFolderPhrasePaneButton).visibleProperty().set(on);
+    }
+
     public void loadPhraseHistoryEntry() {
-        checkNotNull(deletePhrasePhrasePaneButton).visibleProperty().set(false);
+        switchPhraseContext(false);
         checkNotNull(phraseTitledPane).textProperty().set(currentPath());
 
         List<UIWord> phraseWords = getHistoryWords(checkNotNull(currentPhraseBlock).history().get(currentHistoryIndex));
@@ -436,7 +444,7 @@ public class ClientModeForm extends AnchorPane {
     }
 
     public void loadPhrase() {
-        checkNotNull(deletePhrasePhrasePaneButton).visibleProperty().set(true);
+        switchPhraseContext(true);
         checkNotNull(phraseTitledPane).textProperty().set(currentPath());
 
         List<UIWord> phraseWords = getPhraseWords(checkNotNull(currentPhraseBlock), currentPhraseBlock.history().get(0));
