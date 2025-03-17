@@ -161,6 +161,14 @@ public class DefaultDBCreator {
                         24,
                         "generated login",
                         List.of(1,2)
+                ),
+                PhraseTemplatesBlock.WordTemplate.of(7,
+                        getWordPermissions(true, true, true, true),
+                        Icon.SETTINGS,
+                        4,
+                        12,
+                        "bios password",
+                        List.of(1,2,6)
                 )
         );
 
@@ -169,8 +177,8 @@ public class DefaultDBCreator {
                         "Login/Pass",
                         List.of(1, 2)),
                 PhraseTemplatesBlock.PhraseTemplate.of(2,
-                        "OS/encrypted drive",
-                        List.of(1, 2, 5)),
+                        "Computer",
+                        List.of(1, 2, 5, 6)),
                 PhraseTemplatesBlock.PhraseTemplate.of(3,
                         "3 Security questions",
                         List.of(1, 2, 3, 4, 3, 4, 3, 4)),
