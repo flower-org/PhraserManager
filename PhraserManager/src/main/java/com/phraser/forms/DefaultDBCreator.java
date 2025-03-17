@@ -178,7 +178,7 @@ public class DefaultDBCreator {
                         List.of(1, 2)),
                 PhraseTemplatesBlock.PhraseTemplate.of(2,
                         "Computer",
-                        List.of(1, 2, 5, 6)),
+                        List.of(1, 2, 5, 7)),
                 PhraseTemplatesBlock.PhraseTemplate.of(3,
                         "3 Security questions",
                         List.of(1, 2, 3, 4, 3, 4, 3, 4)),

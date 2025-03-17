@@ -18,6 +18,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
 import javafx.scene.input.MouseButton;
@@ -25,6 +26,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,13 +35,15 @@ import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.phraser.forms.DefaultDBCreator.DEFAULT_SYMBOL_SETS;
@@ -118,7 +122,7 @@ public class ClientModeForm extends AnchorPane {
             if (isViewable) {
                 return value;
             } else {
-                return "*****";
+                return StringUtils.isBlank(value) ? "" : "*****";
             }
         }
     }
@@ -196,6 +200,32 @@ public class ClientModeForm extends AnchorPane {
                             JavaFxUtils.copyToClipboard(word.value);
                         });
                         return button;
+                    }
+                };
+            }
+        });
+
+        checkNotNull(phraseTableView).setRowFactory(new Callback<>() {
+            @Override
+            public TableRow<ExplorerNode> call(TableView<ExplorerNode> blockTableView) {
+                return new TableRow<>() {
+                    @Override
+                    protected void updateItem(ExplorerNode node, boolean empty) {
+                        super.updateItem(node, empty);
+                        boolean notAPart = false;
+                        if (node != null) {
+                            if (!isHistoryView) {
+                                if (node.word != null && !node.word.isPartOfTemplate) {
+                                    notAPart = true;
+                                }
+                            }
+                        }
+
+                        if (notAPart) {
+                            styleProperty().setValue("-fx-background-color: salmon");
+                        } else {
+                            styleProperty().setValue("");
+                        }
                     }
                 };
             }
@@ -284,15 +314,18 @@ public class ClientModeForm extends AnchorPane {
         PhraseTemplatesBlock.PhraseTemplate phraseTemplate =
                 dbRuntime.getPhraseTemplate(phraseBlock.phraseTemplateId());
 
-        Map<Integer, PhraseBlock.Word> map = history.phrase().stream()
-                        .collect(Collectors.toMap(PhraseBlock.Word::wordTemplateId, h -> h));
+        Map<Integer, Queue<PhraseBlock.Word>> map = new HashMap<>();
+        for (PhraseBlock.Word word : history.phrase()) {
+            map.computeIfAbsent(word.wordTemplateId(), k -> new ArrayDeque<>()).add(word);
+        }
 
         List<UIWord> words = new ArrayList<>();
         if (phraseTemplate != null) {
             for (int wordTemplateIds : phraseTemplate.wordTemplateIds()) {
                 PhraseTemplatesBlock.WordTemplate wordTemplate = checkNotNull(dbRuntime.getWordTemplate(wordTemplateIds));
 
-                PhraseBlock.Word oldWord = map.remove(wordTemplateIds);
+                Queue<PhraseBlock.Word> q = map.get(wordTemplateIds);
+                PhraseBlock.Word oldWord = q == null ? null : q.poll();
 
                 int wordTemplateId = wordTemplate.wordTemplateId();
                 String wordName = wordTemplate.wordTemplateName();
@@ -308,7 +341,8 @@ public class ClientModeForm extends AnchorPane {
         }
 
         for (PhraseBlock.Word historyWord : history.phrase()) {
-            if (map.containsKey(historyWord.wordTemplateId())) {
+            Queue<PhraseBlock.Word> q = map.get(historyWord.wordTemplateId());
+            if (q != null && !q.isEmpty()) {
                 int wordTemplateId = historyWord.wordTemplateId();
                 String wordName = historyWord.name();
                 String value = historyWord.word();
