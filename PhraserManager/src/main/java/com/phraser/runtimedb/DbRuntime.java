@@ -324,8 +324,17 @@ public class DbRuntime {
 
     // -------------------------------------------------------------------------------------
 
-    public @Nullable PhraseBlock getPhrase(int phraseBlockId) {
-        throw new UnsupportedOperationException();
+    public @Nullable PhraseBlock getPhrase(int phraseBlockId) throws IOException {
+        BlockNumberAndVersion blockNumber = blockNumberAndVersionByBlockId.get(phraseBlockId);
+        if (blockNumber == null) { return null; }
+
+        byte[] block = new byte[FLASH_SECTOR_SIZE];
+        int position = blockNumber.blockNumber * FLASH_SECTOR_SIZE;
+
+        readFileAtPos(block, f, position);
+
+        BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
+        return FlatBufBlockDecoder.fromFlatBufPhraseBlock(blockData.blockData);
     }
 
     public @Nullable PhraseTemplate getPhraseTemplate(int phraseTemplateId) {

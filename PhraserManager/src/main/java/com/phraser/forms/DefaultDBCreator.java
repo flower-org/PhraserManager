@@ -97,8 +97,8 @@ public class DefaultDBCreator {
         List<FoldersBlock.Folder> folders = List.of(
                 FoldersBlock.Folder.of(1, 0, "Websites"),
                 FoldersBlock.Folder.of(2, 0, "Computers"),
-                FoldersBlock.Folder.of(3, 1, "Banking"),
-                FoldersBlock.Folder.of(4, 1, "Social"),
+                FoldersBlock.Folder.of(3, 1, "Social"),
+                FoldersBlock.Folder.of(4, 1, "Finance"),
                 FoldersBlock.Folder.of(5, 2, "Laptops"),
                 FoldersBlock.Folder.of(6, 2, "Servers")
         );

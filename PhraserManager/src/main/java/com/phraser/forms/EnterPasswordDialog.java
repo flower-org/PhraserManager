@@ -5,6 +5,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.PasswordField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -52,6 +54,12 @@ public class EnterPasswordDialog extends VBox {
             Alert alert = new Alert(Alert.AlertType.ERROR, "EnterPasswordDialog close Error: " + e, ButtonType.OK);
             LOGGER.error("EnterPasswordDialog close Error:", e);
             alert.showAndWait();
+        }
+    }
+
+    public void closeOnEnter(KeyEvent event) {
+        if (event.getCode() == KeyCode.ENTER) {
+            okClose();
         }
     }
 }
