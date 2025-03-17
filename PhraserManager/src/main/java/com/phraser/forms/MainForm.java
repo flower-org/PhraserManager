@@ -12,14 +12,12 @@ import com.phraser.db.PhraserDB;
 import com.phraser.dbcodec.DbFileManager;
 import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.control.skin.TabPaneSkin;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -81,14 +79,14 @@ public class MainForm {
         try {
             FileChooser fileChooser = new FileChooser();
             fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Phraser Database files (*.phr)", "*.phr"));
-            fileChooser.setTitle("Save Database");
+            fileChooser.setTitle("Import Database");
             File dbFile = fileChooser.showOpenDialog(checkNotNull(mainStage));
             if (dbFile == null) { return; }
 
             EnterPasswordDialog enterPasswordDialog = new EnterPasswordDialog();
             Stage workspaceStage = ModalWindow.showModal(checkNotNull(mainStage),
                     stage -> { enterPasswordDialog.setStage(stage); return enterPasswordDialog; },
-                    "Get Database Password");
+                    "Enter Database Password");
 
             workspaceStage.setOnHidden(
                     ev -> {
@@ -213,6 +211,47 @@ public class MainForm {
             }
         } else {
             tab.getTabPane().getTabs().remove(tab);
+        }
+    }
+
+    public void openDbInClientMode() {
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Phraser Database files (*.phr)", "*.phr"));
+            fileChooser.setTitle("Open Database in Client Mode");
+            File dbFile = fileChooser.showOpenDialog(checkNotNull(mainStage));
+            if (dbFile == null) { return; }
+
+            EnterPasswordDialog enterPasswordDialog = new EnterPasswordDialog();
+            Stage workspaceStage = ModalWindow.showModal(checkNotNull(mainStage),
+                    stage -> { enterPasswordDialog.setStage(stage); return enterPasswordDialog; },
+                    "Enter Database Password");
+
+            workspaceStage.setOnHidden(
+                    ev -> {
+                        try {
+                            String password = enterPasswordDialog.getPassword();
+                            if (password != null) {
+                                ClientModeForm clientModeForm = new ClientModeForm(this, password, dbFile);
+                                clientModeForm.setStage(checkNotNull(mainStage));
+
+                                final Tab tab = new Tab(UNTITLED_DB, clientModeForm);
+                                tab.setClosable(true);
+                                clientModeForm.setTab(tab);
+
+                                addTab(tab);
+                            }
+                        } catch (Exception e) {
+                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error opening DB in client mode: " + e, ButtonType.OK);
+                            LOGGER.error("Error opening DB in client mode: ", e);
+                            alert.showAndWait();
+                        }
+                    }
+            );
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error opening DB in client mode: " + e, ButtonType.OK);
+            LOGGER.error("Error opening DB in client mode: ", e);
+            alert.showAndWait();
         }
     }
 }

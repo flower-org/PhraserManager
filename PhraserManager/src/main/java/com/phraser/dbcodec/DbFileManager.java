@@ -26,15 +26,15 @@ public class DbFileManager {
 
     public static final int PBKDF2_ITERATIONS = 10000; // Number of iterations
     public static final int PBKDF2_KEY_LENGTH = 256; // Key length in bits
-    public static final String HARD_CODED_SALT_STR = "PhraserPasswordManager"; // Hardcoded salt string
-    public static final byte[] HARD_CODED_SALT;
-    public static final byte[] HARD_CODED_IV;
+    public static final String HARDCODED_PHRASER_TOKEN = "PhraserPasswordManager"; // Hardcoded salt string
+    public static final byte[] HARDCODED_SALT;
+    public static final byte[] HARDCODED_IV_MASK;
 
     static {
         try {
-            byte[] bytes = HARD_CODED_SALT_STR.getBytes();
-            HARD_CODED_SALT = MessageDigest.getInstance("SHA-256").digest(bytes);
-            HARD_CODED_IV = MessageDigest.getInstance("MD5").digest(bytes);
+            byte[] bytes = HARDCODED_PHRASER_TOKEN.getBytes();
+            HARDCODED_SALT = MessageDigest.getInstance("SHA-256").digest(bytes);
+            HARDCODED_IV_MASK = MessageDigest.getInstance("MD5").digest(bytes);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -44,7 +44,7 @@ public class DbFileManager {
         List<Block> blocks = new ArrayList<>(srcBlocks);
 
         // 1. Form KeyBlockKey from password using PBKDF2 and hardcoded stuff
-        byte[] keyBlockKey = Pbkdf2Tool.pbkdf2(password, PBKDF2_ITERATIONS, PBKDF2_KEY_LENGTH, HARD_CODED_SALT);
+        byte[] keyBlockKey = Pbkdf2Tool.pbkdf2(password, PBKDF2_ITERATIONS, PBKDF2_KEY_LENGTH, HARDCODED_SALT);
         assert(keyBlockKey.length == 32);
 
         // 2. Get latest KeyBlock
@@ -84,7 +84,7 @@ public class DbFileManager {
                 } else {
                     byte[] dataBytes = FlatBufBlockEncoder.toFlatBufBlock(block);
                     if (block.blockType() == BlockType.KEY_BLOCK) {
-                        blockBytes = DbEncoder.encodeBlock(dataBytes, block.blockType().code, keyBlockKey, HARD_CODED_IV);
+                        blockBytes = DbEncoder.encodeBlock(dataBytes, block.blockType().code, keyBlockKey, HARDCODED_IV_MASK);
                     } else {
                         blockBytes = DbEncoder.encodeBlock(dataBytes, block.blockType().code, mainKey, ivMask);
                     }
@@ -95,11 +95,17 @@ public class DbFileManager {
         }
     }
 
+    public static byte[] getPbkdf2Key(String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
+        byte[] keyBlockKey = Pbkdf2Tool.pbkdf2(password, PBKDF2_ITERATIONS, PBKDF2_KEY_LENGTH, HARDCODED_SALT);
+        assert(keyBlockKey.length == 32);
+        return keyBlockKey;
+    }
+
     public static List<Block> loadBlocksFromFile(String password, File file) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         List<Block> blocks = new ArrayList<>();
 
         // 1. Form KeyBlockKey from password using PBKDF2 and hardcoded stuff
-        byte[] keyBlockKey = Pbkdf2Tool.pbkdf2(password, PBKDF2_ITERATIONS, PBKDF2_KEY_LENGTH, HARD_CODED_SALT);
+        byte[] keyBlockKey = getPbkdf2Key(password);
         assert(keyBlockKey.length == 32);
 
         // 2. Locate latest KeyBlock, decrypt with KeyBlockKey
@@ -112,7 +118,7 @@ public class DbFileManager {
                 // Try to decode block
                 BlockData blockData = null;
                 try {
-                    blockData = DbEncoder.decodeBlock(buffer, keyBlockKey, HARD_CODED_IV);
+                    blockData = DbEncoder.decodeBlock(buffer, keyBlockKey, HARDCODED_IV_MASK);
                 } catch (ChecksumException e) {
                     LOGGER.trace("Block checksum failed", e);
                 } catch (Exception e) {

@@ -3,8 +3,8 @@ package com.phraser.dbcodec;
 import com.phraser.db.BlockType;
 
 public class BlockData {
-    final BlockType blockType;
-    final byte[] blockData;
+    public final BlockType blockType;
+    public final byte[] blockData;
 
     public BlockData(BlockType blockType, byte[] blockData) {
         this.blockType = blockType;

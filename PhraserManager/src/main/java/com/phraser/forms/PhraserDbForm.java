@@ -533,7 +533,7 @@ public class PhraserDbForm extends AnchorPane {
         try {
             FileChooser fileChooser = new FileChooser();
             fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Phraser Database files (*.phr)", "*.phr"));
-            fileChooser.setTitle("Save Database");
+            fileChooser.setTitle("Export Database");
             File saveFile = fileChooser.showSaveDialog(checkNotNull(stage));
             if (saveFile == null) { return; }
 
@@ -544,7 +544,7 @@ public class PhraserDbForm extends AnchorPane {
             EnterPasswordDialog enterPasswordDialog = new EnterPasswordDialog();
             Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
                     stage -> { enterPasswordDialog.setStage(stage); return enterPasswordDialog; },
-                    "Set Database Password");
+                    "Enter Database Password");
 
             final File finalSaveFile = saveFile;
             workspaceStage.setOnHidden(
