@@ -31,12 +31,14 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
 
 public class MainForm {
     final static Logger LOGGER = LoggerFactory.getLogger(MainForm.class);
 
     final static String UNTITLED_DB = "Untitled";
+    final static String YES = "Yes";
+    final static String NO = "No";
+    final static String CANCEL = "Cancel";
 
     @Nullable Stage mainStage;
     @FXML @Nullable Label infoLabel;
@@ -61,9 +63,15 @@ public class MainForm {
     }
 
     public void newDb() {
-        boolean initDefaultConfig = false;
-        if (YES == JavaFxUtils.showYesNoDialog("New DB", "Initialize default DB configuration?")) {
+        String res = JavaFxUtils.showCustomDialog("New DB", "New DB",
+                "Initialize default DB configuration?", YES, NO, CANCEL);
+        boolean initDefaultConfig;
+        if (YES.equals(res)) {
             initDefaultConfig = true;
+        } else if (NO.equals(res)) {
+            initDefaultConfig = false;
+        } else {
+            return;
         }
 
         PhraserDbForm phraserDbForm = new PhraserDbForm(this, UNTITLED_DB, initDefaultConfig);
