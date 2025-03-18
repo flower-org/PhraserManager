@@ -349,8 +349,39 @@ public class DbRuntime {
     }
 
     // -------------------------------------------------------------------------------------
-    // BlockLoaders
+    // BlockLoaders (startup)
 
+    // Symbol Sets
+    protected void loadSymbolSetsBlock(int symbolSetsBlockNumber) throws IOException {
+        Block symbolSetsBlock = getSymbolSetsBlock(symbolSetsBlockNumber);
+        refreshSymbolSetsCache(symbolSetsBlock);
+    }
+
+    protected void refreshSymbolSetsCache(Block symbolSetsBlock) {
+        // Fully reload SymbolSets cache
+        symbolSets.clear();
+        checkNotNull(symbolSetsBlock.symbolSetsBlock()).symbolSets()
+                .forEach(ss -> symbolSets.put(ss.symbolSetId(), ss));
+    }
+
+    protected Block getSymbolSetsBlock(int symbolSetsBlockNumber) throws IOException {
+        byte[] block = new byte[FLASH_SECTOR_SIZE];
+
+        int symbolSetsBlockPosition = symbolSetsBlockNumber * FLASH_SECTOR_SIZE;
+        readFromFileAtPos(block, f, symbolSetsBlockPosition);
+        BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
+        Block symbolSetsBlock = Block.of(FlatBufBlockDecoder.fromFlatBufSymbolSetsBlock(blockData.blockData));
+        assert (symbolSetsBlock.blockType() == BlockType.SYMBOL_SETS_BLOCK);
+
+        return symbolSetsBlock;
+    }
+
+    public Block getSymbolSetsBlock() throws IOException {
+        int symbolSetsBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(symbolSetsBlockId)).blockNumber;
+        return getSymbolSetsBlock(symbolSetsBlockNumber);
+    }
+
+    // Folders
     public void loadFoldersBlock(int foldersBlockNumber) throws IOException {
         byte[] block = new byte[FLASH_SECTOR_SIZE];
 
@@ -371,6 +402,7 @@ public class DbRuntime {
                 });
     }
 
+    //Phrase Templates
     public void loadPhraseTemplatesBlock(int phraseTemplatesBlockNumber) throws IOException {
         byte[] block = new byte[FLASH_SECTOR_SIZE];
 
@@ -390,40 +422,43 @@ public class DbRuntime {
 
     // --------------------------------------------------------------------------------------------------------
 
-    public void reloadSymbolSetsBlock() throws IOException {
-        int symbolSetsBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(symbolSetsBlockId)).blockNumber;
-        loadSymbolSetsBlock(symbolSetsBlockNumber);
+    public void reloadBlockCache(Block block) {
+        switch (block.blockType()) {
+            case SYMBOL_SETS_BLOCK:
+                refreshSymbolSetsCache(block);
+                break;
+            case KEY_BLOCK:
+                // No-op, Key Block is immutable in Client Mode
+                break;
+            case FOLDERS_BLOCK:
+                // TODO: update FOLDERS_BLOCK cache
+                // - FoldersBlock cache
+                //final Map<Integer, Folder> folders;
+                //final Map<Integer, Set<Integer>> subFoldersByFolder;
+                break;
+            case PHRASE_TEMPLATES_BLOCK:
+                // TODO: update PHRASE_TEMPLATES_BLOCK cache
+                // - PhraseTemplatesBlock cache
+                //final Map<Integer, PhraseTemplate> phraseTemplates;
+                //final Map<Integer, WordTemplate> wordTemplates;
+                break;
+            case PHRASE_BLOCK:
+                // TODO: update PHRASE_BLOCK cache
+                // - Phrase Blocks (minimal info) cache
+                //final Map<Integer, PhraseFolderAndName> phrases;
+                //final Map<Integer, Set<Integer>> phrasesByFolder;
+                break;
+            default:
+                throw new RuntimeException("Unexpected block type " + block.blockType());
+        }
     }
 
-    protected void loadSymbolSetsBlock(int symbolSetsBlockNumber) throws IOException {
-        Block symbolSetsBlock = getSymbolSetsBlock(symbolSetsBlockNumber);
-        // Fully reload SymbolSets cache
-        symbolSets.clear();
-        checkNotNull(symbolSetsBlock.symbolSetsBlock()).symbolSets()
-                .forEach(ss -> symbolSets.put(ss.symbolSetId(), ss));
-    }
-
-    public Block getSymbolSetsBlock() throws IOException {
-        int symbolSetsBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(symbolSetsBlockId)).blockNumber;
-        return getSymbolSetsBlock(symbolSetsBlockNumber);
-    }
-
-    protected Block getSymbolSetsBlock(int symbolSetsBlockNumber) throws IOException {
-        byte[] block = new byte[FLASH_SECTOR_SIZE];
-
-        int symbolSetsBlockPosition = symbolSetsBlockNumber * FLASH_SECTOR_SIZE;
-        readFromFileAtPos(block, f, symbolSetsBlockPosition);
-        BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
-        Block symbolSetsBlock = Block.of(FlatBufBlockDecoder.fromFlatBufSymbolSetsBlock(blockData.blockData));
-        assert (symbolSetsBlock.blockType() == BlockType.SYMBOL_SETS_BLOCK);
-
-        return symbolSetsBlock;
-    }
+    //-------------------------------------------------------------------------------------------------------------
 
     protected int incrementAndGetBlockId() { return ++lastBlockId; }
     protected long incrementAndGetVersion() { return ++lastBlockVersion; }
 
-    public void updateSymbolSetsBlock(Block mainBlock) {
+    public void updateBlock(Block mainBlock) {
         BlockNumberAndVersion previousBlockInfo = blockNumberAndVersionByBlockId.get(mainBlock.getBlockId());
         int blockNumber = checkNotNull(previousBlockInfo).blockNumber;
 
@@ -443,7 +478,8 @@ public class DbRuntime {
                     compBlock = nextVersion(compBlock);
                     saveBlock(compBlock, freeBlockNumber);
 
-                    //Update DbRuntime fields:
+                    //Update DbRuntime context:
+                    reloadBlockCache(compBlock);
                     occupiedBlocksNumbers.remove(moveBlockNumber);
                     occupiedBlocksNumbers.put(freeBlockNumber, freeBlockNumber);
                     blockNumberAndVersionByBlockId.put(compBlock.getBlockId(),
@@ -468,7 +504,8 @@ public class DbRuntime {
             // save to nextUnoccupiedBlockNumber position
             saveBlock(mainBlock, freeBlockNumber);
 
-            // Update DbRuntime fields:
+            // Update DbRuntime context:
+            reloadBlockCache(mainBlock);
             occupiedBlocksNumbers.remove(blockNumber);
             occupiedBlocksNumbers.put(freeBlockNumber, freeBlockNumber);
             blockNumberAndVersionByBlockId.put(mainBlock.getBlockId(),

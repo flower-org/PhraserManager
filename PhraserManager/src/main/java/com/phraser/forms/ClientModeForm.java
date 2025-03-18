@@ -538,11 +538,7 @@ public class ClientModeForm extends AnchorPane {
             AtomicReference<Stage> workspaceStage = new AtomicReference<>();
             Consumer<SymbolSetsBlock> symbolSetsBlockCallback = newSymbolSetsBlock -> {
                 try {
-                    // 1. Form new block
-                    dbRuntime.updateSymbolSetsBlock(Block.of(newSymbolSetsBlock));
-
-                    // 2. Reload block and update cache
-                    dbRuntime.reloadSymbolSetsBlock();
+                    dbRuntime.updateBlock(Block.of(newSymbolSetsBlock));
 
                     Stage stage = workspaceStage.get();
                     while (stage == null) { stage = workspaceStage.get(); }

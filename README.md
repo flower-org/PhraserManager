@@ -27,15 +27,15 @@ what an attacker trying to decrypt sees first is random data, not structured dat
 theoretically possible, but the effort required to implement a non-standard mode on the microcontroller 
 does not allow it to be one of the practical goals of the first version.
 
-Also, for security, when initializing the database, it makes sense to place blocks in random locations 
+Also, for security, when initializing the database, it makes sense to place blocks in random locations (shuffle)
 so that it is harder for an attacker to deduce that, for example, the block with the key should be 
 at a certain position by default.
 
 ### 3. KeyBlock
 A special KeyBlock containing the decryption key for all other blocks is encrypted with a user key 
-generated from the user password using the PBKDF2 algorithm. This block also contains an IV mask for all 
+generated from the user password using PBKDF2 algorithm. This block also contains an IV mask for all 
 other blocks, which should be XORed with the IV from the footer of the block, the result is used as 
-actual IV for encryption/decryption.
+an actual IV for encryption/decryption.
 
 
 ### Optimizations:
