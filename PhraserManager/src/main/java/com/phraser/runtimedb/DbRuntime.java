@@ -474,6 +474,10 @@ public class DbRuntime {
         int blockNumber = checkNotNull(previousBlockInfo).blockNumber;
 
         // 1. Find next occupied block "to the right" from the last block and move to the left
+        // TODO: sometimes the 'block "to the right" from the last block' is actually the last recorded version of mainBlock.
+        //  This will not cause bugs, but an old version of the same block will be moved, instead of an actual version of some other block.
+        //  And the whole point of this approach is to move 2 blocks at the same time to prevent bit rot on blocks that are rarely updated.
+        //  MB put a small fix to prevent this from happening?
         try {
             Integer freeBlockNumber = TreeUtil.getNextMissingNumberToTheLeft(lastBlockNumber, occupiedBlocksNumbers, blockCount);
             // Make sure we have capacity to move blocks
