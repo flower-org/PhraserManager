@@ -1,63 +1,55 @@
-База данных проекта Phraser
+# Database tools for the Phraser Project
 
-Данный проект предоставляет UI для работы с БД формата, используемого 
-в устройстве Phraser.
+This project provides a UI management tool for custom database format used in the Phraser device.
 
-## Немного о БД:
+## A Bit About the Database:
 
-База данных состоит из блоков размером 4096 байт.
-По умолчанию мы занимаем 1 мб на встроенном флеш, что дает нам 256 таких блоков.
-Структура и виды данных, хранимых в блоках описаны при помощи FlatBuf, 
-их структуру можно подробнее рассмотреть в `resources/Schema.fbs`.
+The database consists of 4096 bytes blocks (the size of a flash sector of the target microcontroller RP2040). 
+By default, we occupy 1 MB of built-in flash, which gives us 256 such blocks. The structure and types of data 
+stored in the blocks are described using FlatBuf, and their structure can be examined in more detail in 
+`resources/Schema.fbs`.
 
-### 1. Внешняя структура
-Данные хранятся в зашифрованном виде. Все блоки состоят из зашифрованного сегмента данных и незашифрованного 
-футера.  
-В футере у нас 16 байтов - IV.
+### 1. External Structure
+Data is stored in an encrypted form. All blocks consist of an encrypted data segment and an unencrypted footer.  
+In the footer, we have 16 bytes - IV.
 
-### 2. Закриптованный сегмент
-Для шифровки используется AES-256 CBC, таким образом размер закриптованных данных 4096-16 = 4080 байт, 
-что удобно, т.к. AES работает с размером блока в 16 байт.  
-В хедере криптованного сегмента у нас: 1 (BlockType) + 2 (DataLength) = 3 байта.  
-В футере криптованного сегмента у нас: 4 (Adler32) = 4 байта.
-Таким образом, максимальный размер данных 4080 - (4+3) = 4073 байт.
+### 2. Encrypted Segment
+AES-256 CBC is used for encryption, thus the size of the encrypted data is 4096-16 = 4080 bytes, 
+which is convenient since AES works with a block size of 16 bytes.  
+In the header of the encrypted segment, we have: 1 (BlockType) + 2 (DataLength) = 3 bytes.  
+In the footer of the encrypted segment, we have: 4 (Adler32) = 4 bytes.  
+Thus, the maximum size of the data is 4080 - (4+3) = 4073 bytes.
 
 ![DB Block structure.png](DB%20Block%20structure.png)
 
-Данные комплементятся рандомом до максимального размера, и реверсятся перед 
-шифровкой, чтобы на пытающегося декриптовать смотрел бы рандом, а не годные данные.
-Тройной AES теоретически возможен, но эффорт, связанный с необходимостью реализации 
-нестандартного режима на микроконтроллере не позволяет сделать это одной из 
-практических целей 1й версии.
+Data is padded with random bytes to the maximum size and reversed before encryption so that 
+what an attacker trying to decrypt sees first is random data, not structured data. Triple AES is 
+theoretically possible, but the effort required to implement a non-standard mode on the microcontroller 
+does not allow it to be one of the practical goals of the first version.
 
-Также для безопасности, при инициализации БД имеет смысл расставить блоки 
-на рандомные места, чтобы атакующему сложнее было сделать вывод, что, 
-например, блок с ключом у нас дожен быть на той или иной позиции по умолчанию. 
+Also, for security, when initializing the database, it makes sense to place blocks in random locations 
+so that it is harder for an attacker to deduce that, for example, the block with the key should be 
+at a certain position by default.
 
 ### 3. KeyBlock
-Специальный блок KeyBlock, содержащий ключ дешифровки для всех остальных блоков, 
-шифруется пользовательским ключом, производимым из пользовательского пароля с 
-использованием алгоритма PBKDF2. Также данный блок содержит IV-маску для всех 
-остальных блоков, которую следует XOR-ить с IV из футера блока, после чего использовать 
-результат для расшифровки.
+A special KeyBlock containing the decryption key for all other blocks is encrypted with a user key 
+generated from the user password using the PBKDF2 algorithm. This block also contains an IV mask for all 
+other blocks, which should be XORed with the IV from the footer of the block, the result is used as 
+actual IV for encryption/decryption.
 
-## Оптимизации:
 
-Для оптимизации жизни флеш-памяти, новые и измененные блоки записываются в 
-append-only mode, используя незанятое пространство, как круговой буфер. (Copy On Write)
-Для избежания bit rot, каждый раз, когда мы записываем новый блок, мы можем 
-перемещать еще один, идея здесь в том, чтобы перемещать в том числе и блоки, 
-которые слишком долго не используются. 
+### Optimizations:
 
-Здесь можно пойти еще дальше, и перемещать 
-один блок при каждом включении, т.к. могут быть ситуации, в которых данные 
-изменяются слишком редко; но этот подход сликом агрессивен, и, надо полагать, 
-снизит ресурс жизни флеша из-за чрезмерных записей.
-Либо можно сделать специальую функцию для "освежения" хранилища путем перемещения блоков, 
-вызываемую пользователем; или же хранить все данные в двойном экземпляре, 
-в общем, тут возможны варианты.
+To optimize the life of flash memory, new and modified blocks are written in append-only mode, using 
+unoccupied space as a circular buffer (Copy On Write). To avoid bit rot, each time we write a new/updated block, 
+we move another one; the idea here is to make sure we overwrite blocks that have not been updated in a while. 
+(More details in [Phraser Block Storage notes.pdf](Phraser%20Block%20Storage%20notes.pdf))
 
-Однако же сделать встроенный флеш в полном смысле слова надежным представляется 
-слишком трудоемким, если, вообще, возможным; потому лучшим и первичным способом защиты 
-данных устройства от потери или коррупции следует считать экспорт БД и хранение внешних резервных 
-копий БД для восстановления.
+It's possible to go even further and move one block at each power-up, as there may be situations where data changes 
+too infrequently; but this approach might be too aggressive and is likely to reduce the lifespan of the flash 
+due to excessive writes. Alternatively, a special user-invokable function could be created for "refreshing" 
+the storage by moving blocks around; or all data could be stored in 2 copies; overall, there is a room for creativity here.
+
+However, making a built-in flash reliable in the "true" sense of the word seems very labor-intensive, 
+if not impossible; therefore, the best and primary way to protect the device's data from loss or corruption 
+is to periodically export the database data and recover from data loss using those external backups.
