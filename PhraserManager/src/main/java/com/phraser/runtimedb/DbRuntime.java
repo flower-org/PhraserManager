@@ -486,14 +486,14 @@ public class DbRuntime {
             if (freeBlockNumber != null) {
                 Integer moveBlockNumber = TreeUtil.getNextNumberToTheRight(lastBlockNumber, occupiedBlocksNumbers);
 
-                // If found (pretty much always), move the next occupied block to the right, bumping the version
+                // If found (pretty much always), move the valid block to the left, bumping the version
                 if (moveBlockNumber != null) {
-                    // load block at nextOccupiedBlockNumber
+                    // load block at moveBlockNumber
                     Block compBlock = loadBlock(moveBlockNumber);
 
                     // Here we just bump the version and keep the entropy unchanged; entropy update comes with the main block
                     compBlock = nextVersion(compBlock);
-                    // save to nextUnoccupiedBlockNumber position
+                    // save the block to freeBlockNumber position
                     saveBlock(compBlock, freeBlockNumber);
 
                     //Update DbRuntime context:
@@ -511,7 +511,7 @@ public class DbRuntime {
             LOGGER.error("1st (complementary) block save issue", e);
         }
 
-        // 2. Update the block version and move it to the right
+        // 2. Update the main block version and write it to the right of last block
         try {
             // We expect that entropy was updated by the updater of the main block
             // TODO: update entropy here?
@@ -521,7 +521,7 @@ public class DbRuntime {
             // If we don't have capacity to move blocks, update in place
             if (freeBlockNumber == null) { freeBlockNumber = blockNumber; }
 
-            // save to nextUnoccupiedBlockNumber position
+            // save to freeBlockNumber position
             saveBlock(mainBlock, freeBlockNumber);
 
             // Update DbRuntime context:
