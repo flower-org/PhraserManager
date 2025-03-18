@@ -353,7 +353,7 @@ public class DbRuntime {
 
     // Symbol Sets
     protected void loadSymbolSetsBlock(int symbolSetsBlockNumber) throws IOException {
-        Block symbolSetsBlock = getSymbolSetsBlock(symbolSetsBlockNumber);
+        Block symbolSetsBlock = readSymbolSetsBlock(symbolSetsBlockNumber);
         refreshSymbolSetsCache(symbolSetsBlock);
     }
 
@@ -364,7 +364,7 @@ public class DbRuntime {
                 .forEach(ss -> symbolSets.put(ss.symbolSetId(), ss));
     }
 
-    protected Block getSymbolSetsBlock(int symbolSetsBlockNumber) throws IOException {
+    protected Block readSymbolSetsBlock(int symbolSetsBlockNumber) throws IOException {
         byte[] block = new byte[FLASH_SECTOR_SIZE];
 
         int symbolSetsBlockPosition = symbolSetsBlockNumber * FLASH_SECTOR_SIZE;
@@ -376,14 +376,14 @@ public class DbRuntime {
         return symbolSetsBlock;
     }
 
-    public Block getSymbolSetsBlock() throws IOException {
+    public Block readSymbolSetsBlock() throws IOException {
         int symbolSetsBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(symbolSetsBlockId)).blockNumber;
-        return getSymbolSetsBlock(symbolSetsBlockNumber);
+        return readSymbolSetsBlock(symbolSetsBlockNumber);
     }
 
     //Phrase Templates
     protected void loadPhraseTemplatesBlock(int phraseTemplatesBlockNumber) throws IOException {
-        Block phraseTemplatesBlock = getPhraseTemplatesBlock(phraseTemplatesBlockNumber);
+        Block phraseTemplatesBlock = readPhraseTemplatesBlock(phraseTemplatesBlockNumber);
         refreshPhraseTemplatesCache(phraseTemplatesBlock);
     }
 
@@ -397,7 +397,7 @@ public class DbRuntime {
                 .forEach(wt -> wordTemplates.put(wt.wordTemplateId(), wt));
     }
 
-    protected Block getPhraseTemplatesBlock(int phraseTemplatesBlockNumber) throws IOException {
+    protected Block readPhraseTemplatesBlock(int phraseTemplatesBlockNumber) throws IOException {
         byte[] block = new byte[FLASH_SECTOR_SIZE];
 
         int phraseTemplatesBlockPosition = phraseTemplatesBlockNumber * FLASH_SECTOR_SIZE;
@@ -408,9 +408,9 @@ public class DbRuntime {
         return phraseTemplatesBlock;
     }
 
-    public Block getPhraseTemplatesBlock() throws IOException {
+    public Block readPhraseTemplatesBlock() throws IOException {
         int phraseTemplatesBlock = checkNotNull(blockNumberAndVersionByBlockId.get(phraseTemplatesBlockId)).blockNumber;
-        return getPhraseTemplatesBlock(phraseTemplatesBlock);
+        return readPhraseTemplatesBlock(phraseTemplatesBlock);
     }
 
     // Folders

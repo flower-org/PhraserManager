@@ -530,7 +530,7 @@ public class ClientModeForm extends AnchorPane {
 
     public void updatePhraseTemplatesBlock() {
         try {
-            Block phraseTemplatesBlock = dbRuntime.getPhraseTemplatesBlock();
+            Block phraseTemplatesBlock = dbRuntime.readPhraseTemplatesBlock();
             AtomicReference<Stage> workspaceStage = new AtomicReference<>();
             Consumer<PhraseTemplatesBlock> phraseTemplatesBlockCallback = newPhraseTemplatesBlock -> {
                 try {
@@ -562,7 +562,7 @@ public class ClientModeForm extends AnchorPane {
 
     public void updateSymbolSetsBlock() {
         try {
-            Block symbolSetsBlock = dbRuntime.getSymbolSetsBlock();
+            Block symbolSetsBlock = dbRuntime.readSymbolSetsBlock();
             AtomicReference<Stage> workspaceStage = new AtomicReference<>();
             Consumer<SymbolSetsBlock> symbolSetsBlockCallback = newSymbolSetsBlock -> {
                 try {

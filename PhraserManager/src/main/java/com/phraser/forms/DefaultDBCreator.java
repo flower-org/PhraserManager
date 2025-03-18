@@ -165,8 +165,8 @@ public class DefaultDBCreator {
                 PhraseTemplatesBlock.WordTemplate.of(7,
                         getWordPermissions(true, true, true, true),
                         Icon.SETTINGS,
-                        4,
-                        12,
+                        8,
+                        10,
                         "bios password",
                         List.of(1,2,6)
                 )
