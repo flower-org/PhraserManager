@@ -90,6 +90,7 @@ public class DbFileManager {
         try (FileInputStream fis = new FileInputStream(file)) {
             byte[] buffer = new byte[FLASH_SECTOR_SIZE];
             int bytesRead;
+            int blockNumber = 0;
             // Read the file in blocks
             while ((bytesRead = fis.read(buffer)) != -1) {
                 // Try to decode block
@@ -103,13 +104,14 @@ public class DbFileManager {
                 }
                 if (blockData != null) {
                     if (blockData.blockType == BlockType.KEY_BLOCK) {
-                        Block keyBlock = Block.of(FlatBufBlockDecoder.fromFlatBufKeyBlock(blockData.blockData));
+                        Block keyBlock = Block.of(FlatBufBlockDecoder.fromFlatBufKeyBlock(blockData.blockData), blockNumber);
                         blocks.add(keyBlock);
                         if (latestKeyBlock == null || latestKeyBlock.getVersion() < checkNotNull(keyBlock.keyBlock()).version()) {
                             latestKeyBlock = keyBlock;
                         }
                     }
                 }
+                blockNumber++;
             }
         }
         if (latestKeyBlock == null) {
@@ -124,6 +126,7 @@ public class DbFileManager {
         try (FileInputStream fis = new FileInputStream(file)) {
             byte[] buffer = new byte[FLASH_SECTOR_SIZE];
             int bytesRead;
+            int blockNumber = 0;
             // Read the file in blocks
             while ((bytesRead = fis.read(buffer)) != -1) {
                 // Try to decode block
@@ -136,23 +139,26 @@ public class DbFileManager {
                     LOGGER.error("Block decoding issue", e);
                 }
                 if (blockData != null) {
+                    Block block;
                     switch (blockData.blockType) {
                         case FOLDERS_BLOCK:
-                            blocks.add(Block.of(FlatBufBlockDecoder.fromFlatBufFoldersBlock(blockData.blockData)));
+                            block = Block.of(FlatBufBlockDecoder.fromFlatBufFoldersBlock(blockData.blockData), blockNumber);
                             break;
                         case SYMBOL_SETS_BLOCK:
-                            blocks.add(Block.of(FlatBufBlockDecoder.fromFlatBufSymbolSetsBlock(blockData.blockData)));
+                            block = Block.of(FlatBufBlockDecoder.fromFlatBufSymbolSetsBlock(blockData.blockData), blockNumber);
                             break;
                         case PHRASE_TEMPLATES_BLOCK:
-                            blocks.add(Block.of(FlatBufBlockDecoder.fromFlatBufPhraseTemplatesBlock(blockData.blockData)));
+                            block = Block.of(FlatBufBlockDecoder.fromFlatBufPhraseTemplatesBlock(blockData.blockData), blockNumber);
                             break;
                         case PHRASE_BLOCK:
-                            blocks.add(Block.of(FlatBufBlockDecoder.fromFlatBufPhraseBlock(blockData.blockData)));
+                            block = Block.of(FlatBufBlockDecoder.fromFlatBufPhraseBlock(blockData.blockData), blockNumber);
                             break;
                         default:
                             throw new RuntimeException("Unexpected block type " + blockData.blockType);
                     }
+                    blocks.add(block);
                 }
+                blockNumber++;
             }
         }
 

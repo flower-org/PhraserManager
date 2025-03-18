@@ -33,6 +33,11 @@
                         <children>
                            <TableView fx:id="dbBlocksTable" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                              <columns>
+                                 <TableColumn minWidth="165.0" prefWidth="165.0" text="Original Block No.">
+                                     <cellValueFactory>
+                                         <PropertyValueFactory property="originalBlockNumber" />
+                                     </cellValueFactory>
+                                 </TableColumn>
                                  <TableColumn minWidth="150.0" prefWidth="150.0" text="Block Type">
                                      <cellValueFactory>
                                          <PropertyValueFactory property="blockType" />

@@ -103,7 +103,7 @@ public class PhraserDbForm extends AnchorPane {
                         super.updateItem(block, empty);
                         if (block != null) {
                             if (!phraserDB.isLatest(block)) {
-                                    styleProperty().setValue("-fx-background-color: salmon");
+                                styleProperty().setValue("-fx-background-color: salmon");
                             } else {
                                 if (block.blockType() == PHRASE_BLOCK && checkNotNull(block.phraseBlock()).isTombstone()) {
                                     styleProperty().setValue("-fx-background-color: crimson");

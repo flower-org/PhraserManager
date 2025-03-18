@@ -17,6 +17,7 @@ public interface Block {
 
   Block DUMMY = ImmutableBlock.builder().storeBlock(StoreBlock.of(0,0,0)).build();
 
+  @Nullable Integer originalBlockNumber();
   StoreBlock storeBlock();
 
   default BlockType blockType() {
@@ -93,6 +94,10 @@ public interface Block {
     return storeBlock().entropy();
   }
 
+  default @Nullable Integer getOriginalBlockNumber() {
+    return originalBlockNumber();
+  }
+
   // --------------------------------------------------
 
   static Block of(StoreBlock storeBlock) {
@@ -106,6 +111,21 @@ public interface Block {
 
     return ImmutableBlock.builder()
             .storeBlock(storeBlock)
+            .build();
+  }
+
+  static Block of(StoreBlock storeBlock, int originalBlockNumber) {
+    if (!(storeBlock instanceof FoldersBlock) &&
+            !(storeBlock instanceof SymbolSetsBlock) &&
+            !(storeBlock instanceof PhraseTemplatesBlock) &&
+            !(storeBlock instanceof PhraseBlock) &&
+            !(storeBlock instanceof KeyBlock)) {
+      throw new RuntimeException("Invalid Store Block " + storeBlock.getClass());
+    }
+
+    return ImmutableBlock.builder()
+            .storeBlock(storeBlock)
+            .originalBlockNumber(originalBlockNumber)
             .build();
   }
 }
