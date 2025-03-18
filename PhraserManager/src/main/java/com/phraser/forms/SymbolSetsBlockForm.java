@@ -4,7 +4,6 @@ import com.flower.fxutils.ModalWindow;
 import com.phraser.db.Block;
 import com.phraser.db.ImmutableSymbolSet;
 import com.phraser.db.ImmutableSymbolSetsBlock;
-import com.phraser.db.PhraserDB;
 import com.phraser.db.SymbolSetsBlock;
 import com.phraser.dbcodec.FlatBufBlockEncoder;
 import com.phraser.utils.PhraserUtils;
@@ -41,12 +40,11 @@ public class SymbolSetsBlockForm extends AnchorPane {
     @FXML @Nullable TextField entropyTextField;
     @Nullable Stage stage;
     @Nullable final Block symbolSetsBlock;
-    final PhraserDB phraserDB;
     final Consumer<SymbolSetsBlock> symbolSetsBlockCallback;
 
     int maxSymbolSetId = 0;
 
-    public SymbolSetsBlockForm(@Nullable Block symbolSetsBlock, PhraserDB phraserDB,
+    public SymbolSetsBlockForm(@Nullable Block symbolSetsBlock,
                                Consumer<SymbolSetsBlock> symbolSetsBlockCallback) {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("SymbolSetsBlockForm.fxml"));
         fxmlLoader.setRoot(this);
@@ -75,7 +73,6 @@ public class SymbolSetsBlockForm extends AnchorPane {
 
         checkNotNull(symbolSetTableView).itemsProperty().set(symbolSets);
 
-        this.phraserDB = phraserDB;
         this.symbolSetsBlockCallback = symbolSetsBlockCallback;
 
         updateBlockSize();

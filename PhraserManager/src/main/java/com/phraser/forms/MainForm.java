@@ -135,8 +135,8 @@ public class MainForm {
         return tab;
     }
 
-    public Tab openSymbolSetsBlockForm(@Nullable Block symbolSetsBlock, PhraserDB phraserDB, Consumer<SymbolSetsBlock> symbolSetsBlockCallback) {
-        SymbolSetsBlockForm symbolSetsBlockForm = new SymbolSetsBlockForm(symbolSetsBlock, phraserDB, symbolSetsBlockCallback);
+    public Tab openSymbolSetsBlockForm(@Nullable Block symbolSetsBlock, Consumer<SymbolSetsBlock> symbolSetsBlockCallback) {
+        SymbolSetsBlockForm symbolSetsBlockForm = new SymbolSetsBlockForm(symbolSetsBlock, symbolSetsBlockCallback);
         symbolSetsBlockForm.setStage(checkNotNull(mainStage));
         final Tab tab = new Tab("Symbol Sets Block", symbolSetsBlockForm);
         tab.setClosable(true);

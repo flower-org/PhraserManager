@@ -2,13 +2,20 @@ package com.phraser.runtimedb;
 
 import com.phraser.db.Block;
 import com.phraser.db.BlockType;
+import com.phraser.db.ImmutableFoldersBlock;
+import com.phraser.db.ImmutableKeyBlock;
+import com.phraser.db.ImmutablePhraseBlock;
+import com.phraser.db.ImmutablePhraseTemplatesBlock;
+import com.phraser.db.ImmutableSymbolSetsBlock;
 import com.phraser.db.KeyBlock;
 import com.phraser.db.PhraseBlock;
 import com.phraser.dbcodec.BlockData;
 import com.phraser.dbcodec.ChecksumException;
 import com.phraser.dbcodec.DbEncoder;
-import com.phraser.dbcodec.DbFileManager;
 import com.phraser.dbcodec.FlatBufBlockDecoder;
+import com.phraser.dbcodec.FlatBufBlockEncoder;
+import com.phraser.utils.Pbkdf2Tool;
+import com.phraser.utils.TreeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +38,7 @@ import static com.phraser.db.FoldersBlock.Folder;
 import static com.phraser.db.PhraseTemplatesBlock.PhraseTemplate;
 import static com.phraser.db.PhraseTemplatesBlock.WordTemplate;
 import static com.phraser.db.SymbolSetsBlock.SymbolSet;
-import static com.phraser.dbcodec.DbFileManager.HARDCODED_IV_MASK;
+import static com.phraser.utils.Pbkdf2Tool.HARDCODED_IV_MASK;
 
 /** Mimics DB data structures and related logic the way it will operate on a microcontroller */
 public class DbRuntime {
@@ -40,6 +47,7 @@ public class DbRuntime {
     public static class BlockNumberAndVersion {
         public final int blockNumber;
         public final long version;
+
         public BlockNumberAndVersion(int blockNumber, long version) {
             this.blockNumber = blockNumber;
             this.version = version;
@@ -61,6 +69,7 @@ public class DbRuntime {
     public static class FolderContent {
         public final List<Folder> subFolders;
         public final List<PhraseFolderAndName> phrases;
+
         public FolderContent(List<Folder> subFolders, List<PhraseFolderAndName> phrases) {
             this.subFolders = subFolders;
             this.phrases = phrases;
@@ -74,12 +83,15 @@ public class DbRuntime {
 
     int lastBlockId = 0;
     long lastBlockVersion = 0;
+    int lastBlockNumber = 0;
 
     final int keyBlockId;
+    final int blockCount;
     final int foldersBlockId;
     final int phraseTemplatesBlockId;
     final int symbolSetsBlockId;
 
+    final byte[] keyBlockKey;
     final byte[] aes256Key;
     final byte[] aes256IvMask;
 
@@ -87,17 +99,46 @@ public class DbRuntime {
     final Map<Integer, BlockNumberAndVersion> blockNumberAndVersionByBlockId;
 
     //Cached metadata blocks
-    final Map<Integer, PhraseTemplate> phraseTemplates;
-    final Map<Integer, WordTemplate> wordTemplates;
+    // - SymbolSetsBlock cache
     final Map<Integer, SymbolSet> symbolSets;
+
+    // - FoldersBlock cache
     final Map<Integer, Folder> folders;
     final Map<Integer, Set<Integer>> subFoldersByFolder;
+
+    // - PhraseTemplatesBlock cache
+    final Map<Integer, PhraseTemplate> phraseTemplates;
+    final Map<Integer, WordTemplate> wordTemplates;
+
+    // - Phrase Blocks (minimal info) cache
     final Map<Integer, PhraseFolderAndName> phrases;
     final Map<Integer, Set<Integer>> phrasesByFolder;
 
-    static void readFileAtPos(byte[] bytes, RandomAccessFile f, int positionInFile) throws IOException {
+    static void readFromFileAtPos(byte[] bytes, RandomAccessFile f, int positionInFile) throws IOException {
         f.seek(positionInFile);
         f.read(bytes, 0, bytes.length);
+    }
+
+    static void writeToFileAtPos(byte[] bytes, RandomAccessFile f, int positionInFile) throws IOException {
+        f.seek(positionInFile);
+        f.write(bytes, 0, bytes.length);
+    }
+
+    public static Block fromBlockData(BlockData blockData) {
+        switch (blockData.blockType) {
+            case KEY_BLOCK:
+                return Block.of(FlatBufBlockDecoder.fromFlatBufKeyBlock(blockData.blockData));
+            case SYMBOL_SETS_BLOCK:
+                return Block.of(FlatBufBlockDecoder.fromFlatBufSymbolSetsBlock(blockData.blockData));
+            case FOLDERS_BLOCK:
+                return Block.of(FlatBufBlockDecoder.fromFlatBufFoldersBlock(blockData.blockData));
+            case PHRASE_TEMPLATES_BLOCK:
+                return Block.of(FlatBufBlockDecoder.fromFlatBufPhraseTemplatesBlock(blockData.blockData));
+            case PHRASE_BLOCK:
+                return Block.of(FlatBufBlockDecoder.fromFlatBufPhraseBlock(blockData.blockData));
+            default:
+                throw new RuntimeException("Unexpected block type " + blockData.blockType);
+        }
     }
 
     public DbRuntime(File dbFile, String dbPassword) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
@@ -114,9 +155,9 @@ public class DbRuntime {
         Block latestKeyBlock = null;
         int latestKeyBlockNumber = -1;
 
-        byte[] keyBlockKey = DbFileManager.getPbkdf2Key(dbPassword);
-        for (int i = 0; i < f.length(); i+=FLASH_SECTOR_SIZE) {
-            readFileAtPos(block, f, i);
+        keyBlockKey = Pbkdf2Tool.getPbkdf2Key(dbPassword);
+        for (int i = 0; i < f.length(); i += FLASH_SECTOR_SIZE) {
+            readFromFileAtPos(block, f, i);
 
             BlockData blockData = null;
             try {
@@ -131,7 +172,10 @@ public class DbRuntime {
                     Block keyBlock = Block.of(FlatBufBlockDecoder.fromFlatBufKeyBlock(blockData.blockData));
 
                     lastBlockId = Math.max(lastBlockId, keyBlock.getBlockId());
-                    lastBlockVersion = Math.max(lastBlockVersion, keyBlock.getVersion());
+                    if (lastBlockVersion < keyBlock.getVersion()) {
+                        lastBlockVersion = keyBlock.getVersion();
+                        lastBlockNumber = i / FLASH_SECTOR_SIZE;
+                    }
 
                     if (latestKeyBlock == null || latestKeyBlock.getVersion() < checkNotNull(keyBlock.keyBlock()).version()) {
                         latestKeyBlock = keyBlock;
@@ -140,11 +184,10 @@ public class DbRuntime {
                 }
             }
         }
-        if (latestKeyBlock == null) {
-            throw new RuntimeException("Failed to decrypt KeyBlock");
-        }
+        if (latestKeyBlock == null) { throw new RuntimeException("Failed to decrypt KeyBlock"); }
         KeyBlock keyBlock = checkNotNull(latestKeyBlock.keyBlock());
         keyBlockId = keyBlock.blockId();
+        blockCount = keyBlock.blockCount();
         aes256Key = keyBlock.key();
         aes256IvMask = keyBlock.iv();
         dbName = keyBlock.dbName();
@@ -157,8 +200,8 @@ public class DbRuntime {
         Map<Integer, PhraseFolderAndName> phraseFolders = new HashMap<>();
 
         Set<Integer> tombstonedPhraseBlocks = new HashSet<>();
-        for (int i = 0; i < f.length(); i+=FLASH_SECTOR_SIZE) {
-            readFileAtPos(block, f, i);
+        for (int i = 0; i < f.length(); i += FLASH_SECTOR_SIZE) {
+            readFromFileAtPos(block, f, i);
 
             BlockData blockData = null;
             try {
@@ -169,21 +212,16 @@ public class DbRuntime {
                 LOGGER.error("Block decoding issue", e);
             }
             if (blockData != null) {
-                Block newBlock;
-                switch (blockData.blockType) {
-                    case KEY_BLOCK: newBlock = Block.of(FlatBufBlockDecoder.fromFlatBufKeyBlock(blockData.blockData)); break;
-                    case SYMBOL_SETS_BLOCK: newBlock = Block.of(FlatBufBlockDecoder.fromFlatBufSymbolSetsBlock(blockData.blockData)); break;
-                    case FOLDERS_BLOCK: newBlock = Block.of(FlatBufBlockDecoder.fromFlatBufFoldersBlock(blockData.blockData)); break;
-                    case PHRASE_TEMPLATES_BLOCK: newBlock = Block.of(FlatBufBlockDecoder.fromFlatBufPhraseTemplatesBlock(blockData.blockData)); break;
-                    case PHRASE_BLOCK: newBlock = Block.of(FlatBufBlockDecoder.fromFlatBufPhraseBlock(blockData.blockData)); break;
-                    default: throw new RuntimeException("Unexpected block type " + blockData.blockType);
-                }
+                Block newBlock = fromBlockData(blockData);
 
                 int newBlockId = newBlock.getBlockId();
                 long newBlockVersion = newBlock.getVersion();
 
                 lastBlockId = Math.max(lastBlockId, newBlockId);
-                lastBlockVersion = Math.max(lastBlockVersion, newBlockVersion);
+                if (lastBlockVersion < newBlockVersion) {
+                    lastBlockVersion = newBlockVersion;
+                    lastBlockNumber = i / FLASH_SECTOR_SIZE;
+                }
 
                 BlockNumberAndVersion old = blockNumberAndVersionByBlockId.get(newBlockId);
                 if (old == null || old.version < newBlockVersion) {
@@ -209,23 +247,17 @@ public class DbRuntime {
                         localPhraseTemplatesBlockId = newBlockId;
                     } else if (newBlock.blockType() == BlockType.PHRASE_BLOCK) {
                         phraseFolders.put(newBlockId,
-                                            new PhraseFolderAndName(newBlockId,
-                                                checkNotNull(newBlock.phraseBlock()).folderId(),
-                                                checkNotNull(newBlock.phraseBlock()).phraseName()));
+                                new PhraseFolderAndName(newBlockId,
+                                        checkNotNull(newBlock.phraseBlock()).folderId(),
+                                        checkNotNull(newBlock.phraseBlock()).phraseName()));
                     }
                 }
             }
         }
 
-        if (localFoldersBlockId == null) {
-            throw new RuntimeException("Failed to find FoldersBlock");
-        }
-        if (localPhraseTemplatesBlockId == null) {
-            throw new RuntimeException("Failed to find PhraseTemplatesBlock");
-        }
-        if (localSymbolSetsBlockId == null) {
-            throw new RuntimeException("Failed to find SymbolSetsBlock");
-        }
+        if (localFoldersBlockId == null) { throw new RuntimeException("Failed to find FoldersBlock"); }
+        if (localPhraseTemplatesBlockId == null) { throw new RuntimeException("Failed to find PhraseTemplatesBlock"); }
+        if (localSymbolSetsBlockId == null) { throw new RuntimeException("Failed to find SymbolSetsBlock"); }
 
         foldersBlockId = localFoldersBlockId;
         phraseTemplatesBlockId = localPhraseTemplatesBlockId;
@@ -249,55 +281,22 @@ public class DbRuntime {
         }
 
         // 5. Fill metadata caches
-        {
-            // 5.1 PhraseTemplates Cache
-            int phraseTemplatesBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(phraseTemplatesBlockId)).blockNumber;
-            int phraseTemplatesBlockPosition = phraseTemplatesBlockNumber * FLASH_SECTOR_SIZE;
-            readFileAtPos(block, f, phraseTemplatesBlockPosition);
-            BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
-            Block phraseTemplatesBlock = Block.of(FlatBufBlockDecoder.fromFlatBufPhraseTemplatesBlock(blockData.blockData));
-            assert (phraseTemplatesBlock.blockType() == BlockType.PHRASE_TEMPLATES_BLOCK);
+        // 5.1 SymbolSets Cache
+        symbolSets = new HashMap<>();
+        int symbolSetsBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(symbolSetsBlockId)).blockNumber;
+        loadSymbolSetsBlock(symbolSetsBlockNumber);
 
-            phraseTemplates = new HashMap<>();
-            checkNotNull(phraseTemplatesBlock.phraseTemplatesBlock()).phraseTemplates()
-                    .forEach(pt -> phraseTemplates.put(pt.phraseTemplateId(), pt));
-            wordTemplates = new HashMap<>();
-            checkNotNull(phraseTemplatesBlock.phraseTemplatesBlock()).wordTemplates()
-                    .forEach(wt -> wordTemplates.put(wt.wordTemplateId(), wt));
-        }
+        // 5.2 Folders cache
+        folders = new HashMap<>();
+        subFoldersByFolder = new HashMap<>();
+        int foldersBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(foldersBlockId)).blockNumber;
+        loadFoldersBlock(foldersBlockNumber);
 
-        {
-            // 5.2 SymbolSets Cache
-            int symbolSetsBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(symbolSetsBlockId)).blockNumber;
-            int symbolSetsBlockPosition = symbolSetsBlockNumber * FLASH_SECTOR_SIZE;
-            readFileAtPos(block, f, symbolSetsBlockPosition);
-            BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
-            Block symbolSetsBlock = Block.of(FlatBufBlockDecoder.fromFlatBufSymbolSetsBlock(blockData.blockData));
-            assert (symbolSetsBlock.blockType() == BlockType.SYMBOL_SETS_BLOCK);
-
-            symbolSets = new HashMap<>();
-            checkNotNull(symbolSetsBlock.symbolSetsBlock()).symbolSets()
-                    .forEach(ss -> symbolSets.put(ss.symbolSetId(), ss));
-        }
-
-        {
-            // 5.3 Folders cache
-            int foldersBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(foldersBlockId)).blockNumber;
-            int foldersBlockPosition = foldersBlockNumber * FLASH_SECTOR_SIZE;
-            readFileAtPos(block, f, foldersBlockPosition);
-            BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
-            Block foldersBlock = Block.of(FlatBufBlockDecoder.fromFlatBufFoldersBlock(blockData.blockData));
-            assert (foldersBlock.blockType() == BlockType.FOLDERS_BLOCK);
-
-            folders = new HashMap<>();
-            subFoldersByFolder = new HashMap<>();
-            checkNotNull(foldersBlock.foldersBlock()).folders()
-                    .forEach(f -> {
-                        folders.put(f.folderId(), f);
-                        subFoldersByFolder.computeIfAbsent(f.parentFolderId(), k -> new HashSet<>())
-                                .add(f.folderId());
-                    });
-        }
+        // 5.3 PhraseTemplates Cache
+        phraseTemplates = new HashMap<>();
+        wordTemplates = new HashMap<>();
+        int phraseTemplatesBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(phraseTemplatesBlockId)).blockNumber;
+        loadPhraseTemplatesBlock(phraseTemplatesBlockNumber);
     }
 
     public String getDbName() {
@@ -331,7 +330,7 @@ public class DbRuntime {
         byte[] block = new byte[FLASH_SECTOR_SIZE];
         int position = blockNumber.blockNumber * FLASH_SECTOR_SIZE;
 
-        readFileAtPos(block, f, position);
+        readFromFileAtPos(block, f, position);
 
         BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
         return FlatBufBlockDecoder.fromFlatBufPhraseBlock(blockData.blockData);
@@ -347,5 +346,195 @@ public class DbRuntime {
 
     public @Nullable SymbolSet getSymbolSet(int symbolSetId) {
         return symbolSets.get(symbolSetId);
+    }
+
+    // -------------------------------------------------------------------------------------
+    // BlockLoaders
+
+    public void loadFoldersBlock(int foldersBlockNumber) throws IOException {
+        byte[] block = new byte[FLASH_SECTOR_SIZE];
+
+        int foldersBlockPosition = foldersBlockNumber * FLASH_SECTOR_SIZE;
+        readFromFileAtPos(block, f, foldersBlockPosition);
+        BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
+        Block foldersBlock = Block.of(FlatBufBlockDecoder.fromFlatBufFoldersBlock(blockData.blockData));
+        assert (foldersBlock.blockType() == BlockType.FOLDERS_BLOCK);
+
+        // Fully reload Folders cache
+        folders.clear();
+        subFoldersByFolder.clear();
+        checkNotNull(foldersBlock.foldersBlock()).folders()
+                .forEach(f -> {
+                    folders.put(f.folderId(), f);
+                    subFoldersByFolder.computeIfAbsent(f.parentFolderId(), k -> new HashSet<>())
+                            .add(f.folderId());
+                });
+    }
+
+    public void loadPhraseTemplatesBlock(int phraseTemplatesBlockNumber) throws IOException {
+        byte[] block = new byte[FLASH_SECTOR_SIZE];
+
+        int phraseTemplatesBlockPosition = phraseTemplatesBlockNumber * FLASH_SECTOR_SIZE;
+        readFromFileAtPos(block, f, phraseTemplatesBlockPosition);
+        BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
+        Block phraseTemplatesBlock = Block.of(FlatBufBlockDecoder.fromFlatBufPhraseTemplatesBlock(blockData.blockData));
+        assert (phraseTemplatesBlock.blockType() == BlockType.PHRASE_TEMPLATES_BLOCK);
+
+        phraseTemplates.clear();
+        checkNotNull(phraseTemplatesBlock.phraseTemplatesBlock()).phraseTemplates()
+                .forEach(pt -> phraseTemplates.put(pt.phraseTemplateId(), pt));
+        wordTemplates.clear();
+        checkNotNull(phraseTemplatesBlock.phraseTemplatesBlock()).wordTemplates()
+                .forEach(wt -> wordTemplates.put(wt.wordTemplateId(), wt));
+    }
+
+    // --------------------------------------------------------------------------------------------------------
+
+    public void reloadSymbolSetsBlock() throws IOException {
+        int symbolSetsBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(symbolSetsBlockId)).blockNumber;
+        loadSymbolSetsBlock(symbolSetsBlockNumber);
+    }
+
+    protected void loadSymbolSetsBlock(int symbolSetsBlockNumber) throws IOException {
+        Block symbolSetsBlock = getSymbolSetsBlock(symbolSetsBlockNumber);
+        // Fully reload SymbolSets cache
+        symbolSets.clear();
+        checkNotNull(symbolSetsBlock.symbolSetsBlock()).symbolSets()
+                .forEach(ss -> symbolSets.put(ss.symbolSetId(), ss));
+    }
+
+    public Block getSymbolSetsBlock() throws IOException {
+        int symbolSetsBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(symbolSetsBlockId)).blockNumber;
+        return getSymbolSetsBlock(symbolSetsBlockNumber);
+    }
+
+    protected Block getSymbolSetsBlock(int symbolSetsBlockNumber) throws IOException {
+        byte[] block = new byte[FLASH_SECTOR_SIZE];
+
+        int symbolSetsBlockPosition = symbolSetsBlockNumber * FLASH_SECTOR_SIZE;
+        readFromFileAtPos(block, f, symbolSetsBlockPosition);
+        BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
+        Block symbolSetsBlock = Block.of(FlatBufBlockDecoder.fromFlatBufSymbolSetsBlock(blockData.blockData));
+        assert (symbolSetsBlock.blockType() == BlockType.SYMBOL_SETS_BLOCK);
+
+        return symbolSetsBlock;
+    }
+
+    protected int incrementAndGetBlockId() { return ++lastBlockId; }
+    protected long incrementAndGetVersion() { return ++lastBlockVersion; }
+
+    public void updateSymbolSetsBlock(Block mainBlock) {
+        BlockNumberAndVersion previousBlockInfo = blockNumberAndVersionByBlockId.get(mainBlock.getBlockId());
+        int blockNumber = checkNotNull(previousBlockInfo).blockNumber;
+
+        // 1. Find next occupied block "to the right" from the last block and move to the left
+        try {
+            Integer freeBlockNumber = TreeUtil.getNextMissingNumberToTheLeft(lastBlockNumber, occupiedBlocksNumbers, blockCount);
+            // Make sure we have capacity to move blocks
+            if (freeBlockNumber != null) {
+                Integer moveBlockNumber = TreeUtil.getNextNumberToTheRight(lastBlockNumber, occupiedBlocksNumbers);
+
+                // If found (pretty much always), move the next occupied block to the right, bumping the version
+                if (moveBlockNumber != null) {
+                    // load block at nextOccupiedBlockNumber
+                    Block compBlock = loadBlock(moveBlockNumber);
+
+                    // save to nextUnoccupiedBlockNumber position
+                    compBlock = nextVersion(compBlock);
+                    saveBlock(compBlock, freeBlockNumber);
+
+                    //Update DbRuntime fields:
+                    occupiedBlocksNumbers.remove(moveBlockNumber);
+                    occupiedBlocksNumbers.put(freeBlockNumber, freeBlockNumber);
+                    blockNumberAndVersionByBlockId.put(compBlock.getBlockId(),
+                            new BlockNumberAndVersion(freeBlockNumber, compBlock.getVersion()));
+                    // We're moving this backwards, so we're not updating `lastBlockNumber`, which will be updated by the main block move
+                }
+            }
+        } catch (ChecksumException e) {
+            LOGGER.trace("1st (complementary) block save: Block checksum failed", e);
+        } catch (Exception e) {
+            LOGGER.error("1st (complementary) block save issue", e);
+        }
+
+        // 2. Update the block version and move it to the right
+        try {
+            mainBlock = nextVersion(mainBlock);
+
+            Integer freeBlockNumber = TreeUtil.getNextMissingNumberToTheRight(lastBlockNumber, occupiedBlocksNumbers, blockCount);
+            // If we don't have capacity to move blocks, update in place
+            if (freeBlockNumber == null) { freeBlockNumber = blockNumber; }
+
+            // save to nextUnoccupiedBlockNumber position
+            saveBlock(mainBlock, freeBlockNumber);
+
+            // Update DbRuntime fields:
+            occupiedBlocksNumbers.remove(blockNumber);
+            occupiedBlocksNumbers.put(freeBlockNumber, freeBlockNumber);
+            blockNumberAndVersionByBlockId.put(mainBlock.getBlockId(),
+                    new BlockNumberAndVersion(freeBlockNumber, mainBlock.getVersion()));
+            lastBlockNumber = freeBlockNumber;
+        } catch (ChecksumException e) {
+            LOGGER.trace("2st (main) block save: Block checksum failed", e);
+        } catch (Exception e) {
+            LOGGER.error("2st (main) block save issue", e);
+        }
+    }
+
+    private Block nextVersion(Block block) {
+        switch (block.blockType()) {
+            case KEY_BLOCK:
+                return Block.of(ImmutableKeyBlock.builder()
+                        .from(checkNotNull(block.keyBlock()))
+                        .version(incrementAndGetVersion())
+                        .build());
+            case SYMBOL_SETS_BLOCK:
+                return Block.of(ImmutableSymbolSetsBlock.builder()
+                        .from(checkNotNull(block.symbolSetsBlock()))
+                        .version(incrementAndGetVersion())
+                        .build());
+            case FOLDERS_BLOCK:
+                return Block.of(ImmutableFoldersBlock.builder()
+                        .from(checkNotNull(block.foldersBlock()))
+                        .version(incrementAndGetVersion())
+                        .build());
+            case PHRASE_TEMPLATES_BLOCK:
+                return Block.of(ImmutablePhraseTemplatesBlock.builder()
+                        .from(checkNotNull(block.phraseTemplatesBlock()))
+                        .version(incrementAndGetVersion())
+                        .build());
+            case PHRASE_BLOCK:
+                return Block.of(ImmutablePhraseBlock.builder()
+                        .from(checkNotNull(block.phraseBlock()))
+                        .version(incrementAndGetVersion())
+                        .build());
+            default:
+                throw new RuntimeException("Unexpected block type " + block.blockType());
+        }
+    }
+
+    protected Block loadBlock(Integer fromBlockNumber) throws IOException {
+        byte[] block = new byte[FLASH_SECTOR_SIZE];
+        int fromBlockNumberPosition = fromBlockNumber * FLASH_SECTOR_SIZE;
+        readFromFileAtPos(block, f, fromBlockNumberPosition);
+
+        BlockNumberAndVersion b = checkNotNull(blockNumberAndVersionByBlockId.get(keyBlockId));
+        boolean isKeyBlock = b.blockNumber == fromBlockNumber;
+        byte[] aesKey = isKeyBlock ? keyBlockKey : aes256Key;
+        byte[] ivMask = isKeyBlock ? HARDCODED_IV_MASK : aes256IvMask;
+
+        BlockData blockData = DbEncoder.decodeBlock(block, aesKey, ivMask);
+        return fromBlockData(blockData);
+    }
+
+    protected void saveBlock(Block block, Integer toBlockNumber) throws IOException {
+        byte[] aesKey = block.blockType() == BlockType.KEY_BLOCK ? keyBlockKey : aes256Key;
+        byte[] ivMask = block.blockType() == BlockType.KEY_BLOCK ? HARDCODED_IV_MASK : aes256IvMask;
+
+        byte[] dataBytes = FlatBufBlockEncoder.toFlatBufBlock(block);
+        byte[] blockBytes = DbEncoder.encodeBlock(dataBytes, block.blockType().code, aesKey, ivMask);
+
+        int position = toBlockNumber * FLASH_SECTOR_SIZE;
+        writeToFileAtPos(blockBytes, f, position);
     }
 }

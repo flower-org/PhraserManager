@@ -246,7 +246,7 @@ public class PhraserDbForm extends AnchorPane {
     }
 
     public void openSymbolSetsBlockForm(@Nullable Block existingSymbolSetBlock) {
-        symbolSetsBlockTab = mainForm.openSymbolSetsBlockForm(existingSymbolSetBlock, phraserDB,
+        symbolSetsBlockTab = mainForm.openSymbolSetsBlockForm(existingSymbolSetBlock,
                 symbolSetsBlock -> {
                     int blockId;
                     long version = phraserDB.incrementAndGetVersion();

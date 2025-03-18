@@ -1,6 +1,8 @@
 package com.phraser.forms;
 
 import com.flower.fxutils.JavaFxUtils;
+import com.flower.fxutils.ModalWindow;
+import com.phraser.db.Block;
 import com.phraser.db.FoldersBlock;
 import com.phraser.db.Icon;
 import com.phraser.db.PhraseBlock;
@@ -44,6 +46,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.phraser.forms.DefaultDBCreator.DEFAULT_SYMBOL_SETS;
@@ -153,6 +157,7 @@ public class ClientModeForm extends AnchorPane {
     final DbRuntime dbRuntime;
     final Stack<String> path;
 
+    // UI markers
     protected int currentFolderId;
     protected int currentPhraseId;
     @Nullable protected PhraseBlock currentPhraseBlock;
@@ -520,6 +525,43 @@ public class ClientModeForm extends AnchorPane {
                     checkNotNull(phraseHistoryTitledPane).visibleProperty().set(true);
                 }
             }
+        }
+    }
+
+    public void updatePhraseTemplatesBlock() {
+        // TODO: implement
+    }
+
+    public void updateSymbolSetsBlock() {
+        try {
+            Block symbolSetsBlock = dbRuntime.getSymbolSetsBlock();
+            AtomicReference<Stage> workspaceStage = new AtomicReference<>();
+            Consumer<SymbolSetsBlock> symbolSetsBlockCallback = newSymbolSetsBlock -> {
+                try {
+                    // 1. Form new block
+                    dbRuntime.updateSymbolSetsBlock(Block.of(newSymbolSetsBlock));
+
+                    // 2. Reload block and update cache
+                    dbRuntime.reloadSymbolSetsBlock();
+
+                    Stage stage = workspaceStage.get();
+                    while (stage == null) { stage = workspaceStage.get(); }
+                    stage.close();
+                } catch (Exception e) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Error updating symbol sets block: " + e, ButtonType.OK);
+                    LOGGER.error("Error updating symbol sets block: ", e);
+                    alert.showAndWait();
+                }
+            };
+
+            SymbolSetsBlockForm pickFolderDialog = new SymbolSetsBlockForm(symbolSetsBlock, symbolSetsBlockCallback);
+            workspaceStage.set(ModalWindow.showModal(checkNotNull(stage),
+                    stage -> { pickFolderDialog.setStage(stage); return pickFolderDialog; },
+                    "Update SymbolSetsBlock"));
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error updating symbol sets block: " + e, ButtonType.OK);
+            LOGGER.error("Error updating symbol sets block: ", e);
+            alert.showAndWait();
         }
     }
 }

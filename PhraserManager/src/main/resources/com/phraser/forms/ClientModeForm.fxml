@@ -17,8 +17,8 @@
             <AnchorPane maxHeight="35.0" minHeight="35.0" prefHeight="35.0" SplitPane.resizableWithParent="false">
                 <ToolBar AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <items>
-                  <Button mnemonicParsing="false" text="Phrase Templates" />
-                  <Button mnemonicParsing="false" text="Symbol Sets" />
+                  <Button mnemonicParsing="false" onAction="#updatePhraseTemplatesBlock" text="Phrase Templates" />
+                  <Button mnemonicParsing="false" onAction="#updateSymbolSetsBlock" text="Symbol Sets" />
                     </items>
                 </ToolBar>
             </AnchorPane>

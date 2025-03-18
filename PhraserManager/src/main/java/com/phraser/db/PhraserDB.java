@@ -219,19 +219,9 @@ public class PhraserDB {
     return dbName;
   }
 
-  public int incrementAndGetBlockId() {
-    lastBlockId++;
-    return lastBlockId;
-  }
-
-  public long incrementAndGetVersion() {
-    lastVersion++;
-    return lastVersion;
-  }
-
-  public long getLastVersion() {
-    return lastVersion;
-  }
+  public int incrementAndGetBlockId() { return ++lastBlockId; }
+  public long incrementAndGetVersion() { return ++lastVersion; }
+  public long getLastVersion() { return lastVersion; }
 
   public boolean isLatest(Block dbBlock) {
     Block block = lastBlockByBlockId.get(dbBlock.getBlockId());

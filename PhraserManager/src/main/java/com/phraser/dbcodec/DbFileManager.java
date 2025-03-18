@@ -3,7 +3,6 @@ package com.phraser.dbcodec;
 import com.phraser.db.Block;
 import com.phraser.db.BlockType;
 import com.phraser.forms.PhraserDbForm;
-import com.phraser.utils.Pbkdf2Tool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +10,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
@@ -20,32 +18,17 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.phraser.db.Block.FLASH_SECTOR_SIZE;
+import static com.phraser.utils.Pbkdf2Tool.HARDCODED_IV_MASK;
+import static com.phraser.utils.Pbkdf2Tool.getPbkdf2Key;
 
 public class DbFileManager {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraserDbForm.class);
-
-    public static final int PBKDF2_ITERATIONS = 10000; // Number of iterations
-    public static final int PBKDF2_KEY_LENGTH = 256; // Key length in bits
-    public static final String HARDCODED_PHRASER_TOKEN = "PhraserPasswordManager"; // Hardcoded salt string
-    public static final byte[] HARDCODED_SALT;
-    public static final byte[] HARDCODED_IV_MASK;
-
-    static {
-        try {
-            byte[] bytes = HARDCODED_PHRASER_TOKEN.getBytes();
-            HARDCODED_SALT = MessageDigest.getInstance("SHA-256").digest(bytes);
-            HARDCODED_IV_MASK = MessageDigest.getInstance("MD5").digest(bytes);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     public static void writeBlocksToFile(List<Block> srcBlocks, String password, File file) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         List<Block> blocks = new ArrayList<>(srcBlocks);
 
         // 1. Form KeyBlockKey from password using PBKDF2 and hardcoded stuff
-        byte[] keyBlockKey = Pbkdf2Tool.pbkdf2(password, PBKDF2_ITERATIONS, PBKDF2_KEY_LENGTH, HARDCODED_SALT);
-        assert(keyBlockKey.length == 32);
+        byte[] keyBlockKey = getPbkdf2Key(password);
 
         // 2. Get latest KeyBlock
         Block latestKeyBlock = null;
@@ -93,12 +76,6 @@ public class DbFileManager {
                 fos.write(blockBytes);
             }
         }
-    }
-
-    public static byte[] getPbkdf2Key(String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
-        byte[] keyBlockKey = Pbkdf2Tool.pbkdf2(password, PBKDF2_ITERATIONS, PBKDF2_KEY_LENGTH, HARDCODED_SALT);
-        assert(keyBlockKey.length == 32);
-        return keyBlockKey;
     }
 
     public static List<Block> loadBlocksFromFile(String password, File file) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
