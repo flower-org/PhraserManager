@@ -529,7 +529,35 @@ public class ClientModeForm extends AnchorPane {
     }
 
     public void updatePhraseTemplatesBlock() {
-        // TODO: implement
+        try {
+            Block phraseTemplatesBlock = dbRuntime.getPhraseTemplatesBlock();
+            AtomicReference<Stage> workspaceStage = new AtomicReference<>();
+            Consumer<PhraseTemplatesBlock> phraseTemplatesBlockCallback = newPhraseTemplatesBlock -> {
+                try {
+                    dbRuntime.updateBlock(Block.of(newPhraseTemplatesBlock));
+
+                    Stage stage = workspaceStage.get();
+                    while (stage == null) { stage = workspaceStage.get(); }
+                    stage.close();
+                } catch (Exception e) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Error updating phrase templates block: " + e, ButtonType.OK);
+                    LOGGER.error("Error updating phrase templates block: ", e);
+                    alert.showAndWait();
+                }
+            };
+
+            PhraseTemplatesBlockForm phraseTemplatesBlockForm = new PhraseTemplatesBlockForm(phraseTemplatesBlock,
+                    dbRuntime::getSymbolSets, phraseTemplatesBlockCallback);
+            workspaceStage.set(ModalWindow.showModal(checkNotNull(stage),
+                    stage -> { phraseTemplatesBlockForm.setStage(stage); return phraseTemplatesBlockForm; },
+                    "Update PhraseTemplatesBlock",
+                    null,
+                    true));
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error updating phrase templates block: " + e, ButtonType.OK);
+            LOGGER.error("Error updating phrase templates block: ", e);
+            alert.showAndWait();
+        }
     }
 
     public void updateSymbolSetsBlock() {
@@ -550,9 +578,9 @@ public class ClientModeForm extends AnchorPane {
                 }
             };
 
-            SymbolSetsBlockForm pickFolderDialog = new SymbolSetsBlockForm(symbolSetsBlock, symbolSetsBlockCallback);
+            SymbolSetsBlockForm symbolSetsBlockForm = new SymbolSetsBlockForm(symbolSetsBlock, symbolSetsBlockCallback);
             workspaceStage.set(ModalWindow.showModal(checkNotNull(stage),
-                    stage -> { pickFolderDialog.setStage(stage); return pickFolderDialog; },
+                    stage -> { symbolSetsBlockForm.setStage(stage); return symbolSetsBlockForm; },
                     "Update SymbolSetsBlock"));
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Error updating symbol sets block: " + e, ButtonType.OK);

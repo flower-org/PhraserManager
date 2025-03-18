@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -27,7 +28,7 @@ public class PickSymbolSetDialog extends VBox {
     @Nullable SymbolSetsBlock.SymbolSet symbolSet;
     @Nullable @FXML TableView<SymbolSetsBlock.SymbolSet> symbolSetTableView;
 
-    public PickSymbolSetDialog(SymbolSetsBlock symbolSetsBlock) {
+    public PickSymbolSetDialog(List<SymbolSetsBlock.SymbolSet> symbolSets) {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("PickSymbolSetDialog.fxml"));
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);
@@ -39,7 +40,7 @@ public class PickSymbolSetDialog extends VBox {
         }
 
         ObservableList<SymbolSetsBlock.SymbolSet> list = FXCollections.observableArrayList();
-        list.addAll(symbolSetsBlock.symbolSets());
+        list.addAll(symbolSets);
         checkNotNull(symbolSetTableView).itemsProperty().set(list);
     }
 

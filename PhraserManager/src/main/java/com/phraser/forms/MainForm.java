@@ -158,7 +158,14 @@ public class MainForm {
     public Tab openPhraseTemplatesBlockForm(@Nullable Block phraseTemplatesBlock,
                                             PhraserDB phraserDB, Consumer<PhraseTemplatesBlock> phraseTemplatesBlockCallback) {
         PhraseTemplatesBlockForm phraseTemplatesBlockForm = new PhraseTemplatesBlockForm(phraseTemplatesBlock,
-                phraserDB, phraseTemplatesBlockCallback);
+                () -> {
+                    Block symbolSetsBlock = phraserDB.getLastSymbolSetBlock();
+                    if (symbolSetsBlock != null && symbolSetsBlock.symbolSetsBlock() != null) {
+                        return symbolSetsBlock.symbolSetsBlock().symbolSets();
+                    }
+                    return null;
+                },
+                phraseTemplatesBlockCallback);
         phraseTemplatesBlockForm.setStage(checkNotNull(mainStage));
         final Tab tab = new Tab("Phrase Templates Block", phraseTemplatesBlockForm);
         tab.setClosable(true);

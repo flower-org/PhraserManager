@@ -9,7 +9,6 @@ import com.phraser.db.ImmutablePhraseTemplatesBlock;
 import com.phraser.db.ImmutableSymbolSet;
 import com.phraser.db.ImmutableWordTemplate;
 import com.phraser.db.PhraseTemplatesBlock;
-import com.phraser.db.PhraserDB;
 import com.phraser.db.SymbolSetsBlock;
 import com.phraser.dbcodec.FlatBufBlockEncoder;
 import com.phraser.utils.PhraserUtils;
@@ -38,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
@@ -101,7 +101,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
     @Nullable Stage stage;
 
     @Nullable final Block phraseTemplatesBlock;
-    final PhraserDB phraserDB;
+    final Supplier<List<SymbolSetsBlock.SymbolSet>> symbolSetsSupplier;
 
     final Consumer<PhraseTemplatesBlock> phraseTemplatesBlockCallback;
     //TODO: phraserDB.getLastSymbolSetBlock()
@@ -110,7 +110,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
     int nextPhraseTemplateId = 0;
 
     public PhraseTemplatesBlockForm(@Nullable Block phraseTemplatesBlock,
-                                    PhraserDB phraserDB,
+                                    Supplier<List<SymbolSetsBlock.SymbolSet>> symbolSetsSupplier,
                                     Consumer<PhraseTemplatesBlock> phraseTemplatesBlockCallback) {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("PhraseTemplatesBlockForm.fxml"));
         fxmlLoader.setRoot(this);
@@ -152,7 +152,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
             checkNotNull(entropyTextField).textProperty().set(Long.toString(phraseTemplatesBlock.getEntropy()));
         }
 
-        this.phraserDB = phraserDB;
+        this.symbolSetsSupplier = symbolSetsSupplier;
         this.phraseTemplatesBlockCallback = phraseTemplatesBlockCallback;
 
         this.wordTemplateSymbolSets = FXCollections.observableArrayList();
@@ -374,10 +374,10 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
         //symbol sets
         wordTemplateSymbolSets = FXCollections.observableArrayList();
 
-        Block symbolSetsBlock = phraserDB.getLastSymbolSetBlock();
-        if (symbolSetsBlock != null && symbolSetsBlock.symbolSetsBlock() != null) {
+        List<SymbolSetsBlock.SymbolSet> symbolSets = symbolSetsSupplier.get();
+        if (symbolSets != null) {
             Map<Integer, SymbolSetsBlock.SymbolSet> symbolSetsMap = new HashMap<>();
-            for (SymbolSetsBlock.SymbolSet sset : symbolSetsBlock.symbolSetsBlock().symbolSets()) {
+            for (SymbolSetsBlock.SymbolSet sset : symbolSets) {
                 symbolSetsMap.put(sset.symbolSetId(), sset);
             }
 
@@ -456,14 +456,8 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
 
     public void addSymbolSet() {
         try {
-            Block symbolSetsBlock = phraserDB.getLastSymbolSetBlock();
-            if (symbolSetsBlock == null || symbolSetsBlock.symbolSetsBlock() == null) {
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Symbol Sets Block not found, please create.", ButtonType.OK);
-                alert.showAndWait();
-                return;
-            }
-
-            PickSymbolSetDialog pickSymbolSetDialog = new PickSymbolSetDialog(symbolSetsBlock.symbolSetsBlock());
+            List<SymbolSetsBlock.SymbolSet> symbolSets = symbolSetsSupplier.get();
+            PickSymbolSetDialog pickSymbolSetDialog = new PickSymbolSetDialog(symbolSets);
             Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
                     stage -> { pickSymbolSetDialog.setStage(stage); return pickSymbolSetDialog; },
                     "Pick Symbol Set");

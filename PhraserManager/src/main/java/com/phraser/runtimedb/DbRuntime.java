@@ -381,6 +381,38 @@ public class DbRuntime {
         return getSymbolSetsBlock(symbolSetsBlockNumber);
     }
 
+    //Phrase Templates
+    protected void loadPhraseTemplatesBlock(int phraseTemplatesBlockNumber) throws IOException {
+        Block phraseTemplatesBlock = getPhraseTemplatesBlock(phraseTemplatesBlockNumber);
+        refreshPhraseTemplatesCache(phraseTemplatesBlock);
+    }
+
+    protected void refreshPhraseTemplatesCache(Block phraseTemplatesBlock) {
+        // Fully reload PhraseTemplates cache
+        phraseTemplates.clear();
+        checkNotNull(phraseTemplatesBlock.phraseTemplatesBlock()).phraseTemplates()
+                .forEach(pt -> phraseTemplates.put(pt.phraseTemplateId(), pt));
+        wordTemplates.clear();
+        checkNotNull(phraseTemplatesBlock.phraseTemplatesBlock()).wordTemplates()
+                .forEach(wt -> wordTemplates.put(wt.wordTemplateId(), wt));
+    }
+
+    protected Block getPhraseTemplatesBlock(int phraseTemplatesBlockNumber) throws IOException {
+        byte[] block = new byte[FLASH_SECTOR_SIZE];
+
+        int phraseTemplatesBlockPosition = phraseTemplatesBlockNumber * FLASH_SECTOR_SIZE;
+        readFromFileAtPos(block, f, phraseTemplatesBlockPosition);
+        BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
+        Block phraseTemplatesBlock = Block.of(FlatBufBlockDecoder.fromFlatBufPhraseTemplatesBlock(blockData.blockData));
+        assert (phraseTemplatesBlock.blockType() == BlockType.PHRASE_TEMPLATES_BLOCK);
+        return phraseTemplatesBlock;
+    }
+
+    public Block getPhraseTemplatesBlock() throws IOException {
+        int phraseTemplatesBlock = checkNotNull(blockNumberAndVersionByBlockId.get(phraseTemplatesBlockId)).blockNumber;
+        return getPhraseTemplatesBlock(phraseTemplatesBlock);
+    }
+
     // Folders
     public void loadFoldersBlock(int foldersBlockNumber) throws IOException {
         byte[] block = new byte[FLASH_SECTOR_SIZE];
@@ -402,24 +434,6 @@ public class DbRuntime {
                 });
     }
 
-    //Phrase Templates
-    public void loadPhraseTemplatesBlock(int phraseTemplatesBlockNumber) throws IOException {
-        byte[] block = new byte[FLASH_SECTOR_SIZE];
-
-        int phraseTemplatesBlockPosition = phraseTemplatesBlockNumber * FLASH_SECTOR_SIZE;
-        readFromFileAtPos(block, f, phraseTemplatesBlockPosition);
-        BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
-        Block phraseTemplatesBlock = Block.of(FlatBufBlockDecoder.fromFlatBufPhraseTemplatesBlock(blockData.blockData));
-        assert (phraseTemplatesBlock.blockType() == BlockType.PHRASE_TEMPLATES_BLOCK);
-
-        phraseTemplates.clear();
-        checkNotNull(phraseTemplatesBlock.phraseTemplatesBlock()).phraseTemplates()
-                .forEach(pt -> phraseTemplates.put(pt.phraseTemplateId(), pt));
-        wordTemplates.clear();
-        checkNotNull(phraseTemplatesBlock.phraseTemplatesBlock()).wordTemplates()
-                .forEach(wt -> wordTemplates.put(wt.wordTemplateId(), wt));
-    }
-
     // --------------------------------------------------------------------------------------------------------
 
     public void reloadBlockCache(Block block) {
@@ -437,10 +451,7 @@ public class DbRuntime {
                 //final Map<Integer, Set<Integer>> subFoldersByFolder;
                 break;
             case PHRASE_TEMPLATES_BLOCK:
-                // TODO: update PHRASE_TEMPLATES_BLOCK cache
-                // - PhraseTemplatesBlock cache
-                //final Map<Integer, PhraseTemplate> phraseTemplates;
-                //final Map<Integer, WordTemplate> wordTemplates;
+                refreshPhraseTemplatesCache(block);
                 break;
             case PHRASE_BLOCK:
                 // TODO: update PHRASE_BLOCK cache
@@ -474,8 +485,9 @@ public class DbRuntime {
                     // load block at nextOccupiedBlockNumber
                     Block compBlock = loadBlock(moveBlockNumber);
 
-                    // save to nextUnoccupiedBlockNumber position
+                    // Here we just bump the version and keep the entropy unchanged; entropy update comes with the main block
                     compBlock = nextVersion(compBlock);
+                    // save to nextUnoccupiedBlockNumber position
                     saveBlock(compBlock, freeBlockNumber);
 
                     //Update DbRuntime context:
@@ -484,7 +496,7 @@ public class DbRuntime {
                     occupiedBlocksNumbers.put(freeBlockNumber, freeBlockNumber);
                     blockNumberAndVersionByBlockId.put(compBlock.getBlockId(),
                             new BlockNumberAndVersion(freeBlockNumber, compBlock.getVersion()));
-                    // We're moving this backwards, so we're not updating `lastBlockNumber`, which will be updated by the main block move
+                    // We're moving this backwards, so we're not updating `lastBlockNumber`, which will be updated by the main block write
                 }
             }
         } catch (ChecksumException e) {
@@ -495,6 +507,8 @@ public class DbRuntime {
 
         // 2. Update the block version and move it to the right
         try {
+            // We expect that entropy was updated by the updater of the main block
+            // TODO: update entropy here?
             mainBlock = nextVersion(mainBlock);
 
             Integer freeBlockNumber = TreeUtil.getNextMissingNumberToTheRight(lastBlockNumber, occupiedBlocksNumbers, blockCount);
@@ -573,5 +587,9 @@ public class DbRuntime {
 
         int position = toBlockNumber * FLASH_SECTOR_SIZE;
         writeToFileAtPos(blockBytes, f, position);
+    }
+
+    public List<SymbolSet> getSymbolSets() {
+        return symbolSets.values().stream().toList();
     }
 }
