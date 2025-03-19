@@ -506,15 +506,19 @@ public class ClientModeForm extends AnchorPane {
         }
     }
 
+    protected void switchToFolderViewFromPhraseView() {
+        path.pop();
+        checkNotNull(phraseTitledPane).visibleProperty().set(false);
+        checkNotNull(foldersTitledPane).visibleProperty().set(true);
+        loadFolders();
+    }
+
     public void phraseTableViewClicked(MouseEvent event) {
         if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
             ExplorerNode selectedItem = checkNotNull(phraseTableView).getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 if (selectedItem.type == ExplorerNodeType.UP && !isHistoryView) {
-                    path.pop();
-                    checkNotNull(phraseTitledPane).visibleProperty().set(false);
-                    checkNotNull(foldersTitledPane).visibleProperty().set(true);
-                    loadFolders();
+                    switchToFolderViewFromPhraseView();
                 } else if (selectedItem.type == ExplorerNodeType.UP) {
                     path.pop();
                     loadPhraseHistory();
@@ -723,7 +727,25 @@ public class ClientModeForm extends AnchorPane {
     }
 
     public void tombstonePhrase() {
-        // TODO:
+        try {
+            if (currentPhraseBlock != null) {
+                int phraseId = currentPhraseBlock.blockId();
+                String phraseName = currentPhraseBlock.phraseName();
+
+                // 1. Get user confirmation
+                if (YES == JavaFxUtils.showYesNoDialog("Delete phrase [" + phraseId + " / " + phraseName + "]?")) {
+                    // 2. Tombstone phrase
+                    dbRuntime.tombstonePhrase(phraseId);
+
+                    // 3. Switch back to folder UI and reload
+                    switchToFolderViewFromPhraseView();
+                }
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "tombstonePhrase error: " + e, ButtonType.OK);
+            LOGGER.error("tombstonePhrase error: ", e);
+            alert.showAndWait();
+        }
     }
 
     public void changePhraseFolder() {
