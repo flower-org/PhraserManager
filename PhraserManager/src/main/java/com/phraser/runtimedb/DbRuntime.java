@@ -720,13 +720,23 @@ public class DbRuntime {
     protected void refreshPhraseCache(Block mainPhraseBlock) {
         PhraseBlock phraseBlock = checkNotNull(mainPhraseBlock.phraseBlock());
         int phraseBlockId = phraseBlock.blockId();
-        int folderId = phraseBlock.folderId();
-        String name = phraseBlock.phraseName();
 
-        //If block is not tombstoned, update indices
+        // Remove old phrase block indices
+        PhraseFolderAndName oldPhraseInfo = phrases.remove(phraseBlockId);
+        if (oldPhraseInfo != null) {
+            Set<Integer> phrasesForFolder = phrasesByFolder.get(oldPhraseInfo.folderId);
+            if (phrasesForFolder != null) {
+                phrasesForFolder.remove(phraseBlockId);
+            }
+        }
+
+        //If block is not tombstoned, create new indices
         if (!phraseBlock.isTombstone()) {
-            phrases.put(phraseBlockId, new PhraseFolderAndName(phraseBlockId, folderId, name));
-            phrasesByFolder.computeIfAbsent(folderId, k -> new HashSet<>()).add(phraseBlockId);
+            int newFolderId = phraseBlock.folderId();
+            String newNme = phraseBlock.phraseName();
+
+            phrases.put(phraseBlockId, new PhraseFolderAndName(phraseBlockId, newFolderId, newNme));
+            phrasesByFolder.computeIfAbsent(newFolderId, k -> new HashSet<>()).add(phraseBlockId);
         }
     }
 
@@ -741,12 +751,5 @@ public class DbRuntime {
         );
 
         updateBlock(newPhraseBlock);
-
-        // Remove block indices
-        phrases.remove(phraseBlockId);
-        Set<Integer> phrasesForFolder = phrasesByFolder.get(checkNotNull(oldPhraseBlock.phraseBlock()).folderId());
-        if (phrasesForFolder != null) {
-            phrasesForFolder.remove(phraseBlockId);
-        }
     }
 }
