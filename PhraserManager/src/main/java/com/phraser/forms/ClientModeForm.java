@@ -854,8 +854,45 @@ public class ClientModeForm extends AnchorPane {
     }
 
     public void renamePhrase() {
-        // TODO:
-        //GenericNameDialog genericNameDialog;
+        try {
+            if (currentPhraseBlock != null) {
+                int phraseId = currentPhraseBlock.blockId();
+                String phraseName = currentPhraseBlock.phraseName();
+
+                // 1. Obtain new phrase name
+                GenericNameDialog genericNameDialog = new GenericNameDialog("Set Phrase Name", phraseName);
+                Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
+                        stage -> { genericNameDialog.setStage(stage); return genericNameDialog; },
+                        "Rename Phrase");
+
+                workspaceStage.setOnHidden(
+                        ev -> {
+                            try {
+                                String newPhraseName = genericNameDialog.getName();
+                                if (!StringUtils.isBlank(newPhraseName)) {
+                                    // 2. Rename folder
+                                    dbRuntime.renamePhrase(phraseId, newPhraseName);
+
+                                    // 3. update path to reflect new phrase name
+                                    path.pop();
+                                    path.push(newPhraseName);
+
+                                    // 3. Reload UI
+                                    loadPhrase();
+                                }
+                            } catch (Exception e) {
+                                Alert alert = new Alert(Alert.AlertType.ERROR, "Error renaming folder: " + e, ButtonType.OK);
+                                LOGGER.error("Error renaming folder: ", e);
+                                alert.showAndWait();
+                            }
+                        }
+                );
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error renaming folder: " + e, ButtonType.OK);
+            LOGGER.error("Error renaming folder: ", e);
+            alert.showAndWait();
+        }
     }
 
     public void addPhraseFoldersForm() {

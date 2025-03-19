@@ -36,8 +36,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.phraser.db.Block.DUMMY_VERSION;
-import static com.phraser.db.Block.FLASH_SECTOR_SIZE;
+import static com.phraser.db.Block.*;
 import static com.phraser.db.FoldersBlock.Folder;
 import static com.phraser.db.PhraseTemplatesBlock.PhraseTemplate;
 import static com.phraser.db.PhraseTemplatesBlock.WordTemplate;
@@ -783,6 +782,24 @@ public class DbRuntime {
                         .folderId(folderId)
                         .build()
         );
+
+        updateBlock(newPhraseBlock);
+    }
+
+    public void renamePhrase(int phraseBlockId, String newPhraseName) throws IOException {
+        int blockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(phraseBlockId)).blockNumber;
+
+        Block oldPhraseBlock = readPhraseBlock(blockNumber);
+        Block newPhraseBlock = Block.of(
+                ImmutablePhraseBlock.builder().from(checkNotNull(oldPhraseBlock.phraseBlock()))
+                        .phraseName(newPhraseName)
+                        .build()
+        );
+
+        int newBlockLength = FlatBufBlockEncoder.toFlatBufPhraseBlock(checkNotNull(newPhraseBlock.phraseBlock())).length;
+        if (newBlockLength > DATA_BLOCK_SIZE) {
+            throw new RuntimeException("Maximum block size exceeded: [" + newBlockLength + "] > [" + DATA_BLOCK_SIZE + "]");
+        }
 
         updateBlock(newPhraseBlock);
     }
