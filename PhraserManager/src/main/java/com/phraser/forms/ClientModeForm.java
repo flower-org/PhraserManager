@@ -49,6 +49,7 @@ import java.util.Stack;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.phraser.forms.DefaultDBCreator.DEFAULT_SYMBOL_SETS;
 
@@ -598,7 +599,7 @@ public class ClientModeForm extends AnchorPane {
         GenericNameDialog genericNameDialog = new GenericNameDialog("Set Folder Name", null);
         Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
                 stage -> { genericNameDialog.setStage(stage); return genericNameDialog; },
-                "New Folder Name");
+                "New Folder");
 
         workspaceStage.setOnHidden(
                 ev -> {
@@ -612,8 +613,8 @@ public class ClientModeForm extends AnchorPane {
                             loadFolders();
                         }
                     } catch (Exception e) {
-                        Alert alert = new Alert(Alert.AlertType.ERROR, "Error opening DB in client mode: " + e, ButtonType.OK);
-                        LOGGER.error("Error opening DB in client mode: ", e);
+                        Alert alert = new Alert(Alert.AlertType.ERROR, "Error adding folder: " + e, ButtonType.OK);
+                        LOGGER.error("Error adding folder: ", e);
                         alert.showAndWait();
                     }
                 }
@@ -621,16 +622,77 @@ public class ClientModeForm extends AnchorPane {
     }
 
     public void renameFolder() {
-        // 1. Obtain new folder name
-        // 2. Rename folder
-        // 3. Rebuild Folders block
+        try {
+            ExplorerNode selectedItem = checkNotNull(foldersTableView).getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                if (selectedItem.type == ExplorerNodeType.FOLDER) {
+                    int folderId = selectedItem.id;
+                    String folderName = selectedItem.name;
+
+                    // 1. Obtain new folder name
+                    GenericNameDialog genericNameDialog = new GenericNameDialog("Set Folder Name", folderName);
+                    Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
+                            stage -> { genericNameDialog.setStage(stage); return genericNameDialog; },
+                            "Rename Folder");
+
+                    workspaceStage.setOnHidden(
+                            ev -> {
+                                try {
+                                    String name = genericNameDialog.getName();
+                                    if (!StringUtils.isBlank(name)) {
+                                        // 2. Rename folder
+                                        dbRuntime.renameFolder(folderId, name);
+
+                                        // 3. Reload UI
+                                        loadFolders();
+                                    }
+                                } catch (Exception e) {
+                                    Alert alert = new Alert(Alert.AlertType.ERROR, "Error renaming folder: " + e, ButtonType.OK);
+                                    LOGGER.error("Error renaming folder: ", e);
+                                    alert.showAndWait();
+                                }
+                            }
+                    );
+                }
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "deleteFolder error: " + e, ButtonType.OK);
+            LOGGER.error("deleteFolder error: ", e);
+            alert.showAndWait();
+        }
     }
 
     public void deleteFolder() {
-        // 1. Check folder is not empty
-        // 2. Get user confirmation
-        // 3. Remove folder form collections
-        // 4. Rebuild Folders block
+        try {
+            ExplorerNode selectedItem = checkNotNull(foldersTableView).getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                if (selectedItem.type == ExplorerNodeType.FOLDER) {
+                    int folderId = selectedItem.id;
+                    String folderName = selectedItem.name;
+
+                    // 1. Check folder is not empty
+                    if (!dbRuntime.isFolderEmpty(folderId)) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR, "Can't delete folder [" + folderId + " / " + folderName + "]: folder not empty ", ButtonType.OK);
+                        LOGGER.error("Can't delete folder [" + folderName + "]: folder not empty ");
+                        alert.showAndWait();
+                        return;
+                    }
+
+                    // 2. Get user confirmation
+                    if (YES == JavaFxUtils.showYesNoDialog("Delete folder [" + folderId + " / " + folderName + "]?")) {
+                        // 3. Delete folder
+                        dbRuntime.removeFolder(folderId);
+
+                        // 4. Reload UI
+                        loadFolders();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "deleteFolder error: " + e, ButtonType.OK);
+            LOGGER.error("deleteFolder error: ", e);
+            alert.showAndWait();
+        }
     }
 
     public void addPhrase() {

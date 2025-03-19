@@ -2,7 +2,6 @@ package com.phraser.runtimedb;
 
 import com.phraser.db.Block;
 import com.phraser.db.BlockType;
-import com.phraser.db.FoldersBlock;
 import com.phraser.db.ImmutableFoldersBlock;
 import com.phraser.db.ImmutableKeyBlock;
 import com.phraser.db.ImmutablePhraseBlock;
@@ -514,7 +513,7 @@ public class DbRuntime {
                     Block compBlock = loadBlock(moveBlockNumber);
 
                     // Here we just bump the version and keep the entropy unchanged; entropy update comes with the main block
-                    compBlock = nextVersion(compBlock);
+                    compBlock = nextVersionAndEntropy(compBlock);
                     // save the block to freeBlockNumber position
                     saveBlock(compBlock, freeBlockNumber);
 
@@ -535,9 +534,7 @@ public class DbRuntime {
 
         // 2. Update the main block version and write it to the right of last block
         try {
-            // We expect that entropy was updated by the updater of the main block
-            // TODO: update entropy here?
-            mainBlock = nextVersion(mainBlock);
+            mainBlock = nextVersionAndEntropy(mainBlock);
 
             Integer freeBlockNumber = TreeUtil.getNextMissingNumberToTheRight(lastBlockNumber, occupiedBlocksNumbers, blockCount);
             // If we don't have capacity to move blocks, update in place
@@ -560,32 +557,37 @@ public class DbRuntime {
         }
     }
 
-    private Block nextVersion(Block block) {
+    private Block nextVersionAndEntropy(Block block) {
         switch (block.blockType()) {
             case KEY_BLOCK:
                 return Block.of(ImmutableKeyBlock.builder()
                         .from(checkNotNull(block.keyBlock()))
                         .version(incrementAndGetVersion())
+                        .entropy(PhraserUtils.generateEntropy())
                         .build());
             case SYMBOL_SETS_BLOCK:
                 return Block.of(ImmutableSymbolSetsBlock.builder()
                         .from(checkNotNull(block.symbolSetsBlock()))
                         .version(incrementAndGetVersion())
+                        .entropy(PhraserUtils.generateEntropy())
                         .build());
             case FOLDERS_BLOCK:
                 return Block.of(ImmutableFoldersBlock.builder()
                         .from(checkNotNull(block.foldersBlock()))
                         .version(incrementAndGetVersion())
+                        .entropy(PhraserUtils.generateEntropy())
                         .build());
             case PHRASE_TEMPLATES_BLOCK:
                 return Block.of(ImmutablePhraseTemplatesBlock.builder()
                         .from(checkNotNull(block.phraseTemplatesBlock()))
                         .version(incrementAndGetVersion())
+                        .entropy(PhraserUtils.generateEntropy())
                         .build());
             case PHRASE_BLOCK:
                 return Block.of(ImmutablePhraseBlock.builder()
                         .from(checkNotNull(block.phraseBlock()))
                         .version(incrementAndGetVersion())
+                        .entropy(PhraserUtils.generateEntropy())
                         .build());
             default:
                 throw new RuntimeException("Unexpected block type " + block.blockType());
@@ -635,13 +637,51 @@ public class DbRuntime {
         }
         newFolders.add(Folder.of(maxFolderId+1, parentFolderId, folderName));
 
+        updateFoldersBlock(oldFoldersBlock.getBlockId(), newFolders);
+    }
+
+    public void removeFolder(int folderId) throws IOException {
+        Block oldFoldersBlock = readFoldersBlock();
+        List<Folder> oldFolders = checkNotNull(oldFoldersBlock.foldersBlock()).folders();
+
+        List<Folder> newFolders = new ArrayList<>();
+        for (Folder oldFolder : oldFolders) {
+            if (oldFolder.folderId() != folderId) {
+                newFolders.add(oldFolder);
+            }
+        }
+
+        updateFoldersBlock(oldFoldersBlock.getBlockId(), newFolders);
+    }
+
+    public void renameFolder(int folderId, String newFolderName) throws IOException {
+        Block oldFoldersBlock = readFoldersBlock();
+        List<Folder> oldFolders = checkNotNull(oldFoldersBlock.foldersBlock()).folders();
+
+        List<Folder> newFolders = new ArrayList<>();
+        for (Folder oldFolder : oldFolders) {
+            if (oldFolder.folderId() == folderId) {
+                newFolders.add(Folder.of(oldFolder.folderId(), oldFolder.parentFolderId(), newFolderName));
+            } else {
+                newFolders.add(oldFolder);
+            }
+        }
+
+        updateFoldersBlock(oldFoldersBlock.getBlockId(), newFolders);
+    }
+
+    protected void updateFoldersBlock(int foldersBlockId, List<Folder> newFolders) {
         Block newFoldersBlock = Block.of(ImmutableFoldersBlock.builder()
-                .blockId(oldFoldersBlock.getBlockId())
+                .blockId(foldersBlockId)
                 .version(DUMMY_VERSION)
                 .entropy(PhraserUtils.generateEntropy())
                 .addAllFolders(newFolders)
                 .build());
 
         updateBlock(newFoldersBlock);
+    }
+
+    public boolean isFolderEmpty(int folderId) {
+        return !subFoldersByFolder.containsKey(folderId) && !phrasesByFolder.containsKey(folderId);
     }
 }
