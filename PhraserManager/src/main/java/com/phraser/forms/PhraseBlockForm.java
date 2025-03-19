@@ -512,7 +512,7 @@ public class PhraseBlockForm extends AnchorPane {
 
     public void openPhraseTemplate() {
         try {
-            PickPhraseTemplateDialog pickPhraseTemplateDialog = new PickPhraseTemplateDialog(phraseTemplatesBlock.phraseTemplates());
+            PickPhraseTemplateDialog pickPhraseTemplateDialog = new PickPhraseTemplateDialog(phraseTemplatesBlock.phraseTemplates(), null);
             Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
                     stage -> { pickPhraseTemplateDialog.setStage(stage); return pickPhraseTemplateDialog; },
                     "Pick Phrase Template");

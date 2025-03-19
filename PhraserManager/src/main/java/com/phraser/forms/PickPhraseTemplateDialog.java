@@ -27,7 +27,8 @@ public class PickPhraseTemplateDialog extends VBox {
     @Nullable PhraseTemplatesBlock.PhraseTemplate phraseTemplate;
     @Nullable @FXML TableView<PhraseTemplatesBlock.PhraseTemplate> phraseTemplateTableView;
 
-    public PickPhraseTemplateDialog(List<PhraseTemplatesBlock.PhraseTemplate> phraseTemplates) {
+    public PickPhraseTemplateDialog(List<PhraseTemplatesBlock.PhraseTemplate> phraseTemplates,
+                                    @Nullable Integer selectedPhraseTemplate) {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("PickPhraseTemplateDialog.fxml"));
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);
@@ -41,6 +42,19 @@ public class PickPhraseTemplateDialog extends VBox {
         ObservableList<PhraseTemplatesBlock.PhraseTemplate> list = FXCollections.observableArrayList();
         list.addAll(phraseTemplates);
         checkNotNull(phraseTemplateTableView).itemsProperty().set(list);
+        if (selectedPhraseTemplate != null) {
+            int selectedIndex = -1;
+            for (int i = 0; i < phraseTemplates.size(); i++) {
+                PhraseTemplatesBlock.PhraseTemplate p = phraseTemplates.get(i);
+                if (p.phraseTemplateId() == selectedPhraseTemplate) {
+                    selectedIndex = i;
+                    break;
+                }
+            }
+            if (selectedIndex > -1) {
+                phraseTemplateTableView.getSelectionModel().select(selectedIndex);
+            }
+        }
     }
 
     public void setStage(Stage stage) {

@@ -660,8 +660,8 @@ public class ClientModeForm extends AnchorPane {
                 }
             }
         } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "deleteFolder error: " + e, ButtonType.OK);
-            LOGGER.error("deleteFolder error: ", e);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error renaming folder: " + e, ButtonType.OK);
+            LOGGER.error("Error renaming folder: ", e);
             alert.showAndWait();
         }
     }
@@ -748,14 +748,51 @@ public class ClientModeForm extends AnchorPane {
         }
     }
 
+    public void changePhraseTemplate() {
+        try {
+            if (currentPhraseBlock != null) {
+                int phraseId = currentPhraseBlock.blockId();
+                int currentPhraseTemplateId = currentPhraseBlock.phraseTemplateId();
+
+                // 1. Obtain new phrase template
+                PickPhraseTemplateDialog pickPhraseTemplateDialog =
+                        new PickPhraseTemplateDialog(dbRuntime.getPhraseTemplates(), currentPhraseTemplateId);
+                Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
+                        stage -> { pickPhraseTemplateDialog.setStage(stage); return pickPhraseTemplateDialog; },
+                        "Change Phrase Template");
+
+                workspaceStage.setOnHidden(
+                        ev -> {
+                            try {
+                                PhraseTemplatesBlock.PhraseTemplate phraseTemplate = pickPhraseTemplateDialog.phraseTemplate;
+                                if (phraseTemplate != null) {
+                                    // 2. Update phrase template
+                                    dbRuntime.updatePhraseTemplate(phraseId, phraseTemplate.phraseTemplateId());
+
+                                    // 3. Reload phrase block and refresh UI
+                                    currentPhraseBlock = dbRuntime.getPhrase(currentPhraseId);
+                                    if (currentPhraseBlock == null) { throw new RuntimeException("PhraseBlock not found"); }
+
+                                    loadPhrase();
+                                }
+                            } catch (Exception e) {
+                                Alert alert = new Alert(Alert.AlertType.ERROR, "changePhraseTemplate error: " + e, ButtonType.OK);
+                                LOGGER.error("changePhraseTemplate error: ", e);
+                                alert.showAndWait();
+                            }
+                        }
+                );
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "changePhraseTemplate error: " + e, ButtonType.OK);
+            LOGGER.error("changePhraseTemplate error: ", e);
+            alert.showAndWait();
+        }
+    }
+
     public void changePhraseFolder() {
         // TODO:
         //PickFolderDialog pickFolderDialog;
-    }
-
-    public void changePhraseTemplate() {
-        // TODO:
-        //PickPhraseTemplateDialog pickPhraseTemplateDialog;
     }
 
     public void renamePhrase() {

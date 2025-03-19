@@ -355,6 +355,10 @@ public class DbRuntime {
         return phraseTemplates.get(phraseTemplateId);
     }
 
+    public List<PhraseTemplate> getPhraseTemplates() {
+        return phraseTemplates.values().stream().toList();
+    }
+
     public @Nullable WordTemplate getWordTemplate(int wordTemplateId) {
         return wordTemplates.get(wordTemplateId);
     }
@@ -747,6 +751,19 @@ public class DbRuntime {
         Block newPhraseBlock = Block.of(
                 ImmutablePhraseBlock.builder().from(checkNotNull(oldPhraseBlock.phraseBlock()))
                         .isTombstone(true)
+                        .build()
+        );
+
+        updateBlock(newPhraseBlock);
+    }
+
+    public void updatePhraseTemplate(int phraseBlockId, int phraseTemplateId) throws IOException {
+        int blockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(phraseBlockId)).blockNumber;
+
+        Block oldPhraseBlock = readPhraseBlock(blockNumber);
+        Block newPhraseBlock = Block.of(
+                ImmutablePhraseBlock.builder().from(checkNotNull(oldPhraseBlock.phraseBlock()))
+                        .phraseTemplateId(phraseTemplateId)
                         .build()
         );
 
