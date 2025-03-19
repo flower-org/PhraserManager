@@ -103,4 +103,9 @@ public class PhraserUtils {
     public static boolean isUserEditable(byte permissions) { return (permissions & USER_EDITABLE) == USER_EDITABLE; }
     public static boolean isTypeable(byte permissions) { return (permissions & TYPEABLE) == TYPEABLE; }
     public static boolean isViewable(byte permissions) { return (permissions & VIEWABLE) == VIEWABLE; }
+
+    public static byte removeGenerateable(byte permissions) { return (byte) (permissions & ~GENERATEABLE); }
+    public static byte removeUserEditable(byte permissions) { return (byte) (permissions & ~USER_EDITABLE); }
+    public static byte removeTypeable(byte permissions) { return (byte) (permissions & ~TYPEABLE); }
+    public static byte removeViewable(byte permissions) { return (byte) (permissions & ~VIEWABLE); }
 }

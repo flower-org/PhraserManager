@@ -52,6 +52,8 @@ import java.util.function.Consumer;
 import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.phraser.forms.DefaultDBCreator.DEFAULT_SYMBOL_SETS;
+import static com.phraser.utils.PhraserUtils.removeGenerateable;
+import static com.phraser.utils.PhraserUtils.removeUserEditable;
 
 public class ClientModeForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(ClientModeForm.class);
@@ -112,6 +114,12 @@ public class ClientModeForm extends AnchorPane {
             this.wordTemplateId = wordTemplateId;
             this.wordName = wordName;
             this.value = value;
+
+            // Force not generateable, not editable for non-template words
+            if (!isPartOfTemplate) {
+                permissions = removeGenerateable(permissions);
+                permissions = removeUserEditable(permissions);
+            }
             this.permissions = permissions;
             this.icon = icon;
             this.symbolSet = symbolSet;
@@ -205,6 +213,66 @@ public class ClientModeForm extends AnchorPane {
 
                     private Button getCopyButton(UIWord word) {
                         Button button = new Button("Copy");
+                        button.setOnAction(event -> {
+                            JavaFxUtils.copyToClipboard(word.value);
+                        });
+                        return button;
+                    }
+                };
+            }
+        });
+
+        checkNotNull(generateColumn).setCellFactory(new Callback<>() {
+            @Override
+            public TableCell<ExplorerNode, String> call(TableColumn<ExplorerNode, String> tableColumn) {
+                return new TableCell<>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        int index = getIndex();
+                        List<ExplorerNode> items = getTableView().getItems();
+                        if (index >= 0 && index < items.size()) {
+                            ExplorerNode node = items.get(index);
+                            if (node.word != null && node.word.isGenerateable) {
+                                setGraphic(getGenerateButton(node.word));
+                                return;
+                            }
+                        }
+                        setGraphic(null);
+                    }
+
+                    private Button getGenerateButton(UIWord word) {
+                        Button button = new Button("Generate");
+                        button.setOnAction(event -> {
+                            JavaFxUtils.copyToClipboard(word.value);
+                        });
+                        return button;
+                    }
+                };
+            }
+        });
+
+        checkNotNull(editColumn).setCellFactory(new Callback<>() {
+            @Override
+            public TableCell<ExplorerNode, String> call(TableColumn<ExplorerNode, String> tableColumn) {
+                return new TableCell<>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        int index = getIndex();
+                        List<ExplorerNode> items = getTableView().getItems();
+                        if (index >= 0 && index < items.size()) {
+                            ExplorerNode node = items.get(index);
+                            if (node.word != null && node.word.isUserEditable) {
+                                setGraphic(getEditButton(node.word));
+                                return;
+                            }
+                        }
+                        setGraphic(null);
+                    }
+
+                    private Button getEditButton(UIWord word) {
+                        Button button = new Button("Edit");
                         button.setOnAction(event -> {
                             JavaFxUtils.copyToClipboard(word.value);
                         });
@@ -379,7 +447,6 @@ public class ClientModeForm extends AnchorPane {
             char[] symbolSet = getSymbolSet(historyWord.wordTemplateId());
             boolean isPartOfTemplate = false;
 
-            //TODO: force not generateable not editable
             UIWord word = new UIWord(wordTemplateId, wordName, value, permissions, icon, symbolSet, isPartOfTemplate);
             words.add(word);
         }
