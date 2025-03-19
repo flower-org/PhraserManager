@@ -198,7 +198,7 @@ public class MainForm {
     }
 
     public void showAboutDialog() {
-        Alert alert = new Alert(Alert.AlertType.NONE, "Phraser Manager v0.1", ButtonType.OK);
+        Alert alert = new Alert(Alert.AlertType.NONE, "Phraser Manager v0.0.1", ButtonType.OK);
         alert.showAndWait();
     }
 

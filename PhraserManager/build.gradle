@@ -19,7 +19,7 @@ targetCompatibility = '17'
 
 application {
     mainModule = 'com.phraser'
-    mainClass = 'com.phraser.App'
+    mainClass = 'com.phraser.AppLauncher'
 }
 
 compileJava {
