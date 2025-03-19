@@ -143,6 +143,7 @@ public class ClientModeForm extends AnchorPane {
     @FXML @Nullable TableView<ExplorerNode> phraseHistoryTableView;
     final ObservableList<ExplorerNode> phraseHistoryContent;
 
+    @FXML @Nullable Button renamePhrasePhrasePaneButton;
     @FXML @Nullable Button deletePhrasePhrasePaneButton;
     @FXML @Nullable Button changeTemplatePhrasePaneButton;
     @FXML @Nullable Button changeFolderPhrasePaneButton;
@@ -426,6 +427,7 @@ public class ClientModeForm extends AnchorPane {
     }
 
     public void switchPhraseContext(boolean on) {
+        checkNotNull(renamePhrasePhrasePaneButton).visibleProperty().set(on);
         checkNotNull(deletePhrasePhrasePaneButton).visibleProperty().set(on);
         checkNotNull(changeTemplatePhrasePaneButton).visibleProperty().set(on);
         checkNotNull(changeFolderPhrasePaneButton).visibleProperty().set(on);
@@ -587,5 +589,27 @@ public class ClientModeForm extends AnchorPane {
             LOGGER.error("Error updating symbol sets block: ", e);
             alert.showAndWait();
         }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------
+
+    public void addFolder() {
+        //
+    }
+
+    public void renameFolder() {
+        //
+    }
+
+    public void deleteFolder() {
+        //
+    }
+
+    public void addPhrase() {
+        //
+    }
+
+    public void tombstonePhraseFoldersForm() {
+        //
     }
 }

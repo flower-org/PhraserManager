@@ -38,9 +38,10 @@
                                                 <children>
                                                    <ToolBar prefHeight="40.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                       <items>
-                                                         <Button fx:id="deletePhrasePhrasePaneButton" mnemonicParsing="false" text="Delete Phrase (tombstone)" />
-                                                         <Button fx:id="changeTemplatePhrasePaneButton" mnemonicParsing="false" text="Change Template" />
+                                                         <Button fx:id="renamePhrasePhrasePaneButton" mnemonicParsing="false" text="Rename Phrase" />
+                                                         <Button fx:id="changeTemplatePhrasePaneButton" mnemonicParsing="false" text="Change Phrase Template" />
                                                          <Button fx:id="changeFolderPhrasePaneButton" mnemonicParsing="false" text="Change Folder" />
+                                                         <Button fx:id="deletePhrasePhrasePaneButton" mnemonicParsing="false" text="Delete Phrase (tombstone)" />
                                                       </items>
                                                    </ToolBar>
                                                 </children>
@@ -92,12 +93,12 @@
                                                 <children>
                                                    <ToolBar prefHeight="40.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                      <items>
-                                                       <Button mnemonicParsing="false" text="Add Folder" />
-                                                         <Button mnemonicParsing="false" text="Rename Folder" />
-                                                         <Button mnemonicParsing="false" text="Delete Folder" />
+                                                       <Button mnemonicParsing="false" onAction="#addFolder" text="Add Folder" />
+                                                         <Button mnemonicParsing="false" onAction="#renameFolder" text="Rename Folder" />
+                                                         <Button mnemonicParsing="false" onAction="#deleteFolder" text="Delete Folder" />
                                                          <Separator orientation="VERTICAL" prefHeight="200.0" />
-                                                         <Button mnemonicParsing="false" text="Add Phrase" />
-                                                         <Button mnemonicParsing="false" text="Delete Phrase (tombstone)" />
+                                                         <Button mnemonicParsing="false" onAction="#addPhrase" text="Add Phrase" />
+                                                         <Button mnemonicParsing="false" onAction="#tombstonePhraseFoldersForm" text="Delete Phrase (tombstone)" />
                                                      </items>
                                                    </ToolBar>
                                                 </children>
