@@ -19,9 +19,16 @@ import com.phraser.utils.PhraserUtils;
 import javax.crypto.SecretKey;
 import java.util.List;
 
+import static com.phraser.db.Block.FLASH_SECTOR_SIZE;
 import static com.phraser.utils.PhraserUtils.getWordPermissions;
 
 public class DefaultDBCreator {
+    // TODO: determine a practical default DB size rather than based on total usable space on device.
+    //  E.g. 64 blocks is much faster startup, or 128 blocks might be a good compromise.
+    //  The goal would be to find the best balance between practical performance (notably, startup time)
+    //  on target HW, while still maintaining enough DB capacity for all practical purposes.
+    public static final int DEFAULT_BLOCKS_IN_DB = (1024 * 1024) / FLASH_SECTOR_SIZE; // 256 blocks in 1 mb
+
     public static final char[] DIGITS = "0123456789".toCharArray();
     public static final char[] LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();
     public static final char[] UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
@@ -54,7 +61,6 @@ public class DefaultDBCreator {
 
     public static Block getKeyBlock(String dbName) {
         // 1. KeyBlock
-        int blockCount = 256;
         SecretKey aesKey = PhraserUtils.getAes256Key();
         byte[] key = aesKey.getEncoded();
         byte[] iv = PhraserUtils.generateAesIv();
@@ -62,7 +68,7 @@ public class DefaultDBCreator {
                 .blockId(1)
                 .version(1)
                 .entropy(PhraserUtils.generateEntropy())
-                .blockCount(blockCount)
+                .blockCount(DEFAULT_BLOCKS_IN_DB)
                 .key(key)
                 .iv(iv)
                 .dbName(dbName)

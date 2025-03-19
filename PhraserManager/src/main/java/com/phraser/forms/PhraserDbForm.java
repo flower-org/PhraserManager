@@ -42,7 +42,7 @@ import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.flower.fxutils.JavaFxUtils.YesNo.NO;
 import static com.phraser.db.BlockType.PHRASE_BLOCK;
-import static com.phraser.db.PhraserDB.BLOCKS_IN_DB;
+import static com.phraser.forms.DefaultDBCreator.DEFAULT_BLOCKS_IN_DB;
 import static com.phraser.forms.DefaultDBCreator.initDefaultBlockConfig;
 
 public class PhraserDbForm extends AnchorPane {
@@ -86,7 +86,7 @@ public class PhraserDbForm extends AnchorPane {
             throw new RuntimeException(exception);
         }
 
-        phraserDB = new PhraserDB(List.of(), BLOCKS_IN_DB, null);
+        phraserDB = new PhraserDB(List.of(), DEFAULT_BLOCKS_IN_DB, null);
         if (blocks != null) {
             for (Block dbBlock : blocks) {
                 addBlock(dbBlock);

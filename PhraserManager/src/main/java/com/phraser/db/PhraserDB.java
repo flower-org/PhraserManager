@@ -11,12 +11,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.phraser.db.Block.FLASH_SECTOR_SIZE;
 import static com.phraser.db.BlockType.KEY_BLOCK;
 
 public class PhraserDB {
-  public static final int BLOCKS_IN_DB = (1024 * 1024) / FLASH_SECTOR_SIZE; // 256 blocks in 1 mb
-
   @Nullable Block lastKeyBlock = null;
   @Nullable Block lastSymbolSetBlock = null;
   @Nullable Block lastFoldersBlock = null;
