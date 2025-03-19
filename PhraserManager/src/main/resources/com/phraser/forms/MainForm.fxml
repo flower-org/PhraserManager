@@ -20,13 +20,6 @@
             <MenuItem mnemonicParsing="false" onAction="#closeAllTabs" text="Close all tabs" />
             <MenuItem mnemonicParsing="false" onAction="#quit" text="Quit" />
         </Menu>
-        <Menu mnemonicParsing="false" text="Find">
-            <MenuItem mnemonicParsing="false" text="Phrase Block By Name" />
-            <MenuItem mnemonicParsing="false" text="Key Block" />
-            <MenuItem mnemonicParsing="false" text="Folders Block" />
-            <MenuItem mnemonicParsing="false" text="Symbol Sets Block" />
-            <MenuItem mnemonicParsing="false" text="Phrase Templates Block" />
-        </Menu>
         <Menu mnemonicParsing="false" text="Help">
             <MenuItem mnemonicParsing="false" onAction="#showAboutDialog" text="About" />
         </Menu>

@@ -92,11 +92,11 @@
                                                 <children>
                                                    <ToolBar prefHeight="40.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                      <items>
-                                                       <Button mnemonicParsing="false" onAction="#addFolder" text="Add Folder" />
+                                                       <Button mnemonicParsing="false" onAction="#addFolder" text="New Folder" />
                                                          <Button mnemonicParsing="false" onAction="#renameFolder" text="Rename Folder" />
                                                          <Button mnemonicParsing="false" onAction="#deleteFolder" text="Delete Folder" />
                                                          <Separator orientation="VERTICAL" prefHeight="200.0" />
-                                                         <Button mnemonicParsing="false" onAction="#addPhraseFoldersForm" text="Add Phrase" />
+                                                         <Button mnemonicParsing="false" onAction="#addPhraseFoldersForm" text="New Phrase" />
                                                          <Button mnemonicParsing="false" onAction="#tombstonePhraseFoldersForm" text="Delete Phrase (tombstone)" />
                                                      </items>
                                                    </ToolBar>

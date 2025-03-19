@@ -896,6 +896,55 @@ public class ClientModeForm extends AnchorPane {
     }
 
     public void addPhraseFoldersForm() {
-        // TODO:
+        try {
+            // 1. Obtain new phrase template
+            PickPhraseTemplateDialog pickPhraseTemplateDialog =
+                    new PickPhraseTemplateDialog(dbRuntime.getPhraseTemplates(), null);
+            Stage phraseTemplateStage = ModalWindow.showModal(checkNotNull(stage),
+                    stage -> { pickPhraseTemplateDialog.setStage(stage); return pickPhraseTemplateDialog; },
+                    "Choose Phrase Template");
+
+            phraseTemplateStage.setOnHidden(
+                ev1 -> {
+                    try {
+                        PhraseTemplatesBlock.PhraseTemplate phraseTemplate = pickPhraseTemplateDialog.phraseTemplate;
+                        if (phraseTemplate != null) {
+                            // 1. Obtain new phrase name
+                            GenericNameDialog genericNameDialog = new GenericNameDialog("Set Phrase Name", null);
+                            Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
+                                    stage -> { genericNameDialog.setStage(stage); return genericNameDialog; },
+                                    "Enter Phrase Name");
+
+                            workspaceStage.setOnHidden(
+                                    ev3 -> {
+                                        try {
+                                            String newPhraseName = genericNameDialog.getName();
+                                            if (!StringUtils.isBlank(newPhraseName)) {
+                                                // 2. Create new folder
+                                                dbRuntime.createPhrase(phraseTemplate.phraseTemplateId(), currentFolderId, newPhraseName);
+
+                                                // 3. Reload UI
+                                                loadFolders();
+                                            }
+                                        } catch (Exception e) {
+                                            Alert alert = new Alert(Alert.AlertType.ERROR, "Error renaming folder: " + e, ButtonType.OK);
+                                            LOGGER.error("Error renaming folder: ", e);
+                                            alert.showAndWait();
+                                        }
+                                    }
+                            );
+                        }
+                    } catch (Exception e) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR, "addPhraseFoldersForm error: " + e, ButtonType.OK);
+                        LOGGER.error("addPhraseFoldersForm error: ", e);
+                        alert.showAndWait();
+                    }
+                }
+            );
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "addPhraseFoldersForm folder: " + e, ButtonType.OK);
+            LOGGER.error("addPhraseFoldersForm folder: ", e);
+            alert.showAndWait();
+        }
     }
 }

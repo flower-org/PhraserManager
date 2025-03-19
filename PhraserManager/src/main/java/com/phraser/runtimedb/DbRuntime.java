@@ -5,8 +5,10 @@ import com.phraser.db.BlockType;
 import com.phraser.db.ImmutableFoldersBlock;
 import com.phraser.db.ImmutableKeyBlock;
 import com.phraser.db.ImmutablePhraseBlock;
+import com.phraser.db.ImmutablePhraseHistory;
 import com.phraser.db.ImmutablePhraseTemplatesBlock;
 import com.phraser.db.ImmutableSymbolSetsBlock;
+import com.phraser.db.ImmutableWord;
 import com.phraser.db.KeyBlock;
 import com.phraser.db.PhraseBlock;
 import com.phraser.dbcodec.BlockData;
@@ -515,7 +517,7 @@ public class DbRuntime {
 
     public void updateBlock(Block mainBlock) {
         BlockNumberAndVersion previousBlockInfo = blockNumberAndVersionByBlockId.get(mainBlock.getBlockId());
-        int blockNumber = checkNotNull(previousBlockInfo).blockNumber;
+        Integer blockNumber = previousBlockInfo == null ? null : previousBlockInfo.blockNumber;
 
         // 1. Find next occupied block "to the right" from the last block and move to the left
         // TODO: sometimes the 'block "to the right" from the last block' is the last recorded version of mainBlock
@@ -561,14 +563,23 @@ public class DbRuntime {
 
             Integer freeBlockNumber = TreeUtil.getNextMissingNumberToTheRight(lastBlockNumber, occupiedBlocksNumbers, blockCount);
             // If we don't have capacity to move blocks, update in place
-            if (freeBlockNumber == null) { freeBlockNumber = blockNumber; }
+            if (freeBlockNumber == null) {
+                if (blockNumber != null) {
+                    freeBlockNumber = blockNumber;
+                } else {
+                    // If there are no overwritable blocks, and it's a new block, we throw Out Of Capacity error
+                    throw new RuntimeException("No spare blocks left (" + occupiedBlocksNumbers.size() + "/" + blockCount + ")");
+                }
+            }
 
             // save to freeBlockNumber position
             saveBlock(mainBlock, freeBlockNumber);
 
             // Update DbRuntime context:
             reloadBlockCache(mainBlock);
-            occupiedBlocksNumbers.remove(blockNumber);
+            if (blockNumber != null) {
+                occupiedBlocksNumbers.remove(blockNumber);
+            }
 
             boolean isATombstonedPhraseBlock = mainBlock.blockType() == BlockType.PHRASE_BLOCK
                     && checkNotNull(mainBlock.phraseBlock()).isTombstone();
@@ -793,6 +804,66 @@ public class DbRuntime {
         Block newPhraseBlock = Block.of(
                 ImmutablePhraseBlock.builder().from(checkNotNull(oldPhraseBlock.phraseBlock()))
                         .phraseName(newPhraseName)
+                        .build()
+        );
+
+        int newBlockLength = FlatBufBlockEncoder.toFlatBufPhraseBlock(checkNotNull(newPhraseBlock.phraseBlock())).length;
+        if (newBlockLength > DATA_BLOCK_SIZE) {
+            throw new MaxBlockSizeExceededException(newBlockLength, DATA_BLOCK_SIZE);
+        }
+
+        updateBlock(newPhraseBlock);
+    }
+
+    public void createPhrase(int phraseTemplateId, int folderId, String phraseName) {
+        PhraseTemplate phraseTemplate = getPhraseTemplate(phraseTemplateId);
+        if (phraseTemplate == null) { throw new RuntimeException("PhraseTemplate [" + phraseTemplateId + "] not found"); }
+
+        List<PhraseBlock.Word> phrase = new ArrayList<>();
+        for (int wordTemplateId : phraseTemplate.wordTemplateIds()) {
+            WordTemplate wordTemplate = getWordTemplate(wordTemplateId);
+            if (wordTemplate == null) { throw new RuntimeException("WordTemplate [" + wordTemplateId +
+                    "] of PhraseTemplate [" + phraseTemplateId + "] not found"); }
+
+            String wordStr = "";
+            if (PhraserUtils.isGenerateable(wordTemplate.permissions())) {
+                List<char[]> symbolSets = new ArrayList<>();
+                for (int symbolSetId : wordTemplate.symbolSetIds()) {
+                    SymbolSet symbolSet = getSymbolSet(symbolSetId);
+                    if (symbolSet == null) { throw new RuntimeException("SymbolSet [" + symbolSetId +
+                            "] of WordTemplate [" + wordTemplateId + "] of PhraseTemplate [" + phraseTemplateId + "] not found"); }
+                    symbolSets.add(symbolSet.symbolSet());
+                }
+
+                wordStr = WordGenerator.generateWord(symbolSets, wordTemplate.minLength(), wordTemplate.maxLength());
+            }
+
+            PhraseBlock.Word word = ImmutableWord.builder()
+                    .wordTemplateId(wordTemplate.wordTemplateId())
+                    .name(wordTemplate.wordTemplateName())
+                    .word(wordStr)
+                    .permissions(wordTemplate.permissions())
+                    .icon(wordTemplate.icon())
+                    .build();
+            phrase.add(word);
+        }
+
+        PhraseBlock.PhraseHistory phraseHistory = ImmutablePhraseHistory.builder()
+                .phraseTemplateId(phraseTemplateId)
+                .addAllPhrase(phrase)
+                .build();
+
+        List<PhraseBlock.PhraseHistory> history = List.of(phraseHistory);
+        Block newPhraseBlock = Block.of(
+                ImmutablePhraseBlock.builder()
+                        .blockId(incrementAndGetBlockId())
+                        .version(DUMMY_VERSION)
+                        .entropy(DUMMY_ENTROPY)
+                        .phraseTemplateId(phraseTemplateId)
+                        .folderId(folderId)
+                        .isTombstone(false)
+                        .phraseName(phraseName)
+                        .history(history)
                         .build()
         );
 

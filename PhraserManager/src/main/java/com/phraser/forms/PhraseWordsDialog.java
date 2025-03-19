@@ -1,6 +1,5 @@
 package com.phraser.forms;
 
-import com.phraser.db.PhraseBlock;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
@@ -18,17 +17,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.phraser.runtimedb.WordGenerator.generateWord;
 
 public class PhraseWordsDialog extends VBox {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraseWordsDialog.class);
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom(); // Single instance
 
     @Nullable Stage stage;
     @Nullable List<RetWord> phraseUpdate;
@@ -137,7 +133,7 @@ public class PhraseWordsDialog extends VBox {
                     wordsGridPane.add(generateButton, 2, row);
                     generateButton.setOnAction(
                             event -> {
-                                String randomString = generateRandomString(checkNotNull(word.symbolSets),
+                                String randomString = generateWord(checkNotNull(word.symbolSets),
                                     word.minLength, word.maxLength);
                                     valueTextField.textProperty().set(randomString);
                             });
@@ -165,25 +161,4 @@ public class PhraseWordsDialog extends VBox {
         }
     }
 
-    public static String generateRandomString(List<char[]> symbolSets, int minLength, int maxLength) {
-        Set<Character> symbolSet = new HashSet<>();
-        for (char[] symbolArray : symbolSets) {
-            for (char c : symbolArray) {
-                symbolSet.add(c);
-            }
-        }
-        List<Character> symbols = symbolSet.stream().toList();
-
-        // Generate a random length between minLength and maxLength
-        int length = SECURE_RANDOM.nextInt(maxLength - minLength + 1) + minLength;
-
-        StringBuilder randomString = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            // Randomly select a character from the list
-            char randomChar = symbols.get(SECURE_RANDOM.nextInt(symbols.size()));
-            randomString.append(randomChar);
-        }
-
-        return randomString.toString();
-    }
 }
