@@ -695,11 +695,53 @@ public class ClientModeForm extends AnchorPane {
         }
     }
 
-    public void addPhrase() {
+    // ---------------------------------------------------------------------------------------------------------
+
+    public void tombstonePhraseFoldersForm() {
+        try {
+            ExplorerNode selectedItem = checkNotNull(foldersTableView).getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                if (selectedItem.type == ExplorerNodeType.PHRASE) {
+                    int phraseId = selectedItem.id;
+                    String phraseName = selectedItem.name;
+
+                    // 1. Get user confirmation
+                    if (YES == JavaFxUtils.showYesNoDialog("Delete phrase [" + phraseId + " / " + phraseName + "]?")) {
+                        // 2. Tombstone phrase
+                        dbRuntime.tombstonePhrase(phraseId);
+
+                        // 3. Reload UI
+                        loadFolders();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "tombstonePhraseFoldersForm error: " + e, ButtonType.OK);
+            LOGGER.error("tombstonePhraseFoldersForm error: ", e);
+            alert.showAndWait();
+        }
+    }
+
+    public void tombstonePhrase() {
         // TODO:
     }
 
-    public void tombstonePhraseFoldersForm() {
+    public void changePhraseFolder() {
+        // TODO:
+        //PickFolderDialog pickFolderDialog;
+    }
+
+    public void changePhraseTemplate() {
+        // TODO:
+        //PickPhraseTemplateDialog pickPhraseTemplateDialog;
+    }
+
+    public void renamePhrase() {
+        // TODO:
+        //GenericNameDialog genericNameDialog;
+    }
+
+    public void addPhraseFoldersForm() {
         // TODO:
     }
 }

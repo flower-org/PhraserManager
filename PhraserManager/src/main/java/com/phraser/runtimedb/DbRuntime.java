@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.phraser.db.Block.DUMMY_VERSION;
@@ -50,10 +51,12 @@ public class DbRuntime {
     public static class BlockNumberAndVersion {
         public final int blockNumber;
         public final long version;
+        public final boolean isTombstoned;
 
-        public BlockNumberAndVersion(int blockNumber, long version) {
+        public BlockNumberAndVersion(int blockNumber, long version, boolean isTombstoned) {
             this.blockNumber = blockNumber;
             this.version = version;
+            this.isTombstoned = isTombstoned;
         }
     }
 
@@ -201,7 +204,7 @@ public class DbRuntime {
         aes256Key = keyBlock.key();
         aes256IvMask = keyBlock.iv();
         dbName = keyBlock.dbName();
-        blockNumberAndVersionByBlockId.put(keyBlockId, new BlockNumberAndVersion(latestKeyBlockNumber, keyBlock.version()));
+        blockNumberAndVersionByBlockId.put(keyBlockId, new BlockNumberAndVersion(latestKeyBlockNumber, keyBlock.version(), false));
 
         // 2. scan other blocks to find all latest versions
         Integer localFoldersBlockId = null;
@@ -209,7 +212,6 @@ public class DbRuntime {
         Integer localSymbolSetsBlockId = null;
         Map<Integer, PhraseFolderAndName> phraseFolders = new HashMap<>();
 
-        Set<Integer> tombstonedPhraseBlocks = new HashSet<>();
         for (int i = 0; i < f.length(); i += FLASH_SECTOR_SIZE) {
             readFromFileAtPos(block, f, i);
 
@@ -236,30 +238,23 @@ public class DbRuntime {
                 BlockNumberAndVersion old = blockNumberAndVersionByBlockId.get(newBlockId);
                 if (old == null || old.version < newBlockVersion) {
                     int blockNumber = i / FLASH_SECTOR_SIZE;
-
-                    //Ignore tombstoned phrase blocks
-                    if (newBlock.blockType() == BlockType.PHRASE_BLOCK && checkNotNull(newBlock.phraseBlock()).isTombstone()) {
-                        tombstonedPhraseBlocks.add(newBlockId);
-                        blockNumberAndVersionByBlockId.remove(newBlockId);
+                    boolean isTombstoned = newBlock.blockType() == BlockType.PHRASE_BLOCK && checkNotNull(newBlock.phraseBlock()).isTombstone();
+                    blockNumberAndVersionByBlockId.put(newBlockId, new BlockNumberAndVersion(blockNumber, newBlockVersion, isTombstoned));
+                    if (isTombstoned) {
                         phraseFolders.remove(newBlockId);
-                        continue;
-                    }
-                    if (tombstonedPhraseBlocks.contains(newBlockId)) {
-                        continue;
-                    }
-
-                    blockNumberAndVersionByBlockId.put(newBlockId, new BlockNumberAndVersion(blockNumber, newBlockVersion));
-                    if (newBlock.blockType() == BlockType.SYMBOL_SETS_BLOCK) {
-                        localSymbolSetsBlockId = newBlockId;
-                    } else if (newBlock.blockType() == BlockType.FOLDERS_BLOCK) {
-                        localFoldersBlockId = newBlockId;
-                    } else if (newBlock.blockType() == BlockType.PHRASE_TEMPLATES_BLOCK) {
-                        localPhraseTemplatesBlockId = newBlockId;
-                    } else if (newBlock.blockType() == BlockType.PHRASE_BLOCK) {
-                        phraseFolders.put(newBlockId,
-                                new PhraseFolderAndName(newBlockId,
-                                        checkNotNull(newBlock.phraseBlock()).folderId(),
-                                        checkNotNull(newBlock.phraseBlock()).phraseName()));
+                    } else {
+                        if (newBlock.blockType() == BlockType.SYMBOL_SETS_BLOCK) {
+                            localSymbolSetsBlockId = newBlockId;
+                        } else if (newBlock.blockType() == BlockType.FOLDERS_BLOCK) {
+                            localFoldersBlockId = newBlockId;
+                        } else if (newBlock.blockType() == BlockType.PHRASE_TEMPLATES_BLOCK) {
+                            localPhraseTemplatesBlockId = newBlockId;
+                        } else if (newBlock.blockType() == BlockType.PHRASE_BLOCK) {
+                            phraseFolders.put(newBlockId,
+                                    new PhraseFolderAndName(newBlockId,
+                                            checkNotNull(newBlock.phraseBlock()).folderId(),
+                                            checkNotNull(newBlock.phraseBlock()).phraseName()));
+                        }
                     }
                 }
             }
@@ -268,6 +263,16 @@ public class DbRuntime {
         if (localFoldersBlockId == null) { throw new RuntimeException("Failed to find FoldersBlock"); }
         if (localPhraseTemplatesBlockId == null) { throw new RuntimeException("Failed to find PhraseTemplatesBlock"); }
         if (localSymbolSetsBlockId == null) { throw new RuntimeException("Failed to find SymbolSetsBlock"); }
+
+        // filter out tombstoned blocks
+        Set<Integer> tombstonedBlocks = blockNumberAndVersionByBlockId.entrySet().stream()
+                .filter(ent -> ent.getValue().isTombstoned)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+
+        for (int tombstonedBlockId : tombstonedBlocks) {
+            blockNumberAndVersionByBlockId.remove(tombstonedBlockId);
+        }
 
         foldersBlockId = localFoldersBlockId;
         phraseTemplatesBlockId = localPhraseTemplatesBlockId;
@@ -441,7 +446,7 @@ public class DbRuntime {
                 });
     }
 
-    public Block readFoldersBlock(int foldersBlockNumber) throws IOException {
+    protected Block readFoldersBlock(int foldersBlockNumber) throws IOException {
         byte[] block = new byte[FLASH_SECTOR_SIZE];
 
         int foldersBlockPosition = foldersBlockNumber * FLASH_SECTOR_SIZE;
@@ -456,6 +461,20 @@ public class DbRuntime {
     public Block readFoldersBlock() throws IOException {
         int foldersBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(foldersBlockId)).blockNumber;
         return readFoldersBlock(foldersBlockNumber);
+    }
+
+    // Phrases
+
+    public Block readPhraseBlock(int phraseBlockNumber) throws IOException {
+        byte[] block = new byte[FLASH_SECTOR_SIZE];
+
+        int phraseBlockPosition = phraseBlockNumber * FLASH_SECTOR_SIZE;
+        readFromFileAtPos(block, f, phraseBlockPosition);
+        BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
+        Block phraseBlock = Block.of(FlatBufBlockDecoder.fromFlatBufPhraseBlock(blockData.blockData));
+        assert (phraseBlock.blockType() == BlockType.PHRASE_BLOCK);
+
+        return phraseBlock;
     }
 
     // --------------------------------------------------------------------------------------------------------
@@ -475,10 +494,7 @@ public class DbRuntime {
                 refreshPhraseTemplatesCache(block);
                 break;
             case PHRASE_BLOCK:
-                // TODO: update PHRASE_BLOCK cache
-                // - Phrase Blocks (minimal info) cache
-                //final Map<Integer, PhraseFolderAndName> phrases;
-                //final Map<Integer, Set<Integer>> phrasesByFolder;
+                refreshPhraseCache(block);
                 break;
             default:
                 throw new RuntimeException("Unexpected block type " + block.blockType());
@@ -522,7 +538,7 @@ public class DbRuntime {
                     occupiedBlocksNumbers.remove(moveBlockNumber);
                     occupiedBlocksNumbers.put(freeBlockNumber, freeBlockNumber);
                     blockNumberAndVersionByBlockId.put(compBlock.getBlockId(),
-                            new BlockNumberAndVersion(freeBlockNumber, compBlock.getVersion()));
+                            new BlockNumberAndVersion(freeBlockNumber, compBlock.getVersion(), false));
                     // We're moving this backwards, so we're not updating `lastBlockNumber`, which will be updated by the main block write
                 }
             }
@@ -546,9 +562,18 @@ public class DbRuntime {
             // Update DbRuntime context:
             reloadBlockCache(mainBlock);
             occupiedBlocksNumbers.remove(blockNumber);
-            occupiedBlocksNumbers.put(freeBlockNumber, freeBlockNumber);
-            blockNumberAndVersionByBlockId.put(mainBlock.getBlockId(),
-                    new BlockNumberAndVersion(freeBlockNumber, mainBlock.getVersion()));
+
+            boolean isATombstonedPhraseBlock = mainBlock.blockType() == BlockType.PHRASE_BLOCK
+                    && checkNotNull(mainBlock.phraseBlock()).isTombstone();
+            if (isATombstonedPhraseBlock) {
+                // If it's a tombstoned phrase block, we remove it from block indices
+                blockNumberAndVersionByBlockId.remove(mainBlock.getBlockId());
+            } else {
+                // Otherwise we update block indices
+                occupiedBlocksNumbers.put(freeBlockNumber, freeBlockNumber);
+                blockNumberAndVersionByBlockId.put(mainBlock.getBlockId(),
+                        new BlockNumberAndVersion(freeBlockNumber, mainBlock.getVersion(), false));
+            }
             lastBlockNumber = freeBlockNumber;
         } catch (ChecksumException e) {
             LOGGER.trace("2st (main) block save: Block checksum failed", e);
@@ -682,6 +707,46 @@ public class DbRuntime {
     }
 
     public boolean isFolderEmpty(int folderId) {
-        return !subFoldersByFolder.containsKey(folderId) && !phrasesByFolder.containsKey(folderId);
+        Set<Integer> subfolders = subFoldersByFolder.get(folderId);
+        boolean hasSubfolders = subfolders != null && !subfolders.isEmpty();
+        Set<Integer> phrases = phrasesByFolder.get(folderId);
+        boolean hasPhrases = phrases != null && !phrases.isEmpty();
+
+        return !hasSubfolders && !hasPhrases;
+    }
+
+    //--------------------------------------------------------------
+
+    protected void refreshPhraseCache(Block mainPhraseBlock) {
+        PhraseBlock phraseBlock = checkNotNull(mainPhraseBlock.phraseBlock());
+        int phraseBlockId = phraseBlock.blockId();
+        int folderId = phraseBlock.folderId();
+        String name = phraseBlock.phraseName();
+
+        //If block is not tombstoned, update indices
+        if (!phraseBlock.isTombstone()) {
+            phrases.put(phraseBlockId, new PhraseFolderAndName(phraseBlockId, folderId, name));
+            phrasesByFolder.computeIfAbsent(folderId, k -> new HashSet<>()).add(phraseBlockId);
+        }
+    }
+
+    public void tombstonePhrase(int phraseBlockId) throws IOException {
+        int blockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(phraseBlockId)).blockNumber;
+
+        Block oldPhraseBlock = readPhraseBlock(blockNumber);
+        Block newPhraseBlock = Block.of(
+                ImmutablePhraseBlock.builder().from(checkNotNull(oldPhraseBlock.phraseBlock()))
+                        .isTombstone(true)
+                        .build()
+        );
+
+        updateBlock(newPhraseBlock);
+
+        // Remove block indices
+        phrases.remove(phraseBlockId);
+        Set<Integer> phrasesForFolder = phrasesByFolder.get(checkNotNull(oldPhraseBlock.phraseBlock()).folderId());
+        if (phrasesForFolder != null) {
+            phrasesForFolder.remove(phraseBlockId);
+        }
     }
 }

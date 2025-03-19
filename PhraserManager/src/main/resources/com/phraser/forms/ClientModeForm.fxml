@@ -5,7 +5,6 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
@@ -13,7 +12,7 @@
 
 <fx:root prefHeight="738.0" prefWidth="872.0" type="AnchorPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
     <children>
-        <SplitPane dividerPositions="0.0, 100.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+        <SplitPane dividerPositions="0.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
             <AnchorPane maxHeight="35.0" minHeight="35.0" prefHeight="35.0" SplitPane.resizableWithParent="false">
                 <ToolBar AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <items>
@@ -38,10 +37,10 @@
                                                 <children>
                                                    <ToolBar prefHeight="40.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                       <items>
-                                                         <Button fx:id="renamePhrasePhrasePaneButton" mnemonicParsing="false" text="Rename Phrase" />
-                                                         <Button fx:id="changeTemplatePhrasePaneButton" mnemonicParsing="false" text="Change Phrase Template" />
-                                                         <Button fx:id="changeFolderPhrasePaneButton" mnemonicParsing="false" text="Change Folder" />
-                                                         <Button fx:id="deletePhrasePhrasePaneButton" mnemonicParsing="false" text="Delete Phrase (tombstone)" />
+                                                         <Button fx:id="renamePhrasePhrasePaneButton" mnemonicParsing="false" onAction="#renamePhrase" text="Rename Phrase" />
+                                                         <Button fx:id="changeTemplatePhrasePaneButton" mnemonicParsing="false" onAction="#changePhraseTemplate" text="Change Phrase Template" />
+                                                         <Button fx:id="changeFolderPhrasePaneButton" mnemonicParsing="false" onAction="#changePhraseFolder" text="Change Folder" />
+                                                         <Button fx:id="deletePhrasePhrasePaneButton" mnemonicParsing="false" onAction="#tombstonePhrase" text="Delete Phrase (tombstone)" />
                                                       </items>
                                                    </ToolBar>
                                                 </children>
@@ -97,7 +96,7 @@
                                                          <Button mnemonicParsing="false" onAction="#renameFolder" text="Rename Folder" />
                                                          <Button mnemonicParsing="false" onAction="#deleteFolder" text="Delete Folder" />
                                                          <Separator orientation="VERTICAL" prefHeight="200.0" />
-                                                         <Button mnemonicParsing="false" onAction="#addPhrase" text="Add Phrase" />
+                                                         <Button mnemonicParsing="false" onAction="#addPhraseFoldersForm" text="Add Phrase" />
                                                          <Button mnemonicParsing="false" onAction="#tombstonePhraseFoldersForm" text="Delete Phrase (tombstone)" />
                                                      </items>
                                                    </ToolBar>
@@ -182,19 +181,6 @@
                </SplitPane>
             </children>
             </AnchorPane>
-         <AnchorPane minHeight="200.0" prefHeight="200.0" prefWidth="200.0" SplitPane.resizableWithParent="false">
-            <children>
-               <TitledPane animated="false" text="Logs" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                 <content>
-                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                        <children>
-                           <TextArea prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                        </children>
-                     </AnchorPane>
-                 </content>
-               </TitledPane>
-            </children>
-         </AnchorPane>
         </SplitPane>
     </children>
 </fx:root>
