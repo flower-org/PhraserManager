@@ -878,6 +878,9 @@ public class ClientModeForm extends AnchorPane {
                                     path.push(newPhraseName);
 
                                     // 3. Reload UI
+                                    currentPhraseBlock = dbRuntime.getPhrase(currentPhraseId);
+                                    if (currentPhraseBlock == null) { throw new RuntimeException("PhraseBlock not found"); }
+
                                     loadPhrase();
                                 }
                             } catch (Exception e) {
@@ -944,6 +947,40 @@ public class ClientModeForm extends AnchorPane {
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "addPhraseFoldersForm folder: " + e, ButtonType.OK);
             LOGGER.error("addPhraseFoldersForm folder: ", e);
+            alert.showAndWait();
+        }
+    }
+
+    public void deleteHistoryEntry() {
+        try {
+            ExplorerNode selectedItem = checkNotNull(phraseHistoryTableView).getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                if (selectedItem.type == ExplorerNodeType.HISTORY_ENTRY) {
+                    int historyEntryIndex = selectedItem.id;
+                    String historyEntryName = selectedItem.name;
+
+                    if (historyEntryIndex == 0) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR, "Can't delete history entry 0 - it contains current data", ButtonType.OK);
+                        alert.showAndWait();
+                        return;
+                    }
+
+                    // 1. Get user confirmation
+                    if (YES == JavaFxUtils.showYesNoDialog("Delete history entry [" + historyEntryIndex + " / " + historyEntryName + "]?")) {
+                        // 2. Delete history entry
+                        dbRuntime.deleteHistoryEntry(currentPhraseId, historyEntryIndex);
+
+                        // 3. Reload UI
+                        currentPhraseBlock = dbRuntime.getPhrase(currentPhraseId);
+                        if (currentPhraseBlock == null) { throw new RuntimeException("PhraseBlock not found"); }
+
+                        loadPhraseHistory();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "deleteHistoryEntry error: " + e, ButtonType.OK);
+            LOGGER.error("deleteHistoryEntry error: ", e);
             alert.showAndWait();
         }
     }

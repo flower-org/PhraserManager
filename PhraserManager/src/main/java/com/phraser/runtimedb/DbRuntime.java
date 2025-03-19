@@ -874,4 +874,21 @@ public class DbRuntime {
 
         updateBlock(newPhraseBlock);
     }
+
+    public void deleteHistoryEntry(int phraseBlockId, int historyEntryIndex) throws IOException {
+        int blockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(phraseBlockId)).blockNumber;
+
+        Block oldPhraseBlock = readPhraseBlock(blockNumber);
+
+        List<PhraseBlock.PhraseHistory> history = new ArrayList<>(checkNotNull(oldPhraseBlock.phraseBlock()).history());
+        history.remove(historyEntryIndex);
+
+        Block newPhraseBlock = Block.of(
+                ImmutablePhraseBlock.builder().from(checkNotNull(oldPhraseBlock.phraseBlock()))
+                        .history(history)
+                        .build()
+        );
+
+        updateBlock(newPhraseBlock);
+    }
 }

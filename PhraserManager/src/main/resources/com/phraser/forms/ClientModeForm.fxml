@@ -141,7 +141,7 @@
                                                 <children>
                                                    <ToolBar prefHeight="40.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                       <items>
-                                                         <Button mnemonicParsing="false" text="Delete History Entry" />
+                                                         <Button mnemonicParsing="false" onAction="#deleteHistoryEntry" text="Delete History Entry" />
                                                       </items>
                                                    </ToolBar>
                                                 </children>
