@@ -109,8 +109,9 @@ public class ClientModeForm extends AnchorPane {
         public final boolean isUserEditable;
 
         public final boolean isPartOfTemplate;
+        public int serial;
 
-        public UIWord(int wordTemplateId, String wordName, String value, byte permissions, Icon icon, char[] symbolSet, boolean isPartOfTemplate) {
+        public UIWord(int wordTemplateId, String wordName, String value, byte permissions, Icon icon, char[] symbolSet, boolean isPartOfTemplate, int serial) {
             this.wordTemplateId = wordTemplateId;
             this.wordName = wordName;
             this.value = value;
@@ -129,6 +130,8 @@ public class ClientModeForm extends AnchorPane {
             this.isViewable = PhraserUtils.isViewable(permissions);
             this.isGenerateable = PhraserUtils.isGenerateable(permissions);
             this.isUserEditable = PhraserUtils.isUserEditable(permissions);
+
+            this.serial = serial;
         }
 
         public String getValue() {
@@ -244,7 +247,7 @@ public class ClientModeForm extends AnchorPane {
                     private Button getGenerateButton(UIWord word) {
                         Button button = new Button("Generate");
                         button.setOnAction(event -> {
-                            JavaFxUtils.copyToClipboard(word.value);
+                            generateWord(word);
                         });
                         return button;
                     }
@@ -274,7 +277,7 @@ public class ClientModeForm extends AnchorPane {
                     private Button getEditButton(UIWord word) {
                         Button button = new Button("Edit");
                         button.setOnAction(event -> {
-                            JavaFxUtils.copyToClipboard(word.value);
+                            editWord(word);
                         });
                         return button;
                     }
@@ -396,6 +399,8 @@ public class ClientModeForm extends AnchorPane {
             map.computeIfAbsent(word.wordTemplateId(), k -> new ArrayDeque<>()).add(word);
         }
 
+
+        int serial = 0;
         List<UIWord> words = new ArrayList<>();
         if (phraseTemplate != null) {
             for (int wordTemplateIds : phraseTemplate.wordTemplateIds()) {
@@ -412,7 +417,7 @@ public class ClientModeForm extends AnchorPane {
                 char[] symbolSet = getSymbolSet(wordTemplate);
                 boolean isPartOfTemplate = true;
 
-                UIWord word = new UIWord(wordTemplateId, wordName, value, permissions, icon, symbolSet, isPartOfTemplate);
+                UIWord word = new UIWord(wordTemplateId, wordName, value, permissions, icon, symbolSet, isPartOfTemplate, serial++);
                 words.add(word);
             }
         }
@@ -428,7 +433,7 @@ public class ClientModeForm extends AnchorPane {
                 char[] symbolSet = getSymbolSet(historyWord.wordTemplateId());
                 boolean isPartOfTemplate = false;
 
-                UIWord word = new UIWord(wordTemplateId, wordName, value, permissions, icon, symbolSet, isPartOfTemplate);
+                UIWord word = new UIWord(wordTemplateId, wordName, value, permissions, icon, symbolSet, isPartOfTemplate, serial++);
                 words.add(word);
             }
         }
@@ -438,6 +443,7 @@ public class ClientModeForm extends AnchorPane {
 
     List<UIWord> getHistoryWords(PhraseBlock.PhraseHistory history) {
         List<UIWord> words = new ArrayList<>();
+        int serial = 0;
         for (PhraseBlock.Word historyWord : history.phrase()) {
             int wordTemplateId = historyWord.wordTemplateId();
             String wordName = historyWord.name();
@@ -447,7 +453,7 @@ public class ClientModeForm extends AnchorPane {
             char[] symbolSet = getSymbolSet(historyWord.wordTemplateId());
             boolean isPartOfTemplate = false;
 
-            UIWord word = new UIWord(wordTemplateId, wordName, value, permissions, icon, symbolSet, isPartOfTemplate);
+            UIWord word = new UIWord(wordTemplateId, wordName, value, permissions, icon, symbolSet, isPartOfTemplate, serial++);
             words.add(word);
         }
 
@@ -1048,6 +1054,70 @@ public class ClientModeForm extends AnchorPane {
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "deleteHistoryEntry error: " + e, ButtonType.OK);
             LOGGER.error("deleteHistoryEntry error: ", e);
+            alert.showAndWait();
+        }
+    }
+
+    protected void editWord(UIWord word) {
+        try {
+            if (currentPhraseBlock != null) {
+                int phraseId = currentPhraseBlock.blockId();
+
+                // 1. Obtain new text
+                GenericNameDialog genericNameDialog = new GenericNameDialog("Edit word", word.value);
+                Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
+                        stage -> { genericNameDialog.setStage(stage); return genericNameDialog; },
+                        "Edit word '" + word.wordName + "'");
+
+                workspaceStage.setOnHidden(
+                        ev -> {
+                            try {
+                                String newWord = genericNameDialog.getName();
+                                if (!StringUtils.isBlank(newWord)) {
+                                    // 2. Update word
+                                    dbRuntime.updatePhraseWord(phraseId, word.wordTemplateId, word.serial, newWord);
+
+                                    // 3. Reload UI
+                                    currentPhraseBlock = dbRuntime.getPhrase(currentPhraseId);
+                                    if (currentPhraseBlock == null) { throw new RuntimeException("PhraseBlock not found"); }
+
+                                    loadPhrase();
+                                }
+                            } catch (Exception e) {
+                                Alert alert = new Alert(Alert.AlertType.ERROR, "Error editing word: " + e, ButtonType.OK);
+                                LOGGER.error("Error editing word: ", e);
+                                alert.showAndWait();
+                            }
+                        }
+                );
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error editing word: " + e, ButtonType.OK);
+            LOGGER.error("Error editing word: ", e);
+            alert.showAndWait();
+        }
+    }
+
+    protected void generateWord(UIWord word) {
+        try {
+            if (currentPhraseBlock != null) {
+                int phraseId = currentPhraseBlock.blockId();
+
+                // 1. Get user confirmation
+                if (YES == JavaFxUtils.showYesNoDialog("Generate new value for \"" + word.wordName + "\"?")) {
+                    // 2. Update word / Generate new
+                    dbRuntime.generatePhraseWord(phraseId, word.wordTemplateId, word.serial);
+
+                    // 3. Reload UI
+                    currentPhraseBlock = dbRuntime.getPhrase(currentPhraseId);
+                    if (currentPhraseBlock == null) { throw new RuntimeException("PhraseBlock not found"); }
+
+                    loadPhrase();
+                }
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error generating word: " + e, ButtonType.OK);
+            LOGGER.error("Error generating word: ", e);
             alert.showAndWait();
         }
     }

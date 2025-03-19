@@ -28,11 +28,13 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -825,18 +827,7 @@ public class DbRuntime {
             if (wordTemplate == null) { throw new RuntimeException("WordTemplate [" + wordTemplateId +
                     "] of PhraseTemplate [" + phraseTemplateId + "] not found"); }
 
-            String wordStr = "";
-            if (PhraserUtils.isGenerateable(wordTemplate.permissions())) {
-                List<char[]> symbolSets = new ArrayList<>();
-                for (int symbolSetId : wordTemplate.symbolSetIds()) {
-                    SymbolSet symbolSet = getSymbolSet(symbolSetId);
-                    if (symbolSet == null) { throw new RuntimeException("SymbolSet [" + symbolSetId +
-                            "] of WordTemplate [" + wordTemplateId + "] of PhraseTemplate [" + phraseTemplateId + "] not found"); }
-                    symbolSets.add(symbolSet.symbolSet());
-                }
-
-                wordStr = WordGenerator.generateWord(symbolSets, wordTemplate.minLength(), wordTemplate.maxLength());
-            }
+            String wordStr = getDefaultWord(wordTemplate);
 
             PhraseBlock.Word word = ImmutableWord.builder()
                     .wordTemplateId(wordTemplate.wordTemplateId())
@@ -890,5 +881,106 @@ public class DbRuntime {
         );
 
         updateBlock(newPhraseBlock);
+    }
+
+    protected String getDefaultWord(WordTemplate wordTemplate) {
+        String wordStr = "";
+        if (PhraserUtils.isGenerateable(wordTemplate.permissions())) {
+            List<char[]> symbolSets = new ArrayList<>();
+            for (int symbolSetId : wordTemplate.symbolSetIds()) {
+                SymbolSet symbolSet = getSymbolSet(symbolSetId);
+                if (symbolSet == null) { throw new RuntimeException("SymbolSet [" + symbolSetId +
+                        "] of WordTemplate [" + wordTemplate.wordTemplateId() + "] not found"); }
+                symbolSets.add(symbolSet.symbolSet());
+            }
+
+            wordStr = WordGenerator.generateWord(symbolSets, wordTemplate.minLength(), wordTemplate.maxLength());
+        }
+        return wordStr;
+    }
+
+    public void generatePhraseWord(int phraseBlockId, int wordTemplateIdToUpdate, int serial) throws IOException {
+        WordTemplate wordTemplate = getWordTemplate(wordTemplateIdToUpdate);
+        if (wordTemplate == null) { throw new RuntimeException("WordTemplate [" + wordTemplateIdToUpdate + "] not found"); }
+        String newWord = getDefaultWord(wordTemplate);
+        updatePhraseWord(phraseBlockId, wordTemplateIdToUpdate, serial, newWord);
+    }
+
+    public void updatePhraseWord(int phraseBlockId, int wordTemplateIdToUpdate, int serial, String newWord) throws IOException {
+        int blockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(phraseBlockId)).blockNumber;
+
+        Block oldPhraseBlock = readPhraseBlock(blockNumber);
+        int phraseTemplateId = checkNotNull(oldPhraseBlock.phraseBlock()).phraseTemplateId();
+        PhraseTemplate phraseTemplate = getPhraseTemplate(phraseTemplateId);
+        if (phraseTemplate == null) { throw new RuntimeException("PhraseTemplate [" + phraseTemplateId + "] not found"); }
+
+        PhraseBlock.PhraseHistory currentHistory = checkNotNull(oldPhraseBlock.phraseBlock()).history().get(0);
+        Map<Integer, Queue<PhraseBlock.Word>> phraseMap = new HashMap<>();
+        for (PhraseBlock.Word oldWord : currentHistory.phrase()) {
+            phraseMap.computeIfAbsent(oldWord.wordTemplateId(), k -> new ArrayDeque<>()).add(oldWord);
+        }
+
+        List<PhraseBlock.Word> phrase = new ArrayList<>();
+        int counter = 0;
+        for (int wordTemplateId : phraseTemplate.wordTemplateIds()) {
+            WordTemplate wordTemplate = getWordTemplate(wordTemplateId);
+            if (wordTemplate == null) { throw new RuntimeException("WordTemplate [" + wordTemplateId +
+                    "] of PhraseTemplate [" + phraseTemplateId + "] not found"); }
+
+            String wordStr;
+            if (wordTemplateIdToUpdate == wordTemplateId && counter == serial) {
+                // If template matches, use newWord
+                wordStr = newWord;
+                Queue<PhraseBlock.Word> oldWord = phraseMap.get(wordTemplateId);
+                if (oldWord != null && !oldWord.isEmpty()) {
+                    oldWord.poll();
+                }
+            } else {
+                Queue<PhraseBlock.Word> oldWord = phraseMap.get(wordTemplateId);
+                if (oldWord != null && !oldWord.isEmpty()) {
+                    // If old word found, use oldWord
+                    wordStr = oldWord.poll().word();
+                } else {
+                    // Otherwise use default word
+                    wordStr = getDefaultWord(wordTemplate);
+                }
+            }
+
+            PhraseBlock.Word word = ImmutableWord.builder()
+                    .wordTemplateId(wordTemplate.wordTemplateId())
+                    .name(wordTemplate.wordTemplateName())
+                    .word(wordStr)
+                    .permissions(wordTemplate.permissions())
+                    .icon(wordTemplate.icon())
+                    .build();
+            phrase.add(word);
+
+            counter++;
+        }
+
+        PhraseBlock.PhraseHistory newPhraseHistory = ImmutablePhraseHistory.builder()
+                .phraseTemplateId(phraseTemplateId)
+                .addAllPhrase(phrase)
+                .build();
+
+        List<PhraseBlock.PhraseHistory> history = new ArrayList<>();
+        history.add(newPhraseHistory);
+        history.addAll(checkNotNull(oldPhraseBlock.phraseBlock()).history());
+
+        while (true) {
+            Block newPhraseBlock = Block.of(
+                    ImmutablePhraseBlock.builder().from(checkNotNull(oldPhraseBlock.phraseBlock()))
+                            .history(history)
+                            .build()
+            );
+
+            int newBlockLength = FlatBufBlockEncoder.toFlatBufPhraseBlock(checkNotNull(newPhraseBlock.phraseBlock())).length;
+            if (newBlockLength > DATA_BLOCK_SIZE) {
+                history.remove(history.size()-1);
+            } else {
+                updateBlock(newPhraseBlock);
+                return;
+            }
+        }
     }
 }
