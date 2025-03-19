@@ -594,22 +594,50 @@ public class ClientModeForm extends AnchorPane {
     // ---------------------------------------------------------------------------------------------------------
 
     public void addFolder() {
-        //
+        // 1. Obtain new folder name
+        GenericNameDialog genericNameDialog = new GenericNameDialog("Set Folder Name", null);
+        Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
+                stage -> { genericNameDialog.setStage(stage); return genericNameDialog; },
+                "New Folder Name");
+
+        workspaceStage.setOnHidden(
+                ev -> {
+                    try {
+                        String name = genericNameDialog.getName();
+                        if (!StringUtils.isBlank(name)) {
+                            // 2. Add subfolder of a current folder
+                            dbRuntime.addFolder(name, currentFolderId);
+
+                            // 3. Reload UI
+                            loadFolders();
+                        }
+                    } catch (Exception e) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR, "Error opening DB in client mode: " + e, ButtonType.OK);
+                        LOGGER.error("Error opening DB in client mode: ", e);
+                        alert.showAndWait();
+                    }
+                }
+        );
     }
 
     public void renameFolder() {
-        //
+        // 1. Obtain new folder name
+        // 2. Rename folder
+        // 3. Rebuild Folders block
     }
 
     public void deleteFolder() {
-        //
+        // 1. Check folder is not empty
+        // 2. Get user confirmation
+        // 3. Remove folder form collections
+        // 4. Rebuild Folders block
     }
 
     public void addPhrase() {
-        //
+        // TODO:
     }
 
     public void tombstonePhraseFoldersForm() {
-        //
+        // TODO:
     }
 }

@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.phraser.db.Block.DATA_BLOCK_SIZE;
+import static com.phraser.db.Block.*;
 import static com.phraser.forms.DefaultDBCreator.DEFAULT_SYMBOL_SETS;
 import static com.phraser.forms.PhraserDbForm.NEW_BLOCK;
 import static com.phraser.forms.PhraseWordsDialog.DialogWord;
@@ -601,8 +601,8 @@ public class PhraseBlockForm extends AnchorPane {
 
         return ImmutablePhraseBlock.builder()
                 .blockId(phraseBlock == null ? -1 : phraseBlock.getBlockId())
-                .version(123)
-                .entropy(useRealEntropy ? PhraserUtils.generateEntropy() : 123L)
+                .version(DUMMY_VERSION)
+                .entropy(useRealEntropy ? PhraserUtils.generateEntropy() : DUMMY_ENTROPY)
 
                 .phraseTemplateId(phraseTemplateId)
                 .folderId(folderId)

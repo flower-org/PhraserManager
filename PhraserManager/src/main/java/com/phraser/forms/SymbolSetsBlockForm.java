@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.phraser.db.Block.DATA_BLOCK_SIZE;
+import static com.phraser.db.Block.*;
 import static com.phraser.forms.PhraserDbForm.NEW_BLOCK;
 
 public class SymbolSetsBlockForm extends AnchorPane {
@@ -182,8 +182,8 @@ public class SymbolSetsBlockForm extends AnchorPane {
     SymbolSetsBlock formSymbolSetsBlock(boolean useRealEntropy) {
         return ImmutableSymbolSetsBlock.builder()
                 .blockId(symbolSetsBlock == null ? -1 : symbolSetsBlock.getBlockId())
-                .version(123)
-                .entropy(useRealEntropy ? PhraserUtils.generateEntropy() : 123L)
+                .version(DUMMY_VERSION)
+                .entropy(useRealEntropy ? PhraserUtils.generateEntropy() : DUMMY_ENTROPY)
                 .addAllSymbolSets(symbolSets)
                 .build();
     }

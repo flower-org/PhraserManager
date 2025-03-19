@@ -16,6 +16,8 @@ public interface Block {
   int ENCRYPTED_BLOCK_SIZE = FLASH_SECTOR_SIZE - IV_SIZE;
 
   Block DUMMY = ImmutableBlock.builder().storeBlock(StoreBlock.of(0,0,0)).build();
+  int DUMMY_VERSION = 123;
+  long DUMMY_ENTROPY = 123L;
 
   @Nullable Integer originalBlockNumber();
   StoreBlock storeBlock();

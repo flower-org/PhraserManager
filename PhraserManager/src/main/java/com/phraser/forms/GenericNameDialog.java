@@ -24,13 +24,12 @@ public class GenericNameDialog extends VBox {
 
     @Nullable Stage stage;
 
-    @Nullable @FXML Label nameLabel;
     @Nullable @FXML TextField nameTextField;
     @Nullable @FXML Button okButton;
 
     @Nullable String name;
 
-    public GenericNameDialog(String labelText, String buttonText, @Nullable String textFieldValue) {
+    public GenericNameDialog(String buttonText, @Nullable String textFieldValue) {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("GenericNameDialog.fxml"));
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);
@@ -41,7 +40,6 @@ public class GenericNameDialog extends VBox {
             throw new RuntimeException(exception);
         }
 
-        checkNotNull(nameLabel).textProperty().set(labelText);
         if (textFieldValue == null) {
             checkNotNull(nameTextField).textProperty().set("");
         } else {

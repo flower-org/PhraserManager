@@ -2,6 +2,7 @@ package com.phraser.runtimedb;
 
 import com.phraser.db.Block;
 import com.phraser.db.BlockType;
+import com.phraser.db.FoldersBlock;
 import com.phraser.db.ImmutableFoldersBlock;
 import com.phraser.db.ImmutableKeyBlock;
 import com.phraser.db.ImmutablePhraseBlock;
@@ -15,6 +16,7 @@ import com.phraser.dbcodec.DbEncoder;
 import com.phraser.dbcodec.FlatBufBlockDecoder;
 import com.phraser.dbcodec.FlatBufBlockEncoder;
 import com.phraser.utils.Pbkdf2Tool;
+import com.phraser.utils.PhraserUtils;
 import com.phraser.utils.TreeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +27,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +36,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.phraser.db.Block.DUMMY_VERSION;
 import static com.phraser.db.Block.FLASH_SECTOR_SIZE;
 import static com.phraser.db.FoldersBlock.Folder;
 import static com.phraser.db.PhraseTemplatesBlock.PhraseTemplate;
@@ -76,37 +80,44 @@ public class DbRuntime {
         }
     }
 
+    // Database File
     final File dbFile;
     final RandomAccessFile f;
-    final String dbPassword;
-    final String dbName;
 
+    // Counters - Last issued blockId
     int lastBlockId = 0;
+
+    // Counters - Latest block update version and its block number
     long lastBlockVersion = 0;
     int lastBlockNumber = 0;
 
-    final int keyBlockId;
-    final int blockCount;
-    final int foldersBlockId;
-    final int phraseTemplatesBlockId;
-    final int symbolSetsBlockId;
-
-    final byte[] keyBlockKey;
-    final byte[] aes256Key;
-    final byte[] aes256IvMask;
-
+    // Block layout indices
     final TreeMap<Integer, Integer> occupiedBlocksNumbers;
     final Map<Integer, BlockNumberAndVersion> blockNumberAndVersionByBlockId;
 
-    //Cached metadata blocks
+    // Cached metadata blocks and whatnot
+    // - Login data cache
+    final String dbPassword;
+    final String dbName;
+    final byte[] keyBlockKey;
+
+    // - KeyBlock cache
+    final int keyBlockId;
+    final int blockCount;
+    final byte[] aes256Key;
+    final byte[] aes256IvMask;
+
     // - SymbolSetsBlock cache
+    final int symbolSetsBlockId;
     final Map<Integer, SymbolSet> symbolSets;
 
     // - FoldersBlock cache
+    final int foldersBlockId;
     final Map<Integer, Folder> folders;
     final Map<Integer, Set<Integer>> subFoldersByFolder;
 
     // - PhraseTemplatesBlock cache
+    final int phraseTemplatesBlockId;
     final Map<Integer, PhraseTemplate> phraseTemplates;
     final Map<Integer, WordTemplate> wordTemplates;
 
@@ -409,20 +420,17 @@ public class DbRuntime {
     }
 
     public Block readPhraseTemplatesBlock() throws IOException {
-        int phraseTemplatesBlock = checkNotNull(blockNumberAndVersionByBlockId.get(phraseTemplatesBlockId)).blockNumber;
-        return readPhraseTemplatesBlock(phraseTemplatesBlock);
+        int phraseTemplatesBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(phraseTemplatesBlockId)).blockNumber;
+        return readPhraseTemplatesBlock(phraseTemplatesBlockNumber);
     }
 
     // Folders
-    public void loadFoldersBlock(int foldersBlockNumber) throws IOException {
-        byte[] block = new byte[FLASH_SECTOR_SIZE];
+    protected void loadFoldersBlock(int foldersBlockNumber) throws IOException {
+        Block foldersBlock = readFoldersBlock(foldersBlockNumber);
+        refreshFoldersCache(foldersBlock);
+    }
 
-        int foldersBlockPosition = foldersBlockNumber * FLASH_SECTOR_SIZE;
-        readFromFileAtPos(block, f, foldersBlockPosition);
-        BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
-        Block foldersBlock = Block.of(FlatBufBlockDecoder.fromFlatBufFoldersBlock(blockData.blockData));
-        assert (foldersBlock.blockType() == BlockType.FOLDERS_BLOCK);
-
+    protected void refreshFoldersCache(Block foldersBlock) {
         // Fully reload Folders cache
         folders.clear();
         subFoldersByFolder.clear();
@@ -432,6 +440,23 @@ public class DbRuntime {
                     subFoldersByFolder.computeIfAbsent(f.parentFolderId(), k -> new HashSet<>())
                             .add(f.folderId());
                 });
+    }
+
+    public Block readFoldersBlock(int foldersBlockNumber) throws IOException {
+        byte[] block = new byte[FLASH_SECTOR_SIZE];
+
+        int foldersBlockPosition = foldersBlockNumber * FLASH_SECTOR_SIZE;
+        readFromFileAtPos(block, f, foldersBlockPosition);
+        BlockData blockData = DbEncoder.decodeBlock(block, aes256Key, aes256IvMask);
+        Block foldersBlock = Block.of(FlatBufBlockDecoder.fromFlatBufFoldersBlock(blockData.blockData));
+        assert (foldersBlock.blockType() == BlockType.FOLDERS_BLOCK);
+
+        return foldersBlock;
+    }
+
+    public Block readFoldersBlock() throws IOException {
+        int foldersBlockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(foldersBlockId)).blockNumber;
+        return readFoldersBlock(foldersBlockNumber);
     }
 
     // --------------------------------------------------------------------------------------------------------
@@ -445,10 +470,7 @@ public class DbRuntime {
                 // No-op, Key Block is immutable in Client Mode
                 break;
             case FOLDERS_BLOCK:
-                // TODO: update FOLDERS_BLOCK cache
-                // - FoldersBlock cache
-                //final Map<Integer, Folder> folders;
-                //final Map<Integer, Set<Integer>> subFoldersByFolder;
+                refreshFoldersCache(block);
                 break;
             case PHRASE_TEMPLATES_BLOCK:
                 refreshPhraseTemplatesCache(block);
@@ -597,5 +619,29 @@ public class DbRuntime {
 
     public List<SymbolSet> getSymbolSets() {
         return symbolSets.values().stream().toList();
+    }
+
+    //--------------------------------------------------------------
+
+    public void addFolder(String folderName, int parentFolderId) throws IOException {
+        Block oldFoldersBlock = readFoldersBlock();
+        List<Folder> oldFolders = checkNotNull(oldFoldersBlock.foldersBlock()).folders();
+
+        List<Folder> newFolders = new ArrayList<>();
+        int maxFolderId = 0;
+        for (Folder oldFolder : oldFolders) {
+            newFolders.add(oldFolder);
+            maxFolderId = Math.max(maxFolderId, oldFolder.folderId());
+        }
+        newFolders.add(Folder.of(maxFolderId+1, parentFolderId, folderName));
+
+        Block newFoldersBlock = Block.of(ImmutableFoldersBlock.builder()
+                .blockId(oldFoldersBlock.getBlockId())
+                .version(DUMMY_VERSION)
+                .entropy(PhraserUtils.generateEntropy())
+                .addAllFolders(newFolders)
+                .build());
+
+        updateBlock(newFoldersBlock);
     }
 }

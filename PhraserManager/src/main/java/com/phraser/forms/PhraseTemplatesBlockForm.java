@@ -41,7 +41,7 @@ import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
-import static com.phraser.db.Block.DATA_BLOCK_SIZE;
+import static com.phraser.db.Block.*;
 import static com.phraser.db.PhraseTemplatesBlock.*;
 import static com.phraser.forms.PhraserDbForm.NEW_BLOCK;
 import static com.phraser.utils.PhraserUtils.*;
@@ -704,8 +704,8 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
 
         return ImmutablePhraseTemplatesBlock.builder()
                 .blockId(phraseTemplatesBlock == null ? -1 : phraseTemplatesBlock.getBlockId())
-                .version(123)
-                .entropy(useRealEntropy ? PhraserUtils.generateEntropy() : 123L)
+                .version(DUMMY_VERSION)
+                .entropy(useRealEntropy ? PhraserUtils.generateEntropy() : DUMMY_ENTROPY)
                 .addAllPhraseTemplates(phraseTemplates)
                 .addAllWordTemplates(wordTemplates)
                 .build();
