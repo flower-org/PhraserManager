@@ -786,7 +786,7 @@ public class DbRuntime {
         updateBlock(newPhraseBlock);
     }
 
-    public void renamePhrase(int phraseBlockId, String newPhraseName) throws IOException {
+    public void renamePhrase(int phraseBlockId, String newPhraseName) throws IOException, MaxBlockSizeExceededException {
         int blockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(phraseBlockId)).blockNumber;
 
         Block oldPhraseBlock = readPhraseBlock(blockNumber);
@@ -798,7 +798,7 @@ public class DbRuntime {
 
         int newBlockLength = FlatBufBlockEncoder.toFlatBufPhraseBlock(checkNotNull(newPhraseBlock.phraseBlock())).length;
         if (newBlockLength > DATA_BLOCK_SIZE) {
-            throw new RuntimeException("Maximum block size exceeded: [" + newBlockLength + "] > [" + DATA_BLOCK_SIZE + "]");
+            throw new MaxBlockSizeExceededException(newBlockLength, DATA_BLOCK_SIZE);
         }
 
         updateBlock(newPhraseBlock);
