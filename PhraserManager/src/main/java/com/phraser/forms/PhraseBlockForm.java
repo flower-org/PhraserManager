@@ -542,7 +542,7 @@ public class PhraseBlockForm extends AnchorPane {
 
     public void openFolder() {
         try {
-            PickFolderDialog pickFolderDialog = new PickFolderDialog(foldersBlock.folders());
+            PickFolderDialog pickFolderDialog = new PickFolderDialog(foldersBlock.folders(), null);
             Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
                     stage -> { pickFolderDialog.setStage(stage); return pickFolderDialog; },
                     "Pick Folder");

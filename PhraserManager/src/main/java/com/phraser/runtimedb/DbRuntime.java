@@ -336,6 +336,10 @@ public class DbRuntime {
         return folders.get(folderId);
     }
 
+    public List<Folder> getFolders() {
+        return folders.values().stream().toList();
+    }
+
     // -------------------------------------------------------------------------------------
 
     public @Nullable PhraseBlock getPhrase(int phraseBlockId) throws IOException {
@@ -764,6 +768,19 @@ public class DbRuntime {
         Block newPhraseBlock = Block.of(
                 ImmutablePhraseBlock.builder().from(checkNotNull(oldPhraseBlock.phraseBlock()))
                         .phraseTemplateId(phraseTemplateId)
+                        .build()
+        );
+
+        updateBlock(newPhraseBlock);
+    }
+
+    public void updatePhraseFolder(int phraseBlockId, int folderId) throws IOException {
+        int blockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(phraseBlockId)).blockNumber;
+
+        Block oldPhraseBlock = readPhraseBlock(blockNumber);
+        Block newPhraseBlock = Block.of(
+                ImmutablePhraseBlock.builder().from(checkNotNull(oldPhraseBlock.phraseBlock()))
+                        .folderId(folderId)
                         .build()
         );
 

@@ -12,10 +12,10 @@
 <VBox prefHeight="400.0" prefWidth="478.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.phraser.forms.MainForm">
     <MenuBar VBox.vgrow="NEVER">
         <Menu mnemonicParsing="false" text="File">
+         <MenuItem mnemonicParsing="false" onAction="#openDbInClientMode" text="Open DB in Client Mode" />
+            <SeparatorMenuItem />
             <MenuItem mnemonicParsing="false" onAction="#newDb" text="New DB" />
             <MenuItem mnemonicParsing="false" onAction="#importDb" text="Import DB" />
-            <SeparatorMenuItem />
-         <MenuItem mnemonicParsing="false" onAction="#openDbInClientMode" text="Open DB in Client Mode" />
          <SeparatorMenuItem mnemonicParsing="false" />
             <MenuItem mnemonicParsing="false" onAction="#closeAllTabs" text="Close all tabs" />
             <MenuItem mnemonicParsing="false" onAction="#quit" text="Quit" />

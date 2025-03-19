@@ -457,7 +457,7 @@ public class ClientModeForm extends AnchorPane {
 
         List<UIWord> phraseWords = getPhraseWords(checkNotNull(currentPhraseBlock), currentPhraseBlock.history().get(0));
         List<ExplorerNode> phraseContent = new ArrayList<>();
-        if (currentFolderId != 0) {
+        if (currentFolderId >= 0) {
             phraseContent.add(new ExplorerNode(ExplorerNodeType.UP, "..", currentPhraseId));
         }
         for (UIWord phraseWord : phraseWords) {
@@ -508,6 +508,7 @@ public class ClientModeForm extends AnchorPane {
 
     protected void switchToFolderViewFromPhraseView() {
         path.pop();
+        currentFolderId = checkNotNull(currentPhraseBlock).folderId();
         checkNotNull(phraseTitledPane).visibleProperty().set(false);
         checkNotNull(foldersTitledPane).visibleProperty().set(true);
         loadFolders();
@@ -791,8 +792,65 @@ public class ClientModeForm extends AnchorPane {
     }
 
     public void changePhraseFolder() {
-        // TODO:
-        //PickFolderDialog pickFolderDialog;
+        try {
+            if (currentPhraseBlock != null) {
+                int phraseId = currentPhraseBlock.blockId();
+                int currentFolderId = currentPhraseBlock.folderId();
+
+                // 1. Obtain new phrase template
+                PickFolderDialog pickFolderDialog =
+                        new PickFolderDialog(dbRuntime.getFolders(), currentFolderId);
+                Stage workspaceStage = ModalWindow.showModal(checkNotNull(stage),
+                        stage -> { pickFolderDialog.setStage(stage); return pickFolderDialog; },
+                        "Change Folder");
+
+                workspaceStage.setOnHidden(
+                        ev -> {
+                            try {
+                                if (pickFolderDialog.folder != null) {
+                                    FoldersBlock.Folder folder = pickFolderDialog.folder.folder;
+
+                                    // 2. Update folder
+                                    dbRuntime.updatePhraseFolder(phraseId, folder.folderId());
+
+                                    // 3. Reload phrase block
+                                    currentPhraseBlock = dbRuntime.getPhrase(currentPhraseId);
+                                    if (currentPhraseBlock == null) { throw new RuntimeException("PhraseBlock not found"); }
+
+                                    // 4. Update path to reflect new folder path
+                                    Stack<String> reversePathStack = new Stack<>();
+                                    reversePathStack.push(currentPhraseBlock.phraseName());
+                                    int folderId = currentPhraseBlock.folderId();
+                                    while (folderId > 0) {
+                                        FoldersBlock.Folder nextFolder = dbRuntime.getFolder(folderId);
+                                        if (nextFolder == null) {
+                                            break;
+                                        }
+                                        reversePathStack.push(nextFolder.folderName());
+                                        folderId = nextFolder.parentFolderId();
+                                    }
+
+                                    path.clear();
+                                    while (!reversePathStack.isEmpty()) {
+                                        path.push(reversePathStack.pop());
+                                    }
+
+                                    // 5. Refresh UI
+                                    loadPhrase();
+                                }
+                            } catch (Exception e) {
+                                Alert alert = new Alert(Alert.AlertType.ERROR, "changePhraseTemplate error: " + e, ButtonType.OK);
+                                LOGGER.error("changePhraseTemplate error: ", e);
+                                alert.showAndWait();
+                            }
+                        }
+                );
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "changePhraseTemplate error: " + e, ButtonType.OK);
+            LOGGER.error("changePhraseTemplate error: ", e);
+            alert.showAndWait();
+        }
     }
 
     public void renamePhrase() {

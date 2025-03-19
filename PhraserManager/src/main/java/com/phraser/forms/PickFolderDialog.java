@@ -1,6 +1,7 @@
 package com.phraser.forms;
 
 import com.phraser.db.FoldersBlock;
+import com.phraser.db.PhraseTemplatesBlock;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -42,7 +44,7 @@ public class PickFolderDialog extends VBox {
         }
     }
 
-    public PickFolderDialog(List<FoldersBlock.Folder> folders) {
+    public PickFolderDialog(List<FoldersBlock.Folder> folders, @Nullable Integer selectedFolderId) {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("PickFolderDialog.fxml"));
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);
@@ -53,9 +55,32 @@ public class PickFolderDialog extends VBox {
             throw new RuntimeException(exception);
         }
 
+        // Make sure root folder is always present
+        final List<FoldersBlock.Folder> finalFolders;
+        if (folders.stream().filter(f -> f.folderId() == 0).findAny().isEmpty()) {
+            finalFolders = new ArrayList<>();
+            finalFolders.add(0, FoldersBlock.Folder.of(0, 0, ""));//Folder name will be transformed to "/"
+            finalFolders.addAll(folders);
+        } else {
+            finalFolders = folders;
+        }
+
         ObservableList<UIFolder> list = FXCollections.observableArrayList();
-        list.addAll(folders.stream().map(f -> new UIFolder(f, folders)).toList());
+        list.addAll(finalFolders.stream().map(f -> new UIFolder(f, finalFolders)).toList());
         checkNotNull(foldersTableView).itemsProperty().set(list);
+        if (selectedFolderId != null) {
+            int selectedIndex = -1;
+            for (int i = 0; i < finalFolders.size(); i++) {
+                FoldersBlock.Folder f = finalFolders.get(i);
+                if (f.folderId() == selectedFolderId) {
+                    selectedIndex = i;
+                    break;
+                }
+            }
+            if (selectedIndex > -1) {
+                foldersTableView.getSelectionModel().select(selectedIndex);
+            }
+        }
     }
 
     public void setStage(Stage stage) {
