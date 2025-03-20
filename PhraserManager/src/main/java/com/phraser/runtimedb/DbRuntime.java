@@ -525,8 +525,8 @@ public class DbRuntime {
         // TODO: sometimes the 'block "to the right" from the last block' is the last recorded version of mainBlock
         //  (which is still actual, since mainBlock didn't update yet). This situation will not cause bugs, but a
         //  previous version of the same mainBlock will be moved, instead of an actual version of some other block.
-        //  And the whole point of this approach is to move 2 different blocks at the same time to prevent bit rot on
-        //  blocks that are rarely updated.
+        //  While the whole point of the complementary copy approach is to move 2 different blocks at the same time
+        //  to prevent bit rot on blocks that are rarely updated.
         //  MB put a small fix in place to guarantee that we always move a block that's not mainBlock here?
         try {
             Integer freeBlockNumber = TreeUtil.getNextMissingNumberToTheLeft(lastBlockNumber, occupiedBlocksNumbers, blockCount);
@@ -908,14 +908,14 @@ public class DbRuntime {
         return wordStr;
     }
 
-    public void generatePhraseWord(int phraseBlockId, int wordTemplateIdToUpdate, int serial) throws IOException {
+    public void generatePhraseWord(int phraseBlockId, int wordTemplateIdToUpdate, int serial, boolean autoTruncateHistory) throws IOException, BlockDataSizeExceededException {
         WordTemplate wordTemplate = getWordTemplate(wordTemplateIdToUpdate);
         if (wordTemplate == null) { throw new RuntimeException("WordTemplate [" + wordTemplateIdToUpdate + "] not found"); }
         String newWord = getDefaultWord(wordTemplate);
-        updatePhraseWord(phraseBlockId, wordTemplateIdToUpdate, serial, newWord);
+        updatePhraseWord(phraseBlockId, wordTemplateIdToUpdate, serial, newWord, autoTruncateHistory);
     }
 
-    public void updatePhraseWord(int phraseBlockId, int wordTemplateIdToUpdate, int serial, String newWord) throws IOException {
+    public void updatePhraseWord(int phraseBlockId, int wordTemplateIdToUpdate, int serial, String newWord, boolean autoTruncateHistory) throws IOException, BlockDataSizeExceededException {
         int blockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(phraseBlockId)).blockNumber;
 
         Block oldPhraseBlock = readPhraseBlock(blockNumber);
@@ -984,11 +984,15 @@ public class DbRuntime {
             );
 
             int newBlockLength = FlatBufBlockEncoder.toFlatBufPhraseBlock(checkNotNull(newPhraseBlock.phraseBlock())).length;
-            if (newBlockLength > DATA_BLOCK_SIZE) {
-                history.remove(history.size()-1);
+            if (autoTruncateHistory) {
+                if (newBlockLength > DATA_BLOCK_SIZE) {
+                    history.remove(history.size()-1);
+                } else {
+                    updateBlock(newPhraseBlock);
+                    return;
+                }
             } else {
-                updateBlock(newPhraseBlock);
-                return;
+                throw new BlockDataSizeExceededException(newBlockLength, DATA_BLOCK_SIZE);
             }
         }
     }

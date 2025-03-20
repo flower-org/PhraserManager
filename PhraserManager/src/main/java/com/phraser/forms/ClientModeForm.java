@@ -8,6 +8,7 @@ import com.phraser.db.Icon;
 import com.phraser.db.PhraseBlock;
 import com.phraser.db.PhraseTemplatesBlock;
 import com.phraser.db.SymbolSetsBlock;
+import com.phraser.runtimedb.BlockDataSizeExceededException;
 import com.phraser.runtimedb.DbRuntime;
 import com.phraser.utils.PhraserUtils;
 import javafx.collections.FXCollections;
@@ -1075,7 +1076,13 @@ public class ClientModeForm extends AnchorPane {
                                 String newWord = genericNameDialog.getName();
                                 if (!StringUtils.isBlank(newWord)) {
                                     // 2. Update word
-                                    dbRuntime.updatePhraseWord(phraseId, word.wordTemplateId, word.serial, newWord);
+                                    try {
+                                        dbRuntime.updatePhraseWord(phraseId, word.wordTemplateId, word.serial, newWord, false);
+                                    } catch (BlockDataSizeExceededException be) {
+                                        if (YES == JavaFxUtils.showYesNoDialog("Block data size too large (" + be.dataSize + "/" + be.maxSize + "). Truncate history?")) {
+                                            dbRuntime.updatePhraseWord(phraseId, word.wordTemplateId, word.serial, newWord, true);
+                                        }
+                                    }
 
                                     // 3. Reload UI
                                     currentPhraseBlock = dbRuntime.getPhrase(currentPhraseId);
@@ -1106,7 +1113,13 @@ public class ClientModeForm extends AnchorPane {
                 // 1. Get user confirmation
                 if (YES == JavaFxUtils.showYesNoDialog("Generate new value for \"" + word.wordName + "\"?")) {
                     // 2. Update word / Generate new
-                    dbRuntime.generatePhraseWord(phraseId, word.wordTemplateId, word.serial);
+                    try {
+                        dbRuntime.generatePhraseWord(phraseId, word.wordTemplateId, word.serial, false);
+                    } catch (BlockDataSizeExceededException be) {
+                        if (YES == JavaFxUtils.showYesNoDialog("Block data size too large (" + be.dataSize + "/" + be.maxSize + "). Truncate history?")) {
+                            dbRuntime.generatePhraseWord(phraseId, word.wordTemplateId, word.serial, true);
+                        }
+                    }
 
                     // 3. Reload UI
                     currentPhraseBlock = dbRuntime.getPhrase(currentPhraseId);
