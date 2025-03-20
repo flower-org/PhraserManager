@@ -29,8 +29,8 @@ public final class Word extends Table {
 
   public int wordTemplateId() { int o = __offset(4); return o != 0 ? bb.getShort(o + bb_pos) & 0xFFFF : 0; }
   public boolean mutateWordTemplateId(int word_template_id) { int o = __offset(4); if (o != 0) { bb.putShort(o + bb_pos, (short) word_template_id); return true; } else { return false; } }
-  public int wordTemplateOrdinal() { int o = __offset(6); return o != 0 ? bb.getShort(o + bb_pos) & 0xFFFF : 0; }
-  public boolean mutateWordTemplateOrdinal(int word_template_ordinal) { int o = __offset(6); if (o != 0) { bb.putShort(o + bb_pos, (short) word_template_ordinal); return true; } else { return false; } }
+  public byte wordTemplateOrdinal() { int o = __offset(6); return o != 0 ? bb.get(o + bb_pos) : 0; }
+  public boolean mutateWordTemplateOrdinal(byte word_template_ordinal) { int o = __offset(6); if (o != 0) { bb.put(o + bb_pos, word_template_ordinal); return true; } else { return false; } }
   public String name() { int o = __offset(8); return o != 0 ? __string(o + bb_pos) : null; }
   public ByteBuffer nameAsByteBuffer() { return __vector_as_bytebuffer(8, 1); }
   public ByteBuffer nameInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 8, 1); }
@@ -44,7 +44,7 @@ public final class Word extends Table {
 
   public static int createWord(FlatBufferBuilder builder,
       int wordTemplateId,
-      int wordTemplateOrdinal,
+      byte wordTemplateOrdinal,
       int nameOffset,
       int wordOffset,
       byte permissions,
@@ -52,16 +52,16 @@ public final class Word extends Table {
     builder.startTable(6);
     Word.addWord(builder, wordOffset);
     Word.addName(builder, nameOffset);
-    Word.addWordTemplateOrdinal(builder, wordTemplateOrdinal);
     Word.addWordTemplateId(builder, wordTemplateId);
     Word.addIcon(builder, icon);
     Word.addPermissions(builder, permissions);
+    Word.addWordTemplateOrdinal(builder, wordTemplateOrdinal);
     return Word.endWord(builder);
   }
 
   public static void startWord(FlatBufferBuilder builder) { builder.startTable(6); }
   public static void addWordTemplateId(FlatBufferBuilder builder, int wordTemplateId) { builder.addShort(0, (short) wordTemplateId, (short) 0); }
-  public static void addWordTemplateOrdinal(FlatBufferBuilder builder, int wordTemplateOrdinal) { builder.addShort(1, (short) wordTemplateOrdinal, (short) 0); }
+  public static void addWordTemplateOrdinal(FlatBufferBuilder builder, byte wordTemplateOrdinal) { builder.addByte(1, wordTemplateOrdinal, 0); }
   public static void addName(FlatBufferBuilder builder, int nameOffset) { builder.addOffset(2, nameOffset, 0); }
   public static void addWord(FlatBufferBuilder builder, int wordOffset) { builder.addOffset(3, wordOffset, 0); }
   public static void addPermissions(FlatBufferBuilder builder, byte permissions) { builder.addByte(4, permissions, 0); }

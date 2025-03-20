@@ -51,16 +51,16 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
 
     public static class PhraseTemplateWord {
         final PhraseTemplatesBlock.WordTemplate wordTemplate;
-        final @Nullable Integer wordTemplateOrdinal;
+        final @Nullable Short wordTemplateOrdinal;
 
-        PhraseTemplateWord(WordTemplate wordTemplate, @Nullable Integer wordTemplateOrdinal) {
+        PhraseTemplateWord(WordTemplate wordTemplate, @Nullable Short wordTemplateOrdinal) {
             this.wordTemplate = wordTemplate;
             this.wordTemplateOrdinal = wordTemplateOrdinal;
         }
 
         public int getId() { return wordTemplate.getId(); }
         public String getName() { return wordTemplate.getName(); }
-        public @Nullable Integer getOrdinal() { return wordTemplateOrdinal; }
+        public @Nullable Short getOrdinal() { return wordTemplateOrdinal; }
     }
 
     @FXML @Nullable Button addUpdateWordTemplateButton;

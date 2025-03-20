@@ -25,6 +25,7 @@ import com.phraser.schema.phraser.SymbolSetsBlock;
 import com.phraser.schema.phraser.Word;
 import com.phraser.schema.phraser.WordTemplate;
 import com.phraser.schema.phraser.WordTemplateRef;
+import com.phraser.utils.UnsignedConverter;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -176,7 +177,7 @@ public class FlatBufBlockDecoder {
                 WordTemplateRef wordTemplateRefSrc = phraseTemplate.wordTemplateRefs(j);
                 com.phraser.db.PhraseTemplatesBlock.WordTemplateRef wordTemplateRef = ImmutableWordTemplateRef.builder()
                         .wordTemplateId(wordTemplateRefSrc.wordTemplateId())
-                        .wordTemplateOrdinal(wordTemplateRefSrc.wordTemplateOrdinal())
+                        .wordTemplateOrdinal(UnsignedConverter.byteToShort(wordTemplateRefSrc.wordTemplateOrdinal()))
                         .build();
                 wordTemplateRefs.add(wordTemplateRef);
             }
@@ -219,7 +220,7 @@ public class FlatBufBlockDecoder {
                 Word word = phraseHistory.phrase(j);
                 com.phraser.db.PhraseBlock.Word reconstructedWord = ImmutableWord.builder()
                         .wordTemplateId(word.wordTemplateId())
-                        .wordTemplateOrdinal(word.wordTemplateOrdinal())
+                        .wordTemplateOrdinal(UnsignedConverter.byteToShort(word.wordTemplateOrdinal()))
                         .name(checkNotNull(word.name()))
                         .word(checkNotNull(word.word()))
                         .permissions(word.permissions())

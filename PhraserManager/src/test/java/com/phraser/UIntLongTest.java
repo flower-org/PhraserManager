@@ -4,6 +4,7 @@ import com.phraser.utils.UnsignedConverter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UIntLongTest {
     @Test
@@ -56,5 +57,32 @@ public class UIntLongTest {
         int i = UnsignedConverter.shortToInt(s);
         short s2 = UnsignedConverter.intToShort(i);
         assertEquals(s, s2);
+    }
+
+    @Test
+    public void test14() {
+        byte b = 50;
+        short s = UnsignedConverter.byteToShort(b);
+        assertTrue(s > 0);
+        byte b2 = UnsignedConverter.shortToByte(s);
+        assertEquals(b, b2);
+    }
+
+    @Test
+    public void test15() {
+        short s = Byte.MAX_VALUE;
+        s = (short) (s + 1);
+        byte b = UnsignedConverter.shortToByte(s);
+        long s2 = UnsignedConverter.byteToShort(b);
+        assertEquals(s, s2);
+    }
+
+    @Test
+    public void test16() {
+        byte b = -50;
+        short s = UnsignedConverter.byteToShort(b);
+        assertTrue(s > 0);
+        byte b2 = UnsignedConverter.shortToByte(s);
+        assertEquals(b, b2);
     }
 }

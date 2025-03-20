@@ -393,7 +393,7 @@ public class ClientModeForm extends AnchorPane {
         PhraseTemplatesBlock.PhraseTemplate phraseTemplate =
                 dbRuntime.getPhraseTemplate(phraseBlock.phraseTemplateId());
 
-        Map<Integer, Map<Integer, PhraseBlock.Word>> historyWordsByTemplateAndOrdinalMap = new HashMap<>();
+        Map<Integer, Map<Short, PhraseBlock.Word>> historyWordsByTemplateAndOrdinalMap = new HashMap<>();
         for (PhraseBlock.Word word : history.phrase()) {
             historyWordsByTemplateAndOrdinalMap.computeIfAbsent(word.wordTemplateId(), k -> new HashMap<>()).put(word.wordTemplateOrdinal(), word);
         }
@@ -403,7 +403,7 @@ public class ClientModeForm extends AnchorPane {
             for (PhraseTemplatesBlock.WordTemplateRef wordTemplateRef : phraseTemplate.wordTemplateRefs()) {
                 PhraseTemplatesBlock.WordTemplate wordTemplate = checkNotNull(dbRuntime.getWordTemplate(wordTemplateRef.wordTemplateId()));
 
-                Map<Integer, PhraseBlock.Word> historyWordsByOrdinalMap =
+                Map<Short, PhraseBlock.Word> historyWordsByOrdinalMap =
                         historyWordsByTemplateAndOrdinalMap.get(wordTemplateRef.wordTemplateId());
                 PhraseBlock.Word oldWord = historyWordsByOrdinalMap == null ?
                         null : historyWordsByOrdinalMap.remove(wordTemplateRef.wordTemplateOrdinal());
@@ -423,7 +423,7 @@ public class ClientModeForm extends AnchorPane {
         }
 
         for (PhraseBlock.Word historyWord : history.phrase()) {
-            Map<Integer, PhraseBlock.Word> historyWordsByOrdinalMap =
+            Map<Short, PhraseBlock.Word> historyWordsByOrdinalMap =
                     historyWordsByTemplateAndOrdinalMap.get(historyWord.wordTemplateId());
             if (historyWordsByOrdinalMap != null && !historyWordsByOrdinalMap.isEmpty()) {
                 if (historyWordsByOrdinalMap.containsKey(historyWord.wordTemplateOrdinal())) {

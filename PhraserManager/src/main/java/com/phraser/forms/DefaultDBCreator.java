@@ -128,13 +128,13 @@ public class DefaultDBCreator {
     }
 
     public static List<PhraseTemplatesBlock.WordTemplateRef> wordTemplateRefs(List<Integer> wordTemplateIds) {
-        Map<Integer, Integer> wordTemplateOrdinals = new HashMap<>();
+        Map<Integer, Short> wordTemplateOrdinals = new HashMap<>();
 
         List<PhraseTemplatesBlock.WordTemplateRef> list = new ArrayList<>();
         for (int i = 0; i < wordTemplateIds.size(); i++) {
             int wordTemplateId = wordTemplateIds.get(i);
 
-            int ordinal = wordTemplateOrdinals.computeIfAbsent(wordTemplateId, k -> 0);
+            short ordinal = wordTemplateOrdinals.computeIfAbsent(wordTemplateId, k -> (short)0);
             ordinal++;//ordinals start with 1
             list.add(PhraseTemplatesBlock.WordTemplateRef.of(wordTemplateId, ordinal));
             wordTemplateOrdinals.put(wordTemplateId, ordinal);
@@ -236,7 +236,7 @@ public class DefaultDBCreator {
                         .phrase(List.of(
                                 ImmutableWord.builder()
                                         .wordTemplateId(1)
-                                        .wordTemplateOrdinal(1)
+                                        .wordTemplateOrdinal((short)1)
                                         .name("username")
                                         .word("admin")
                                         .permissions(getWordPermissions(false, true, true, true))
@@ -244,7 +244,7 @@ public class DefaultDBCreator {
                                         .build(),
                                 ImmutableWord.builder()
                                         .wordTemplateId(2)
-                                        .wordTemplateOrdinal(1)
+                                        .wordTemplateOrdinal((short)1)
                                         .name("password")
                                         .word("qwerty")
                                         .permissions(getWordPermissions(true, false, true, false))
@@ -252,7 +252,7 @@ public class DefaultDBCreator {
                                         .build(),
                                 ImmutableWord.builder()
                                         .wordTemplateId(3)
-                                        .wordTemplateOrdinal(1)
+                                        .wordTemplateOrdinal((short)1)
                                         .name("question")
                                         .word("Question 1")
                                         .permissions(getWordPermissions(false, true, false, true))
@@ -260,7 +260,7 @@ public class DefaultDBCreator {
                                         .build(),
                                 ImmutableWord.builder()
                                         .wordTemplateId(4)
-                                        .wordTemplateOrdinal(1)
+                                        .wordTemplateOrdinal((short)1)
                                         .name("answer")
                                         .word("Answer 1")
                                         .permissions(getWordPermissions(true, false, true, false))
@@ -268,7 +268,7 @@ public class DefaultDBCreator {
                                         .build(),
                                 ImmutableWord.builder()
                                         .wordTemplateId(3)
-                                        .wordTemplateOrdinal(2)
+                                        .wordTemplateOrdinal((short)2)
                                         .name("question")
                                         .word("Question 2")
                                         .permissions(getWordPermissions(false, true, false, true))
@@ -276,7 +276,7 @@ public class DefaultDBCreator {
                                         .build(),
                                 ImmutableWord.builder()
                                         .wordTemplateId(4)
-                                        .wordTemplateOrdinal(2)
+                                        .wordTemplateOrdinal((short)2)
                                         .name("answer")
                                         .word("Answer 2")
                                         .permissions(getWordPermissions(true, false, true, false))
@@ -284,7 +284,7 @@ public class DefaultDBCreator {
                                         .build(),
                                 ImmutableWord.builder()
                                         .wordTemplateId(3)
-                                        .wordTemplateOrdinal(3)
+                                        .wordTemplateOrdinal((short)3)
                                         .name("question")
                                         .word("Question 3")
                                         .permissions(getWordPermissions(false, true, false, true))
@@ -292,7 +292,7 @@ public class DefaultDBCreator {
                                         .build(),
                                 ImmutableWord.builder()
                                         .wordTemplateId(4)
-                                        .wordTemplateOrdinal(3)
+                                        .wordTemplateOrdinal((short)3)
                                         .name("answer")
                                         .word("Answer 3")
                                         .permissions(getWordPermissions(true, false, true, false))
@@ -305,7 +305,7 @@ public class DefaultDBCreator {
                         .phrase(List.of(
                                 ImmutableWord.builder()
                                         .wordTemplateId(1)
-                                        .wordTemplateOrdinal(1)
+                                        .wordTemplateOrdinal((short)1)
                                         .name("username")
                                         .word("admin")
                                         .permissions(getWordPermissions(false, true, true, true))
@@ -313,7 +313,7 @@ public class DefaultDBCreator {
                                         .build(),
                                 ImmutableWord.builder()
                                         .wordTemplateId(2)
-                                        .wordTemplateOrdinal(1)
+                                        .wordTemplateOrdinal((short)1)
                                         .name("password")
                                         .word("qwerty")
                                         .permissions(getWordPermissions(true, false, true, false))

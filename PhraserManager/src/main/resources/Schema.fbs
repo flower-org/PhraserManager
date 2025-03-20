@@ -126,7 +126,7 @@ table PhraseTemplatesBlock {
 
 table Word {
   word_template_id: uint16;
-  word_template_ordinal: uint16;
+  word_template_ordinal: byte;
   name: string;
   word: string;
   permissions: byte;

@@ -31,7 +31,7 @@ public class PhraseWordsDialog extends VBox {
 
     public static class DialogWord {
         public final int wordId;
-        public final int wordOrdinal;
+        public final short wordOrdinal;
         public final String name;
         public final String value;
         public final boolean isGenerateable;
@@ -45,7 +45,7 @@ public class PhraseWordsDialog extends VBox {
         public final int minLength;
         public final int maxLength;
 
-        public DialogWord(int wordId, int wordOrdinal, String name, String value, int minLength, int maxLength,
+        public DialogWord(int wordId, short wordOrdinal, String name, String value, int minLength, int maxLength,
                           boolean isUserEditable, boolean isGenerateable, boolean isViewable,
                           @Nullable List<char[]> symbolSets, boolean isIncompatible) {
             this.wordId = wordId;
@@ -64,10 +64,10 @@ public class PhraseWordsDialog extends VBox {
 
     public static class RetWord {
         public final int wordId;
-        public final int wordOrdinal;
+        public final short wordOrdinal;
         public final String value;
 
-        public RetWord(int wordId, int wordOrdinal, String value) {
+        public RetWord(int wordId, short wordOrdinal, String value) {
             this.wordId = wordId;
             this.wordOrdinal = wordOrdinal;
             this.value = value;

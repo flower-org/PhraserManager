@@ -10,6 +10,7 @@ import com.phraser.db.PhraseBlock;
 import com.phraser.db.PhraseTemplatesBlock;
 import com.phraser.db.StoreBlock;
 import com.phraser.db.SymbolSetsBlock;
+import com.phraser.utils.UnsignedConverter;
 
 import java.util.List;
 
@@ -181,7 +182,7 @@ public class FlatBufBlockEncoder {
             for (int j = 0; j < phraseTemplate.wordTemplateRefs().size(); j++) {
                 PhraseTemplatesBlock.WordTemplateRef wordTemplateRef = phraseTemplate.wordTemplateRefs().get(j);
                 int wordTemplateRefOffset = com.phraser.schema.phraser.WordTemplateRef.createWordTemplateRef(builder,
-                        wordTemplateRef.wordTemplateId(), wordTemplateRef.wordTemplateOrdinal());
+                        wordTemplateRef.wordTemplateId(), UnsignedConverter.shortToByte(wordTemplateRef.wordTemplateOrdinal()));
                 wordTemplateRefOffsets[j] = wordTemplateRefOffset;
             }
             int wordTemplateRefsOffset = com.phraser.schema.phraser.PhraseTemplate.createWordTemplateRefsVector(builder, wordTemplateRefOffsets);
@@ -231,7 +232,7 @@ public class FlatBufBlockEncoder {
             for (int j = 0; j < phrase.size(); j++) {
                 PhraseBlock.Word phraseWord = phrase.get(j);
                 int wordTemplateId = phraseWord.wordTemplateId();
-                int wordTemplateOrdinal = phraseWord.wordTemplateOrdinal();
+                short wordTemplateOrdinal = phraseWord.wordTemplateOrdinal();
                 String name = phraseWord.name();
                 String word = phraseWord.word();
                 byte permissions = phraseWord.permissions();
@@ -241,7 +242,7 @@ public class FlatBufBlockEncoder {
                 int wordOffset = builder.createString(word);
 
                 int phraseWordOffset =
-                        com.phraser.schema.phraser.Word.createWord(builder, wordTemplateId, wordTemplateOrdinal,
+                        com.phraser.schema.phraser.Word.createWord(builder, wordTemplateId, UnsignedConverter.shortToByte(wordTemplateOrdinal),
                                 nameOffset, wordOffset, permissions, icon.code);
                 phraseWordOffsets[j] = phraseWordOffset;
             }

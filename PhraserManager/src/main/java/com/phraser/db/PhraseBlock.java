@@ -10,7 +10,7 @@ public interface PhraseBlock extends StoreBlock {
     interface Word {
         /** 16 bit */
         int wordTemplateId();
-        int wordTemplateOrdinal();
+        short wordTemplateOrdinal();
         String name();
         String word();
         byte permissions();

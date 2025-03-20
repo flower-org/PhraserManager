@@ -925,7 +925,7 @@ public class DbRuntime {
         if (phraseTemplate == null) { throw new RuntimeException("PhraseTemplate [" + phraseTemplateId + "] not found"); }
 
         PhraseBlock.PhraseHistory currentHistory = checkNotNull(oldPhraseBlock.phraseBlock()).history().get(0);
-        Map<Integer, Map<Integer, PhraseBlock.Word>> phraseMap = new HashMap<>();
+        Map<Integer, Map<Short, PhraseBlock.Word>> phraseMap = new HashMap<>();
         for (PhraseBlock.Word oldWord : currentHistory.phrase()) {
             phraseMap.computeIfAbsent(oldWord.wordTemplateId(), k -> new HashMap<>()).put(oldWord.wordTemplateOrdinal(), oldWord);
         }
@@ -940,12 +940,12 @@ public class DbRuntime {
             if (wordTemplateIdToUpdate == wordTemplateRef.wordTemplateId() && wordTemplateOrdinal == wordTemplateRef.wordTemplateOrdinal()) {
                 // If template matches, use newWord
                 wordStr = newWord;
-                Map<Integer, PhraseBlock.Word> oldWordMap = phraseMap.get(wordTemplateRef.wordTemplateId());
+                Map<Short, PhraseBlock.Word> oldWordMap = phraseMap.get(wordTemplateRef.wordTemplateId());
                 if (oldWordMap != null && !oldWordMap.isEmpty()) {
                     oldWordMap.remove(wordTemplateRef.wordTemplateOrdinal());
                 }
             } else {
-                Map<Integer, PhraseBlock.Word> oldWordMap = phraseMap.get(wordTemplateRef.wordTemplateId());
+                Map<Short, PhraseBlock.Word> oldWordMap = phraseMap.get(wordTemplateRef.wordTemplateId());
                 if (oldWordMap != null && !oldWordMap.isEmpty() && oldWordMap.containsKey(wordTemplateRef.wordTemplateOrdinal())) {
                     // If old word found, use oldWord
                     wordStr = oldWordMap.remove(wordTemplateRef.wordTemplateOrdinal()).word();

@@ -29,21 +29,21 @@ public final class WordTemplateRef extends Table {
 
   public int wordTemplateId() { int o = __offset(4); return o != 0 ? bb.getShort(o + bb_pos) & 0xFFFF : 0; }
   public boolean mutateWordTemplateId(int word_template_id) { int o = __offset(4); if (o != 0) { bb.putShort(o + bb_pos, (short) word_template_id); return true; } else { return false; } }
-  public int wordTemplateOrdinal() { int o = __offset(6); return o != 0 ? bb.getShort(o + bb_pos) & 0xFFFF : 0; }
-  public boolean mutateWordTemplateOrdinal(int word_template_ordinal) { int o = __offset(6); if (o != 0) { bb.putShort(o + bb_pos, (short) word_template_ordinal); return true; } else { return false; } }
+  public byte wordTemplateOrdinal() { int o = __offset(6); return o != 0 ? bb.get(o + bb_pos) : 0; }
+  public boolean mutateWordTemplateOrdinal(byte word_template_ordinal) { int o = __offset(6); if (o != 0) { bb.put(o + bb_pos, word_template_ordinal); return true; } else { return false; } }
 
   public static int createWordTemplateRef(FlatBufferBuilder builder,
       int wordTemplateId,
-      int wordTemplateOrdinal) {
+      byte wordTemplateOrdinal) {
     builder.startTable(2);
-    WordTemplateRef.addWordTemplateOrdinal(builder, wordTemplateOrdinal);
     WordTemplateRef.addWordTemplateId(builder, wordTemplateId);
+    WordTemplateRef.addWordTemplateOrdinal(builder, wordTemplateOrdinal);
     return WordTemplateRef.endWordTemplateRef(builder);
   }
 
   public static void startWordTemplateRef(FlatBufferBuilder builder) { builder.startTable(2); }
   public static void addWordTemplateId(FlatBufferBuilder builder, int wordTemplateId) { builder.addShort(0, (short) wordTemplateId, (short) 0); }
-  public static void addWordTemplateOrdinal(FlatBufferBuilder builder, int wordTemplateOrdinal) { builder.addShort(1, (short) wordTemplateOrdinal, (short) 0); }
+  public static void addWordTemplateOrdinal(FlatBufferBuilder builder, byte wordTemplateOrdinal) { builder.addByte(1, wordTemplateOrdinal, 0); }
   public static int endWordTemplateRef(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;

@@ -11,9 +11,9 @@ public interface PhraseTemplatesBlock extends StoreBlock {
         /** 16 bit */
         int wordTemplateId();
         /** 16 bit */
-        int wordTemplateOrdinal();
+        short wordTemplateOrdinal();
 
-        static WordTemplateRef of(int wordTemplateId, int wordTemplateOrdinal) {
+        static WordTemplateRef of(int wordTemplateId, short wordTemplateOrdinal) {
             return ImmutableWordTemplateRef.builder()
                     .wordTemplateId(wordTemplateId)
                     .wordTemplateOrdinal(wordTemplateOrdinal)

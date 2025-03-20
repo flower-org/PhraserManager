@@ -79,7 +79,7 @@ public class PhraseBlockForm extends AnchorPane {
 
     public static class UIWord {
         public final int wordTemplateId;
-        public final int wordTemplateOrdinal;
+        public final short wordTemplateOrdinal;
         public final String wordName;
         public final String value;
         public final byte permissions;
@@ -88,7 +88,7 @@ public class PhraseBlockForm extends AnchorPane {
         public final boolean isViewable;
         public final Icon icon;
 
-        public UIWord(int wordTemplateId, int wordTemplateOrdinal, String wordName, String value, byte permissions,
+        public UIWord(int wordTemplateId, short wordTemplateOrdinal, String wordName, String value, byte permissions,
                       boolean isTypeable, boolean isViewable, Icon icon) {
             this.wordTemplateId = wordTemplateId;
             this.wordTemplateOrdinal = wordTemplateOrdinal;
@@ -258,7 +258,7 @@ public class PhraseBlockForm extends AnchorPane {
             List<UIWord> words = new ArrayList<>();
             for (PhraseBlock.Word retWord : historyEntry.phrase()) {
                 int wordId = retWord.wordTemplateId();
-                int wordOrdinal = retWord.wordTemplateOrdinal();
+                short wordOrdinal = retWord.wordTemplateOrdinal();
                 String value = retWord.word();
                 String wordName = retWord.name();
                 byte permissions = retWord.permissions();
@@ -366,9 +366,9 @@ public class PhraseBlockForm extends AnchorPane {
                 return;
             }
 
-            Map<Integer, Map<Integer, DialogWord>> existingWords = new HashMap<>();
+            Map<Integer, Map<Short, DialogWord>> existingWords = new HashMap<>();
             for (UIWord word : selectedItem.words) {
-                Map<Integer, DialogWord> wordOrdinalMap = existingWords.computeIfAbsent(word.wordTemplateId, k -> new HashMap<>());
+                Map<Short, DialogWord> wordOrdinalMap = existingWords.computeIfAbsent(word.wordTemplateId, k -> new HashMap<>());
                 Optional<PhraseTemplatesBlock.WordTemplate> wordTemplateOpt = getWordTemplateOpt(word.wordTemplateId);
 
                 int minLength;
@@ -413,7 +413,7 @@ public class PhraseBlockForm extends AnchorPane {
                 PhraseTemplatesBlock.WordTemplate wordTemplate = getWordTemplate(wordTemplateRef.wordTemplateId());
                 DialogWord dialogWord;
 
-                Map<Integer, DialogWord> dialogWordMap = existingWords.get(wordTemplateRef.wordTemplateId());
+                Map<Short, DialogWord> dialogWordMap = existingWords.get(wordTemplateRef.wordTemplateId());
                 if (dialogWordMap != null && !dialogWordMap.isEmpty() && dialogWordMap.containsKey(wordTemplateRef.wordTemplateOrdinal())) {
                     dialogWord = dialogWordMap.remove(wordTemplateRef.wordTemplateOrdinal());
                 } else {
@@ -433,7 +433,7 @@ public class PhraseBlockForm extends AnchorPane {
                 dialogWords.add(dialogWord);
             }
 
-            for (Map<Integer, DialogWord> dialogWordMap : existingWords.values()) {
+            for (Map<Short, DialogWord> dialogWordMap : existingWords.values()) {
                 if (!dialogWordMap.isEmpty()) {
                     dialogWords.addAll(dialogWordMap.values());
                 }
@@ -463,7 +463,7 @@ public class PhraseBlockForm extends AnchorPane {
                             List<UIWord> words = new ArrayList<>();
                             for (PhraseWordsDialog.RetWord retWord : phraseUpdate) {
                                 int wordId = retWord.wordId;
-                                int wordOrdinal = retWord.wordOrdinal;
+                                short wordOrdinal = retWord.wordOrdinal;
 
                                 boolean phraseTemplateContainsWord = false;
                                 for (PhraseTemplatesBlock.WordTemplateRef wordTemplateRef : checkNotNull(phraseTemplate).wordTemplateRefs()) {

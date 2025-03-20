@@ -12,4 +12,12 @@ public class UnsignedConverter {
     }
 
     public static int shortToInt(short s) { return s & 0xFFFF; }
+
+    public static short byteToShort(byte b) {
+        return (short)(b & 0xFF);
+    }
+
+    public static byte shortToByte(short s) {
+        return (byte)(s & 0xFF);
+    }
 }
