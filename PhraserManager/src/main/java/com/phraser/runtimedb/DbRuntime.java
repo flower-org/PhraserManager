@@ -892,6 +892,24 @@ public class DbRuntime {
         updateBlock(newPhraseBlock);
     }
 
+    public void makeHistoryEntryCurrent(int phraseBlockId, int historyEntryIndex) throws IOException {
+        int blockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(phraseBlockId)).blockNumber;
+
+        Block oldPhraseBlock = readPhraseBlock(blockNumber);
+
+        List<PhraseBlock.PhraseHistory> history = new ArrayList<>(checkNotNull(oldPhraseBlock.phraseBlock()).history());
+        PhraseBlock.PhraseHistory historyEntry = history.remove(historyEntryIndex);
+        history.add(0, historyEntry);
+
+        Block newPhraseBlock = Block.of(
+                ImmutablePhraseBlock.builder().from(checkNotNull(oldPhraseBlock.phraseBlock()))
+                        .history(history)
+                        .build()
+        );
+
+        updateBlock(newPhraseBlock);
+    }
+
     protected String getDefaultWord(WordTemplate wordTemplate) {
         String wordStr = "";
         if (PhraserUtils.isGenerateable(wordTemplate.permissions())) {

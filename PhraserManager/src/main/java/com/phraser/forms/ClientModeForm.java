@@ -1028,6 +1028,46 @@ public class ClientModeForm extends AnchorPane {
         }
     }
 
+    public void makeCurrent() {
+        try {
+            ExplorerNode selectedItem = checkNotNull(phraseHistoryTableView).getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                if (selectedItem.type == ExplorerNodeType.HISTORY_ENTRY) {
+                    int historyEntryIndex = selectedItem.id;
+                    String historyEntryName = selectedItem.name;
+
+                    if (historyEntryIndex == 0) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR,
+                                "Can't make history entry 0 current - it's already current", ButtonType.OK);
+                        alert.showAndWait();
+                        return;
+                    }
+
+                    // 1. Get user confirmation
+                    if (YES == JavaFxUtils.showYesNoDialog("Make old history entry [" + historyEntryIndex + " / " + historyEntryName + "] current?")) {
+                        // 2. Delete history entry
+                        dbRuntime.makeHistoryEntryCurrent(currentPhraseId, historyEntryIndex);
+
+                        // 3. Reload UI
+                        currentPhraseBlock = dbRuntime.getPhrase(currentPhraseId);
+                        if (currentPhraseBlock == null) { throw new RuntimeException("PhraseBlock not found"); }
+
+                        loadPhraseHistory();
+
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                            "Successfully moved history entry [" + historyEntryIndex + " / " + historyEntryName + "] to the current posiiton.",
+                                ButtonType.OK);
+                        alert.showAndWait();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "makeCurrent error: " + e, ButtonType.OK);
+            LOGGER.error("makeCurrent error: ", e);
+            alert.showAndWait();
+        }
+    }
+
     public void deleteHistoryEntry() {
         try {
             ExplorerNode selectedItem = checkNotNull(phraseHistoryTableView).getSelectionModel().getSelectedItem();
