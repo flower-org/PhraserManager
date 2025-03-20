@@ -1081,6 +1081,8 @@ public class ClientModeForm extends AnchorPane {
                                     } catch (BlockDataSizeExceededException be) {
                                         if (YES == JavaFxUtils.showYesNoDialog("Block data size too large (" + be.dataSize + "/" + be.maxSize + "). Truncate history?")) {
                                             dbRuntime.updatePhraseWord(phraseId, word.wordTemplateId, word.serial, newWord, true);
+                                        } else {
+                                            return;
                                         }
                                     }
 
@@ -1118,6 +1120,8 @@ public class ClientModeForm extends AnchorPane {
                     } catch (BlockDataSizeExceededException be) {
                         if (YES == JavaFxUtils.showYesNoDialog("Block data size too large (" + be.dataSize + "/" + be.maxSize + "). Truncate history?")) {
                             dbRuntime.generatePhraseWord(phraseId, word.wordTemplateId, word.serial, true);
+                        } else {
+                            return;
                         }
                     }
 
