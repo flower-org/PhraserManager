@@ -43,7 +43,7 @@ an actual IV for encryption/decryption.
 To optimize the life of flash memory, new and modified blocks are written in append-only mode, using 
 unoccupied space as a circular buffer (Copy On Write). To avoid bit rot, each time we write a new/updated block, 
 we move another one; the idea here is to make sure we overwrite blocks that have not been updated in a while. 
-(More details in [Phraser Block Storage notes.pdf](Phraser%20Block%20Storage%20notes.pdf))
+(More details in [1. Phraser DB - Optimizing Flash Wear and Bit Rot.md](1.%20Phraser%20DB%20-%20Optimizing%20Flash%20Wear%20and%20Bit%20Rot.md))
 
 It's possible to go even further and move one block at each power-up, as there may be situations where data changes 
 too infrequently; but this approach might be too aggressive and is likely to reduce the lifespan of the flash 

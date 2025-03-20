@@ -822,7 +822,7 @@ public class DbRuntime {
     }
 
     public void createPhrase(int phraseTemplateId, int folderId, String phraseName) {
-        if (occupiedBlocksNumbers.size() >= blockCount) {
+        if (occupiedBlocksNumbers.size() >= blockCount-1) {
             throw new RuntimeException("No spare blocks left (" + occupiedBlocksNumbers.size() + "/" + blockCount +
                     ") - note that we need to keep at least 1 block free for complementary copy to work");
         }
@@ -984,15 +984,14 @@ public class DbRuntime {
             );
 
             int newBlockLength = FlatBufBlockEncoder.toFlatBufPhraseBlock(checkNotNull(newPhraseBlock.phraseBlock())).length;
-            if (autoTruncateHistory) {
-                if (newBlockLength > DATA_BLOCK_SIZE) {
-                    history.remove(history.size()-1);
-                } else {
-                    updateBlock(newPhraseBlock);
-                    return;
+            if (newBlockLength > DATA_BLOCK_SIZE) {
+                if (!autoTruncateHistory) {
+                    throw new BlockDataSizeExceededException(newBlockLength, DATA_BLOCK_SIZE);
                 }
+                history.remove(history.size()-1);
             } else {
-                throw new BlockDataSizeExceededException(newBlockLength, DATA_BLOCK_SIZE);
+                updateBlock(newPhraseBlock);
+                return;
             }
         }
     }
