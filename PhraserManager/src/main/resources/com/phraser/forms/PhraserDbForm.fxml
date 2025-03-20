@@ -19,7 +19,7 @@
                         <Button mnemonicParsing="false" onAction="#newBlockAction" text="New" />
                         <Button mnemonicParsing="false" onAction="#updateBlockAction" text="View/Update" />
                         <Separator orientation="VERTICAL" prefHeight="200.0" />
-                        <Button mnemonicParsing="false" onAction="#defragmentDBAction" text="Defragment DB" />
+                        <Button mnemonicParsing="false" onAction="#compactDBAction" text="Compact/Clean-up DB" />
                         <Separator orientation="VERTICAL" prefHeight="200.0" />
                         <Button mnemonicParsing="false" onAction="#exportDBAction" text="Export DB" />
                     </items>

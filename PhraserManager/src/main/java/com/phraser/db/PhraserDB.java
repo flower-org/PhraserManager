@@ -5,6 +5,7 @@ import javafx.collections.ObservableList;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.phraser.db.BlockType.KEY_BLOCK;
+import static com.phraser.db.BlockType.PHRASE_BLOCK;
 
 public class PhraserDB {
   @Nullable Block lastKeyBlock = null;
@@ -93,7 +95,7 @@ public class PhraserDB {
       int newBlockCount = checkNotNull(block.keyBlock()).blockCount();
       if (newBlockCount < dbBlocks.size()) {
         throw new RuntimeException("Can't reduce block count to " + block.keyBlock().blockCount() +
-                ", db currently contains " + dbBlocks.size() + "blocks. Try defragmenting.");
+                ", since db currently contains " + dbBlocks.size() + " blocks. Try compacting.");
       }
       blockCount = newBlockCount;
 
@@ -220,11 +222,27 @@ public class PhraserDB {
     return true;
   }
 
+  public boolean isInvalid(Block dbBlock) {
+    return !isLatest(dbBlock) ||
+            (dbBlock.blockType() == PHRASE_BLOCK && checkNotNull(dbBlock.phraseBlock()).isTombstone());
+  }
+
   public long getLastBlockVersion(int blockId) {
     return checkNotNull(lastBlockByBlockId.get(blockId)).getVersion();
   }
 
   public @Nullable Block getLastBlock(int blockId) {
     return lastBlockByBlockId.get(blockId);
+  }
+
+  public void compact() {
+    List<Block> validBlocks = new ArrayList<>();
+    for (Block block : dbBlocks) {
+      if (!isInvalid(block)) {
+        validBlocks.add(block);
+      }
+    }
+    dbBlocks.clear();
+    dbBlocks.addAll(validBlocks);
   }
 }

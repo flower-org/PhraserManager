@@ -519,12 +519,13 @@ public class PhraserDbForm extends AnchorPane {
         }
     }
 
-    public void defragmentDBAction() {
+    public void compactDBAction() {
         try {
-            throw new UnsupportedOperationException();
+            phraserDB.compact();
+            checkNotNull(dbBlocksTable).refresh();
         } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Error defragmenting DB: " + e, ButtonType.OK);
-            LOGGER.error("Error defragmenting DB: ", e);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Error compacting DB: " + e, ButtonType.OK);
+            LOGGER.error("Error compacting DB: ", e);
             alert.showAndWait();
         }
     }
