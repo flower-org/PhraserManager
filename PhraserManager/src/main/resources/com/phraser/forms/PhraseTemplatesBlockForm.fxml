@@ -395,6 +395,11 @@
                                                                                                  <PropertyValueFactory property="name" />
                                                                                              </cellValueFactory>
                                                                                          </TableColumn>
+                                                                                         <TableColumn minWidth="200.0" prefWidth="200.0" text="Word Template Ordinal">
+                                                                                             <cellValueFactory>
+                                                                                                 <PropertyValueFactory property="ordinal" />
+                                                                                             </cellValueFactory>
+                                                                                         </TableColumn>
                                                                                      </columns>
                                                                                  </TableView>
                                                                               </children>

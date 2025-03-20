@@ -7,16 +7,31 @@ import java.util.List;
 @Value.Immutable
 public interface PhraseTemplatesBlock extends StoreBlock {
     @Value.Immutable
+    interface WordTemplateRef {
+        /** 16 bit */
+        int wordTemplateId();
+        /** 16 bit */
+        int wordTemplateOrdinal();
+
+        static WordTemplateRef of(int wordTemplateId, int wordTemplateOrdinal) {
+            return ImmutableWordTemplateRef.builder()
+                    .wordTemplateId(wordTemplateId)
+                    .wordTemplateOrdinal(wordTemplateOrdinal)
+                    .build();
+        }
+    }
+
+    @Value.Immutable
     interface WordTemplate {
         /** 16 bit */
         int wordTemplateId();
-        /** 1 bit */
+        /** 8 bit (1 byte) */
         byte permissions();
-        /** 1 bit */
+        /** 8 bit (1 byte) */
         Icon icon();
-        /** 32 bit */ //TODO: make 16 bit?
+        /** 16 bit */
         int minLength();
-        /** 32 bit */ //TODO: make 16 bit?
+        /** 16 bit */
         int maxLength();
         String wordTemplateName();
         /** 16 bit array */
@@ -51,18 +66,18 @@ public interface PhraseTemplatesBlock extends StoreBlock {
         /** 16 bit */
         int phraseTemplateId();
         String phraseTemplateName();
-        List<Integer> wordTemplateIds();
+        List<WordTemplateRef> wordTemplateRefs();
 
         default int getId() { return phraseTemplateId(); }
         default String getName() {
             return phraseTemplateName();
         }
 
-        static PhraseTemplate of(int phraseTemplateId, String phraseTemplateName, List<Integer> wordTemplateIds) {
+        static PhraseTemplate of(int phraseTemplateId, String phraseTemplateName, List<WordTemplateRef> wordTemplateRefs) {
             return ImmutablePhraseTemplate.builder()
                 .phraseTemplateId(phraseTemplateId)
                 .phraseTemplateName(phraseTemplateName)
-                .wordTemplateIds(wordTemplateIds)
+                .wordTemplateRefs(wordTemplateRefs)
                 .build();
         }
     }

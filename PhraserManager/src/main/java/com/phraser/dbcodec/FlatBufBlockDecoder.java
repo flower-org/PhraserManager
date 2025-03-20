@@ -12,6 +12,7 @@ import com.phraser.db.ImmutableSymbolSet;
 import com.phraser.db.ImmutableSymbolSetsBlock;
 import com.phraser.db.ImmutableWord;
 import com.phraser.db.ImmutableWordTemplate;
+import com.phraser.db.ImmutableWordTemplateRef;
 import com.phraser.schema.phraser.Folder;
 import com.phraser.schema.phraser.FoldersBlock;
 import com.phraser.schema.phraser.KeyBlock;
@@ -23,6 +24,7 @@ import com.phraser.schema.phraser.SymbolSet;
 import com.phraser.schema.phraser.SymbolSetsBlock;
 import com.phraser.schema.phraser.Word;
 import com.phraser.schema.phraser.WordTemplate;
+import com.phraser.schema.phraser.WordTemplateRef;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -168,16 +170,21 @@ public class FlatBufBlockDecoder {
             PhraseTemplate phraseTemplate = phraseTemplatesBlock.phraseTemplates(i);
 
             // Retrieve word template IDs
-            int wordTemplateIdCount = phraseTemplate.wordTemplateIdsLength();
-            List<Integer> wordTemplateIds = new ArrayList<>();
-            for (int j = 0; j < wordTemplateIdCount; j++) {
-                wordTemplateIds.add(phraseTemplate.wordTemplateIds(j));
+            int wordTemplateRefsCount = phraseTemplate.wordTemplateRefsLength();
+            List<com.phraser.db.PhraseTemplatesBlock.WordTemplateRef> wordTemplateRefs = new ArrayList<>();
+            for (int j = 0; j < wordTemplateRefsCount; j++) {
+                WordTemplateRef wordTemplateRefSrc = phraseTemplate.wordTemplateRefs(j);
+                com.phraser.db.PhraseTemplatesBlock.WordTemplateRef wordTemplateRef = ImmutableWordTemplateRef.builder()
+                        .wordTemplateId(wordTemplateRefSrc.wordTemplateId())
+                        .wordTemplateOrdinal(wordTemplateRefSrc.wordTemplateOrdinal())
+                        .build();
+                wordTemplateRefs.add(wordTemplateRef);
             }
 
             com.phraser.db.PhraseTemplatesBlock.PhraseTemplate decodedPhraseTemplate = ImmutablePhraseTemplate.builder()
                     .phraseTemplateId(phraseTemplate.phraseTemplateId())
                     .phraseTemplateName(checkNotNull(phraseTemplate.phraseTemplateName()))
-                    .wordTemplateIds(wordTemplateIds)
+                    .wordTemplateRefs(wordTemplateRefs)
             .build();
 
             phraseTemplates.add(decodedPhraseTemplate);
@@ -212,6 +219,7 @@ public class FlatBufBlockDecoder {
                 Word word = phraseHistory.phrase(j);
                 com.phraser.db.PhraseBlock.Word reconstructedWord = ImmutableWord.builder()
                         .wordTemplateId(word.wordTemplateId())
+                        .wordTemplateOrdinal(word.wordTemplateOrdinal())
                         .name(checkNotNull(word.name()))
                         .word(checkNotNull(word.word()))
                         .permissions(word.permissions())

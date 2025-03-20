@@ -35,14 +35,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -81,6 +79,7 @@ public class PhraseBlockForm extends AnchorPane {
 
     public static class UIWord {
         public final int wordTemplateId;
+        public final int wordTemplateOrdinal;
         public final String wordName;
         public final String value;
         public final byte permissions;
@@ -89,9 +88,10 @@ public class PhraseBlockForm extends AnchorPane {
         public final boolean isViewable;
         public final Icon icon;
 
-        public UIWord(int wordTemplateId, String wordName, String value, byte permissions,
+        public UIWord(int wordTemplateId, int wordTemplateOrdinal, String wordName, String value, byte permissions,
                       boolean isTypeable, boolean isViewable, Icon icon) {
             this.wordTemplateId = wordTemplateId;
+            this.wordTemplateOrdinal = wordTemplateOrdinal;
             this.wordName = wordName;
             this.value = value;
             this.permissions = permissions;
@@ -102,6 +102,9 @@ public class PhraseBlockForm extends AnchorPane {
 
         public int getWordTemplateId() {
             return wordTemplateId;
+        }
+        public int getWordTemplateOrdinal() {
+            return wordTemplateOrdinal;
         }
         public String getWordName() {
             return wordName;
@@ -255,6 +258,7 @@ public class PhraseBlockForm extends AnchorPane {
             List<UIWord> words = new ArrayList<>();
             for (PhraseBlock.Word retWord : historyEntry.phrase()) {
                 int wordId = retWord.wordTemplateId();
+                int wordOrdinal = retWord.wordTemplateOrdinal();
                 String value = retWord.word();
                 String wordName = retWord.name();
                 byte permissions = retWord.permissions();
@@ -262,7 +266,7 @@ public class PhraseBlockForm extends AnchorPane {
                 boolean isTypeable = PhraserUtils.isTypeable(permissions);
                 boolean isViewable = PhraserUtils.isViewable(permissions);
 
-                UIWord uiWord = new UIWord(wordId, wordName, value, permissions, isTypeable, isViewable, icon);
+                UIWord uiWord = new UIWord(wordId, wordOrdinal, wordName, value, permissions, isTypeable, isViewable, icon);
                 words.add(uiWord);
             }
 
@@ -321,11 +325,12 @@ public class PhraseBlockForm extends AnchorPane {
                 return;
             }
 
-            List<DialogWord> dialogWords = phraseTemplate.wordTemplateIds().stream()
+            List<DialogWord> dialogWords = phraseTemplate.wordTemplateRefs().stream()
                     .map(
-                    wordTemplateId -> {
-                        PhraseTemplatesBlock.WordTemplate wordTemplate = getWordTemplate(wordTemplateId);
+                    wordTemplateRef -> {
+                        PhraseTemplatesBlock.WordTemplate wordTemplate = getWordTemplate(wordTemplateRef.wordTemplateId());
                         return new DialogWord(wordTemplate.getId(),
+                                wordTemplateRef.wordTemplateOrdinal(),
                                 wordTemplate.getName(),
                                 "",
                                 wordTemplate.minLength(),
@@ -361,10 +366,9 @@ public class PhraseBlockForm extends AnchorPane {
                 return;
             }
 
-            Map<Integer, Queue<DialogWord>> existingWords = new HashMap<>();
+            Map<Integer, Map<Integer, DialogWord>> existingWords = new HashMap<>();
             for (UIWord word : selectedItem.words) {
-                Queue<DialogWord> queue = existingWords.computeIfAbsent(word.wordTemplateId, k -> new ArrayDeque<>());
-
+                Map<Integer, DialogWord> wordOrdinalMap = existingWords.computeIfAbsent(word.wordTemplateId, k -> new HashMap<>());
                 Optional<PhraseTemplatesBlock.WordTemplate> wordTemplateOpt = getWordTemplateOpt(word.wordTemplateId);
 
                 int minLength;
@@ -381,7 +385,16 @@ public class PhraseBlockForm extends AnchorPane {
                     symbolSets = getSymbolSets(wordTemplate);
                 }
 
+                boolean isIncompatible = true;
+                for (PhraseTemplatesBlock.WordTemplateRef wordTemplateRef : checkNotNull(phraseTemplate).wordTemplateRefs()) {
+                    if (wordTemplateRef.wordTemplateId() == word.wordTemplateId && wordTemplateRef.wordTemplateOrdinal() == word.wordTemplateOrdinal) {
+                        isIncompatible = false;
+                        break;
+                    }
+                }
+
                 DialogWord dialogWord = new DialogWord(word.wordTemplateId,
+                        word.wordTemplateOrdinal,
                         word.wordName,
                         word.value,
                         minLength,
@@ -390,21 +403,22 @@ public class PhraseBlockForm extends AnchorPane {
                         PhraserUtils.isGenerateable(word.permissions),
                         PhraserUtils.isViewable(word.permissions),
                         symbolSets,
-                        !checkNotNull(phraseTemplate).wordTemplateIds().contains(word.wordTemplateId));
-
-                queue.add(dialogWord);
+                        isIncompatible);
+                wordOrdinalMap.put(word.wordTemplateOrdinal, dialogWord);
             }
 
             List<DialogWord> dialogWords = new ArrayList<>();
-            List<Integer> wordTemplateIds = phraseTemplate.wordTemplateIds();
-            for (int wordTemplateId : wordTemplateIds) {
-                PhraseTemplatesBlock.WordTemplate wordTemplate = getWordTemplate(wordTemplateId);
+            List<PhraseTemplatesBlock.WordTemplateRef> wordTemplateRefs = phraseTemplate.wordTemplateRefs();
+            for (PhraseTemplatesBlock.WordTemplateRef wordTemplateRef : wordTemplateRefs) {
+                PhraseTemplatesBlock.WordTemplate wordTemplate = getWordTemplate(wordTemplateRef.wordTemplateId());
                 DialogWord dialogWord;
-                Queue<DialogWord> dialogWordQueue = existingWords.get(wordTemplateId);
-                if (dialogWordQueue != null && !dialogWordQueue.isEmpty()) {
-                    dialogWord = dialogWordQueue.poll();
+
+                Map<Integer, DialogWord> dialogWordMap = existingWords.get(wordTemplateRef.wordTemplateId());
+                if (dialogWordMap != null && !dialogWordMap.isEmpty() && dialogWordMap.containsKey(wordTemplateRef.wordTemplateOrdinal())) {
+                    dialogWord = dialogWordMap.remove(wordTemplateRef.wordTemplateOrdinal());
                 } else {
-                    dialogWord = new DialogWord(wordTemplate.getId(),
+                    dialogWord = new DialogWord(wordTemplateRef.wordTemplateId(),
+                            wordTemplateRef.wordTemplateOrdinal(),
                             wordTemplate.getName(),
                             "",
                             wordTemplate.minLength(),
@@ -419,9 +433,9 @@ public class PhraseBlockForm extends AnchorPane {
                 dialogWords.add(dialogWord);
             }
 
-            for (Queue<DialogWord> dialogWordQueue : existingWords.values()) {
-                while (!dialogWordQueue.isEmpty()) {
-                    dialogWords.add(dialogWordQueue.poll());
+            for (Map<Integer, DialogWord> dialogWordMap : existingWords.values()) {
+                if (!dialogWordMap.isEmpty()) {
+                    dialogWords.addAll(dialogWordMap.values());
                 }
             }
 
@@ -449,7 +463,17 @@ public class PhraseBlockForm extends AnchorPane {
                             List<UIWord> words = new ArrayList<>();
                             for (PhraseWordsDialog.RetWord retWord : phraseUpdate) {
                                 int wordId = retWord.wordId;
-                                if (checkNotNull(phraseTemplate).wordTemplateIds().contains(wordId)) {
+                                int wordOrdinal = retWord.wordOrdinal;
+
+                                boolean phraseTemplateContainsWord = false;
+                                for (PhraseTemplatesBlock.WordTemplateRef wordTemplateRef : checkNotNull(phraseTemplate).wordTemplateRefs()) {
+                                    if (wordTemplateRef.wordTemplateId() == wordId && wordTemplateRef.wordTemplateOrdinal() == wordOrdinal) {
+                                        phraseTemplateContainsWord = true;
+                                        break;
+                                    }
+                                }
+
+                                if (phraseTemplateContainsWord) {
                                     String value = retWord.value;
 
                                     Optional<PhraseTemplatesBlock.WordTemplate> wordTemplateOpt =
@@ -477,7 +501,7 @@ public class PhraseBlockForm extends AnchorPane {
                                         icon = wordTemplate.icon();
                                     }
 
-                                    UIWord uiWord = new UIWord(wordId, wordName, value, permissions, isTypeable, isViewable, icon);
+                                    UIWord uiWord = new UIWord(wordId, wordOrdinal, wordName, value, permissions, isTypeable, isViewable, icon);
                                     words.add(uiWord);
                                 }
                             }
@@ -577,6 +601,7 @@ public class PhraseBlockForm extends AnchorPane {
             for (UIWord word : phraseHistory.words) {
                 PhraseBlock.Word blockWord = ImmutableWord.builder()
                         .wordTemplateId(word.wordTemplateId)
+                        .wordTemplateOrdinal(word.wordTemplateOrdinal)
                         .name(word.wordName)
                         .word(word.value)
                         .permissions(word.permissions)

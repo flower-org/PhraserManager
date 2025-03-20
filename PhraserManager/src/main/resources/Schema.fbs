@@ -107,7 +107,7 @@ table WordTemplate {
 //PhraseTemplate is a template for a set of tokens, e.g. login/password/url
 table WordTemplateRef {
   word_template_id: uint16;
-  word_template_ordinal: uint16;
+  word_template_ordinal: byte;
 }
 
 table PhraseTemplate {

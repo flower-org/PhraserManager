@@ -196,9 +196,14 @@
                                                                                           <content>
                                                                                              <TableView fx:id="phraseHistoryWordsTableView" prefHeight="200.0" prefWidth="200.0">
                                                                                                <columns>
-                                                                                                   <TableColumn minWidth="150.0" prefWidth="150.0" text="Word Template Id">
+                                                                                                   <TableColumn minWidth="50.0" prefWidth="50.0" text="Id (Word Template)">
                                                                                                        <cellValueFactory>
                                                                                                            <PropertyValueFactory property="wordTemplateId" />
+                                                                                                       </cellValueFactory>
+                                                                                                   </TableColumn>
+                                                                                                   <TableColumn minWidth="50.0" prefWidth="50.0" text="Ordinal (Word Template)">
+                                                                                                       <cellValueFactory>
+                                                                                                           <PropertyValueFactory property="wordTemplateOrdinal" />
                                                                                                        </cellValueFactory>
                                                                                                    </TableColumn>
                                                                                                    <TableColumn minWidth="150.0" prefWidth="150.0" text="Word Name">

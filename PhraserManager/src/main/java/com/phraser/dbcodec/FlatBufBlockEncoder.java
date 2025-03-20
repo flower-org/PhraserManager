@@ -176,12 +176,18 @@ public class FlatBufBlockEncoder {
 
             int phraseTemplateId = phraseTemplate.phraseTemplateId();
             int phraseTemplateNameOffset = builder.createString(phraseTemplate.phraseTemplateName());
-            int[] wordTemplateIds = toIdArray(phraseTemplate.wordTemplateIds());
 
-            int wordTemplateIdsOffset = com.phraser.schema.phraser.PhraseTemplate.createWordTemplateIdsVector(builder, wordTemplateIds);
+            int[] wordTemplateRefOffsets = new int[phraseTemplate.wordTemplateRefs().size()];
+            for (int j = 0; j < phraseTemplate.wordTemplateRefs().size(); j++) {
+                PhraseTemplatesBlock.WordTemplateRef wordTemplateRef = phraseTemplate.wordTemplateRefs().get(j);
+                int wordTemplateRefOffset = com.phraser.schema.phraser.WordTemplateRef.createWordTemplateRef(builder,
+                        wordTemplateRef.wordTemplateId(), wordTemplateRef.wordTemplateOrdinal());
+                wordTemplateRefOffsets[j] = wordTemplateRefOffset;
+            }
+            int wordTemplateRefsOffset = com.phraser.schema.phraser.PhraseTemplate.createWordTemplateRefsVector(builder, wordTemplateRefOffsets);
 
             int phraseTemplateOffset = com.phraser.schema.phraser.PhraseTemplate.createPhraseTemplate(builder,
-                    phraseTemplateId, phraseTemplateNameOffset, wordTemplateIdsOffset);
+                    phraseTemplateId, phraseTemplateNameOffset, wordTemplateRefsOffset);
 
             phraseTemplateOffsets[i] = phraseTemplateOffset;
         }
@@ -225,6 +231,7 @@ public class FlatBufBlockEncoder {
             for (int j = 0; j < phrase.size(); j++) {
                 PhraseBlock.Word phraseWord = phrase.get(j);
                 int wordTemplateId = phraseWord.wordTemplateId();
+                int wordTemplateOrdinal = phraseWord.wordTemplateOrdinal();
                 String name = phraseWord.name();
                 String word = phraseWord.word();
                 byte permissions = phraseWord.permissions();
@@ -234,8 +241,8 @@ public class FlatBufBlockEncoder {
                 int wordOffset = builder.createString(word);
 
                 int phraseWordOffset =
-                        com.phraser.schema.phraser.Word.createWord(builder, wordTemplateId, nameOffset, wordOffset,
-                                permissions, icon.code);
+                        com.phraser.schema.phraser.Word.createWord(builder, wordTemplateId, wordTemplateOrdinal,
+                                nameOffset, wordOffset, permissions, icon.code);
                 phraseWordOffsets[j] = phraseWordOffset;
             }
 

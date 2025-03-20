@@ -49,6 +49,20 @@ import static com.phraser.utils.PhraserUtils.*;
 public class PhraseTemplatesBlockForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraseTemplatesBlockForm.class);
 
+    public static class PhraseTemplateWord {
+        final PhraseTemplatesBlock.WordTemplate wordTemplate;
+        final @Nullable Integer wordTemplateOrdinal;
+
+        PhraseTemplateWord(WordTemplate wordTemplate, @Nullable Integer wordTemplateOrdinal) {
+            this.wordTemplate = wordTemplate;
+            this.wordTemplateOrdinal = wordTemplateOrdinal;
+        }
+
+        public int getId() { return wordTemplate.getId(); }
+        public String getName() { return wordTemplate.getName(); }
+        public @Nullable Integer getOrdinal() { return wordTemplateOrdinal; }
+    }
+
     @FXML @Nullable Button addUpdateWordTemplateButton;
 
     @FXML @Nullable TextField blockIdTextField;
@@ -66,8 +80,8 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
 
     @FXML @Nullable TextField phraseTemplateIdTextField;
     @FXML @Nullable TextField phraseTemplateNameTextField;
-    @FXML @Nullable TableView<PhraseTemplatesBlock.WordTemplate> phraseTemplateWordsTableView;
-    ObservableList<PhraseTemplatesBlock.WordTemplate> phraseTemplateWords;
+    @FXML @Nullable TableView<PhraseTemplateWord> phraseTemplateWordsTableView;
+    ObservableList<PhraseTemplateWord> phraseTemplateWords;
 
     @FXML @Nullable Button addPhraseTemplateWordButton;
     @FXML @Nullable Button removePhraseTemplateWordButton;
@@ -104,7 +118,6 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
     final Supplier<List<SymbolSetsBlock.SymbolSet>> symbolSetsSupplier;
 
     final Consumer<PhraseTemplatesBlock> phraseTemplatesBlockCallback;
-    //TODO: phraserDB.getLastSymbolSetBlock()
 
     int nextWordTemplateId = 0;
     int nextPhraseTemplateId = 0;
@@ -322,7 +335,14 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
 
         if (selectedItem != null && phraseTemplates != null) {
             for (PhraseTemplate phraseTemplate : phraseTemplates) {
-                if (phraseTemplate.wordTemplateIds().contains(selectedItem.wordTemplateId())) {
+                boolean phraseTemplateContainsWordTemplate = false;
+                for (WordTemplateRef wordTemplateRef : phraseTemplate.wordTemplateRefs()) {
+                    if (wordTemplateRef.wordTemplateId() == selectedItem.wordTemplateId()) {
+                        phraseTemplateContainsWordTemplate = true;
+                    }
+                }
+
+                if (phraseTemplateContainsWordTemplate) {
                     Alert alert = new Alert(Alert.AlertType.ERROR, "Word template [" + selectedItem.wordTemplateName()
                             + "] is used in PhraseTemplate [" + phraseTemplate.phraseTemplateName()
                             + "]. Can't delete.", ButtonType.OK);
@@ -412,21 +432,21 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
             wordTemplateMap.put(wTemplate.wordTemplateId(), wTemplate);
         }
 
-        for (int wordTemplateId : phraseTemplate.wordTemplateIds()) {
-            PhraseTemplatesBlock.WordTemplate wTemplate = wordTemplateMap.get(wordTemplateId);
-            if (wTemplate != null) {
-                phraseTemplateWords.add(wTemplate);
-            } else {
-                phraseTemplateWords.add(ImmutableWordTemplate.builder()
-                        .wordTemplateId(wordTemplateId)
+        for (WordTemplateRef wordTemplateRef : phraseTemplate.wordTemplateRefs()) {
+            PhraseTemplatesBlock.WordTemplate wTemplate = wordTemplateMap.get(wordTemplateRef.wordTemplateId());
+            if (wTemplate == null) {
+                wTemplate = ImmutableWordTemplate.builder()
+                        .wordTemplateId(wordTemplateRef.wordTemplateId())
                         .wordTemplateName("WORD TEMPLATE NOT FOUND")
                         .addSymbolSetIds()
                         .permissions((byte)0)
                         .icon(Icon.X)
                         .minLength(0)
                         .maxLength(0)
-                        .build());
+                        .build();
             }
+
+            phraseTemplateWords.add(new PhraseTemplateWord(wTemplate, wordTemplateRef.wordTemplateOrdinal()));
         }
 
         checkNotNull(phraseTemplateWordsTableView).itemsProperty().set(phraseTemplateWords);
@@ -613,7 +633,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
                         try {
                             PhraseTemplatesBlock.WordTemplate wordTemplate = pickWordTemplateDialog.getWordTemplate();
                             if (wordTemplate != null) {
-                                    phraseTemplateWords.add(wordTemplate);
+                                    phraseTemplateWords.add(new PhraseTemplateWord(wordTemplate, null));
                             }
                         } catch (Exception e) {
                             Alert alert = new Alert(Alert.AlertType.ERROR, "Error picking Word Template: " + e, ButtonType.OK);
@@ -664,15 +684,13 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
         if (phraseTemplateWords.isEmpty()) {
             throw new RuntimeException("Phrase doesn't have any words.");
         }
-        List<Integer> wordTemplateIds = new ArrayList<>();
-        for (PhraseTemplatesBlock.WordTemplate wordTemplate : phraseTemplateWords) {
-            wordTemplateIds.add(wordTemplate.wordTemplateId());
-        }
+        List<Integer> wordTemplateIds = phraseTemplateWords.stream().map(w -> w.wordTemplate.wordTemplateId()).toList();
+        List<WordTemplateRef> wordTemplateRefs = DefaultDBCreator.wordTemplateRefs(wordTemplateIds);;
 
         return ImmutablePhraseTemplate.builder()
                     .phraseTemplateId(phraseTemplateId)
                     .phraseTemplateName(phraseTemplateName)
-                    .wordTemplateIds(wordTemplateIds)
+                    .wordTemplateRefs(wordTemplateRefs)
                 .build();
     }
 

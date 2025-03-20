@@ -54,6 +54,11 @@
                                                                  <PropertyValueFactory property="id" />
                                                              </cellValueFactory>
                                                          </TableColumn>
+                                                         <TableColumn minWidth="50.0" prefWidth="50.0" text="Ordinal">
+                                                             <cellValueFactory>
+                                                                 <PropertyValueFactory property="ordinal" />
+                                                             </cellValueFactory>
+                                                         </TableColumn>
                                                          <TableColumn minWidth="150.0" prefWidth="150.0" text="Name">
                                                              <cellValueFactory>
                                                                  <PropertyValueFactory property="name" />

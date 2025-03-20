@@ -38,13 +38,11 @@ import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicReference;
@@ -91,6 +89,7 @@ public class ClientModeForm extends AnchorPane {
         public ExplorerNodeType getType() { return type; }
         public String getName() { return name; }
         public String getId() { return type == ExplorerNodeType.UP || type == ExplorerNodeType.HISTORY ? "" : Integer.toString(id); }
+        public String getOrdinal() { return word == null ? "" : Integer.toString(word.wordTemplateOrdinal); }
         public String getValue() {
             return word == null ? "" : word.getValue();
         }
@@ -98,6 +97,7 @@ public class ClientModeForm extends AnchorPane {
 
     public static class UIWord {
         public final int wordTemplateId;
+        public final int wordTemplateOrdinal;
         public final String wordName;
         public final String value;
         public final byte permissions;
@@ -110,10 +110,10 @@ public class ClientModeForm extends AnchorPane {
         public final boolean isUserEditable;
 
         public final boolean isPartOfTemplate;
-        public int serial;
 
-        public UIWord(int wordTemplateId, String wordName, String value, byte permissions, Icon icon, char[] symbolSet, boolean isPartOfTemplate, int serial) {
+        public UIWord(int wordTemplateId, int wordTemplateOrdinal, String wordName, String value, byte permissions, Icon icon, char[] symbolSet, boolean isPartOfTemplate) {
             this.wordTemplateId = wordTemplateId;
+            this.wordTemplateOrdinal = wordTemplateOrdinal;
             this.wordName = wordName;
             this.value = value;
 
@@ -131,8 +131,6 @@ public class ClientModeForm extends AnchorPane {
             this.isViewable = PhraserUtils.isViewable(permissions);
             this.isGenerateable = PhraserUtils.isGenerateable(permissions);
             this.isUserEditable = PhraserUtils.isUserEditable(permissions);
-
-            this.serial = serial;
         }
 
         public String getValue() {
@@ -395,22 +393,23 @@ public class ClientModeForm extends AnchorPane {
         PhraseTemplatesBlock.PhraseTemplate phraseTemplate =
                 dbRuntime.getPhraseTemplate(phraseBlock.phraseTemplateId());
 
-        Map<Integer, Queue<PhraseBlock.Word>> map = new HashMap<>();
+        Map<Integer, Map<Integer, PhraseBlock.Word>> historyWordsByTemplateAndOrdinalMap = new HashMap<>();
         for (PhraseBlock.Word word : history.phrase()) {
-            map.computeIfAbsent(word.wordTemplateId(), k -> new ArrayDeque<>()).add(word);
+            historyWordsByTemplateAndOrdinalMap.computeIfAbsent(word.wordTemplateId(), k -> new HashMap<>()).put(word.wordTemplateOrdinal(), word);
         }
 
-
-        int serial = 0;
         List<UIWord> words = new ArrayList<>();
         if (phraseTemplate != null) {
-            for (int wordTemplateIds : phraseTemplate.wordTemplateIds()) {
-                PhraseTemplatesBlock.WordTemplate wordTemplate = checkNotNull(dbRuntime.getWordTemplate(wordTemplateIds));
+            for (PhraseTemplatesBlock.WordTemplateRef wordTemplateRef : phraseTemplate.wordTemplateRefs()) {
+                PhraseTemplatesBlock.WordTemplate wordTemplate = checkNotNull(dbRuntime.getWordTemplate(wordTemplateRef.wordTemplateId()));
 
-                Queue<PhraseBlock.Word> q = map.get(wordTemplateIds);
-                PhraseBlock.Word oldWord = q == null ? null : q.poll();
+                Map<Integer, PhraseBlock.Word> historyWordsByOrdinalMap =
+                        historyWordsByTemplateAndOrdinalMap.get(wordTemplateRef.wordTemplateId());
+                PhraseBlock.Word oldWord = historyWordsByOrdinalMap == null ?
+                        null : historyWordsByOrdinalMap.remove(wordTemplateRef.wordTemplateOrdinal());
 
                 int wordTemplateId = wordTemplate.wordTemplateId();
+                int wordTemplateOrdinal = wordTemplateRef.wordTemplateOrdinal();
                 String wordName = wordTemplate.wordTemplateName();
                 String value = oldWord == null ? "" : oldWord.word();
                 byte permissions = wordTemplate.permissions();
@@ -418,24 +417,28 @@ public class ClientModeForm extends AnchorPane {
                 char[] symbolSet = getSymbolSet(wordTemplate);
                 boolean isPartOfTemplate = true;
 
-                UIWord word = new UIWord(wordTemplateId, wordName, value, permissions, icon, symbolSet, isPartOfTemplate, serial++);
+                UIWord word = new UIWord(wordTemplateId, wordTemplateOrdinal, wordName, value, permissions, icon, symbolSet, isPartOfTemplate);
                 words.add(word);
             }
         }
 
         for (PhraseBlock.Word historyWord : history.phrase()) {
-            Queue<PhraseBlock.Word> q = map.get(historyWord.wordTemplateId());
-            if (q != null && !q.isEmpty()) {
-                int wordTemplateId = historyWord.wordTemplateId();
-                String wordName = historyWord.name();
-                String value = historyWord.word();
-                byte permissions = historyWord.permissions();
-                Icon icon = historyWord.icon();
-                char[] symbolSet = getSymbolSet(historyWord.wordTemplateId());
-                boolean isPartOfTemplate = false;
+            Map<Integer, PhraseBlock.Word> historyWordsByOrdinalMap =
+                    historyWordsByTemplateAndOrdinalMap.get(historyWord.wordTemplateId());
+            if (historyWordsByOrdinalMap != null && !historyWordsByOrdinalMap.isEmpty()) {
+                if (historyWordsByOrdinalMap.containsKey(historyWord.wordTemplateOrdinal())) {
+                    int wordTemplateId = historyWord.wordTemplateId();
+                    int wordTemplateOrdinal = historyWord.wordTemplateOrdinal();
+                    String wordName = historyWord.name();
+                    String value = historyWord.word();
+                    byte permissions = historyWord.permissions();
+                    Icon icon = historyWord.icon();
+                    char[] symbolSet = getSymbolSet(historyWord.wordTemplateId());
+                    boolean isPartOfTemplate = false;
 
-                UIWord word = new UIWord(wordTemplateId, wordName, value, permissions, icon, symbolSet, isPartOfTemplate, serial++);
-                words.add(word);
+                    UIWord word = new UIWord(wordTemplateId, wordTemplateOrdinal, wordName, value, permissions, icon, symbolSet, isPartOfTemplate);
+                    words.add(word);
+                }
             }
         }
 
@@ -444,9 +447,9 @@ public class ClientModeForm extends AnchorPane {
 
     List<UIWord> getHistoryWords(PhraseBlock.PhraseHistory history) {
         List<UIWord> words = new ArrayList<>();
-        int serial = 0;
         for (PhraseBlock.Word historyWord : history.phrase()) {
             int wordTemplateId = historyWord.wordTemplateId();
+            int wordTemplateOrdinal = historyWord.wordTemplateOrdinal();
             String wordName = historyWord.name();
             String value = historyWord.word();
             byte permissions = historyWord.permissions();
@@ -454,7 +457,7 @@ public class ClientModeForm extends AnchorPane {
             char[] symbolSet = getSymbolSet(historyWord.wordTemplateId());
             boolean isPartOfTemplate = false;
 
-            UIWord word = new UIWord(wordTemplateId, wordName, value, permissions, icon, symbolSet, isPartOfTemplate, serial++);
+            UIWord word = new UIWord(wordTemplateId, wordTemplateOrdinal, wordName, value, permissions, icon, symbolSet, isPartOfTemplate);
             words.add(word);
         }
 
@@ -1077,10 +1080,10 @@ public class ClientModeForm extends AnchorPane {
                                 if (!StringUtils.isBlank(newWord)) {
                                     // 2. Update word
                                     try {
-                                        dbRuntime.updatePhraseWord(phraseId, word.wordTemplateId, word.serial, newWord, false);
+                                        dbRuntime.updatePhraseWord(phraseId, word.wordTemplateId, word.wordTemplateOrdinal, newWord, false);
                                     } catch (BlockDataSizeExceededException be) {
                                         if (YES == JavaFxUtils.showYesNoDialog("Block data size too large (" + be.dataSize + "/" + be.maxSize + "). Truncate history?")) {
-                                            dbRuntime.updatePhraseWord(phraseId, word.wordTemplateId, word.serial, newWord, true);
+                                            dbRuntime.updatePhraseWord(phraseId, word.wordTemplateId, word.wordTemplateOrdinal, newWord, true);
                                         } else {
                                             return;
                                         }
@@ -1116,10 +1119,10 @@ public class ClientModeForm extends AnchorPane {
                 if (YES == JavaFxUtils.showYesNoDialog("Generate new value for \"" + word.wordName + "\"?")) {
                     // 2. Update word / Generate new
                     try {
-                        dbRuntime.generatePhraseWord(phraseId, word.wordTemplateId, word.serial, false);
+                        dbRuntime.generatePhraseWord(phraseId, word.wordTemplateId, word.wordTemplateOrdinal, false);
                     } catch (BlockDataSizeExceededException be) {
                         if (YES == JavaFxUtils.showYesNoDialog("Block data size too large (" + be.dataSize + "/" + be.maxSize + "). Truncate history?")) {
-                            dbRuntime.generatePhraseWord(phraseId, word.wordTemplateId, word.serial, true);
+                            dbRuntime.generatePhraseWord(phraseId, word.wordTemplateId, word.wordTemplateOrdinal, true);
                         } else {
                             return;
                         }

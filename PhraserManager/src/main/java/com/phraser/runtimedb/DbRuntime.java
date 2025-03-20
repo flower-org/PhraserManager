@@ -11,6 +11,7 @@ import com.phraser.db.ImmutableSymbolSetsBlock;
 import com.phraser.db.ImmutableWord;
 import com.phraser.db.KeyBlock;
 import com.phraser.db.PhraseBlock;
+import com.phraser.db.PhraseTemplatesBlock;
 import com.phraser.dbcodec.BlockData;
 import com.phraser.dbcodec.ChecksumException;
 import com.phraser.dbcodec.DbEncoder;
@@ -28,13 +29,11 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -831,15 +830,16 @@ public class DbRuntime {
         if (phraseTemplate == null) { throw new RuntimeException("PhraseTemplate [" + phraseTemplateId + "] not found"); }
 
         List<PhraseBlock.Word> phrase = new ArrayList<>();
-        for (int wordTemplateId : phraseTemplate.wordTemplateIds()) {
-            WordTemplate wordTemplate = getWordTemplate(wordTemplateId);
-            if (wordTemplate == null) { throw new RuntimeException("WordTemplate [" + wordTemplateId +
+        for (PhraseTemplatesBlock.WordTemplateRef wordTemplateRef : phraseTemplate.wordTemplateRefs()) {
+            WordTemplate wordTemplate = getWordTemplate(wordTemplateRef.wordTemplateId());
+            if (wordTemplate == null) { throw new RuntimeException("WordTemplate [" + wordTemplateRef.wordTemplateId() +
                     "] of PhraseTemplate [" + phraseTemplateId + "] not found"); }
 
             String wordStr = getDefaultWord(wordTemplate);
 
             PhraseBlock.Word word = ImmutableWord.builder()
                     .wordTemplateId(wordTemplate.wordTemplateId())
+                    .wordTemplateOrdinal(wordTemplateRef.wordTemplateOrdinal())
                     .name(wordTemplate.wordTemplateName())
                     .word(wordStr)
                     .permissions(wordTemplate.permissions())
@@ -908,14 +908,15 @@ public class DbRuntime {
         return wordStr;
     }
 
-    public void generatePhraseWord(int phraseBlockId, int wordTemplateIdToUpdate, int serial, boolean autoTruncateHistory) throws IOException, BlockDataSizeExceededException {
+    public void generatePhraseWord(int phraseBlockId, int wordTemplateIdToUpdate, int wordTemplateOrdinal, boolean autoTruncateHistory) throws IOException, BlockDataSizeExceededException {
         WordTemplate wordTemplate = getWordTemplate(wordTemplateIdToUpdate);
         if (wordTemplate == null) { throw new RuntimeException("WordTemplate [" + wordTemplateIdToUpdate + "] not found"); }
         String newWord = getDefaultWord(wordTemplate);
-        updatePhraseWord(phraseBlockId, wordTemplateIdToUpdate, serial, newWord, autoTruncateHistory);
+        updatePhraseWord(phraseBlockId, wordTemplateIdToUpdate, wordTemplateOrdinal, newWord, autoTruncateHistory);
     }
 
-    public void updatePhraseWord(int phraseBlockId, int wordTemplateIdToUpdate, int serial, String newWord, boolean autoTruncateHistory) throws IOException, BlockDataSizeExceededException {
+    public void updatePhraseWord(int phraseBlockId, int wordTemplateIdToUpdate, int wordTemplateOrdinal, String newWord,
+                                 boolean autoTruncateHistory) throws IOException, BlockDataSizeExceededException {
         int blockNumber = checkNotNull(blockNumberAndVersionByBlockId.get(phraseBlockId)).blockNumber;
 
         Block oldPhraseBlock = readPhraseBlock(blockNumber);
@@ -924,31 +925,30 @@ public class DbRuntime {
         if (phraseTemplate == null) { throw new RuntimeException("PhraseTemplate [" + phraseTemplateId + "] not found"); }
 
         PhraseBlock.PhraseHistory currentHistory = checkNotNull(oldPhraseBlock.phraseBlock()).history().get(0);
-        Map<Integer, Queue<PhraseBlock.Word>> phraseMap = new HashMap<>();
+        Map<Integer, Map<Integer, PhraseBlock.Word>> phraseMap = new HashMap<>();
         for (PhraseBlock.Word oldWord : currentHistory.phrase()) {
-            phraseMap.computeIfAbsent(oldWord.wordTemplateId(), k -> new ArrayDeque<>()).add(oldWord);
+            phraseMap.computeIfAbsent(oldWord.wordTemplateId(), k -> new HashMap<>()).put(oldWord.wordTemplateOrdinal(), oldWord);
         }
 
         List<PhraseBlock.Word> phrase = new ArrayList<>();
-        int counter = 0;
-        for (int wordTemplateId : phraseTemplate.wordTemplateIds()) {
-            WordTemplate wordTemplate = getWordTemplate(wordTemplateId);
-            if (wordTemplate == null) { throw new RuntimeException("WordTemplate [" + wordTemplateId +
+        for (PhraseTemplatesBlock.WordTemplateRef wordTemplateRef : phraseTemplate.wordTemplateRefs()) {
+            WordTemplate wordTemplate = getWordTemplate(wordTemplateRef.wordTemplateId());
+            if (wordTemplate == null) { throw new RuntimeException("WordTemplate [" + wordTemplateRef.wordTemplateId() +
                     "] of PhraseTemplate [" + phraseTemplateId + "] not found"); }
 
             String wordStr;
-            if (wordTemplateIdToUpdate == wordTemplateId && counter == serial) {
+            if (wordTemplateIdToUpdate == wordTemplateRef.wordTemplateId() && wordTemplateOrdinal == wordTemplateRef.wordTemplateOrdinal()) {
                 // If template matches, use newWord
                 wordStr = newWord;
-                Queue<PhraseBlock.Word> oldWord = phraseMap.get(wordTemplateId);
-                if (oldWord != null && !oldWord.isEmpty()) {
-                    oldWord.poll();
+                Map<Integer, PhraseBlock.Word> oldWordMap = phraseMap.get(wordTemplateRef.wordTemplateId());
+                if (oldWordMap != null && !oldWordMap.isEmpty()) {
+                    oldWordMap.remove(wordTemplateRef.wordTemplateOrdinal());
                 }
             } else {
-                Queue<PhraseBlock.Word> oldWord = phraseMap.get(wordTemplateId);
-                if (oldWord != null && !oldWord.isEmpty()) {
+                Map<Integer, PhraseBlock.Word> oldWordMap = phraseMap.get(wordTemplateRef.wordTemplateId());
+                if (oldWordMap != null && !oldWordMap.isEmpty() && oldWordMap.containsKey(wordTemplateRef.wordTemplateOrdinal())) {
                     // If old word found, use oldWord
-                    wordStr = oldWord.poll().word();
+                    wordStr = oldWordMap.remove(wordTemplateRef.wordTemplateOrdinal()).word();
                 } else {
                     // Otherwise use default word
                     wordStr = getDefaultWord(wordTemplate);
@@ -957,14 +957,13 @@ public class DbRuntime {
 
             PhraseBlock.Word word = ImmutableWord.builder()
                     .wordTemplateId(wordTemplate.wordTemplateId())
+                    .wordTemplateOrdinal(wordTemplateRef.wordTemplateOrdinal())
                     .name(wordTemplate.wordTemplateName())
                     .word(wordStr)
                     .permissions(wordTemplate.permissions())
                     .icon(wordTemplate.icon())
                     .build();
             phrase.add(word);
-
-            counter++;
         }
 
         PhraseBlock.PhraseHistory newPhraseHistory = ImmutablePhraseHistory.builder()
