@@ -46,12 +46,13 @@ public class TreeUtilTest {
     @Test
     public void testNoMissingNumber() {
         TreeMap<Integer, Integer> tree = new TreeMap<>();
+        tree.put(0, 100);
         tree.put(1, 100);
         tree.put(2, 200);
         tree.put(3, 300);
 
-        Integer result = TreeUtil.getNextMissingNumberToTheRight(3, tree, 6);
-        assertEquals(Integer.valueOf(4), result); // Next number is 4
+        Integer result = TreeUtil.getNextMissingNumberToTheRight(2, tree, 4);
+        assertNull(result); // All numbers 0 - 4 are taken
     }
 
     @Test
@@ -124,12 +125,13 @@ public class TreeUtilTest {
     @Test
     public void testLeftNoMissingNumber() {
         TreeMap<Integer, Integer> tree = new TreeMap<>();
+        tree.put(0, 100);
         tree.put(1, 100);
         tree.put(2, 200);
         tree.put(3, 300);
 
-        Integer result = TreeUtil.getNextMissingNumberToTheLeft(3, tree, 6);
-        assertEquals(Integer.valueOf(0), result); // Next missing number is 0
+        Integer result = TreeUtil.getNextMissingNumberToTheLeft(2, tree, 4);
+        assertNull(result); // All numbers 0 - 4 are taken
     }
 
     @Test

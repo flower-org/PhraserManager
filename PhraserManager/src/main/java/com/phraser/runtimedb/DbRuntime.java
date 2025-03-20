@@ -564,7 +564,11 @@ public class DbRuntime {
             mainBlock = nextVersionAndEntropy(mainBlock);
 
             Integer freeBlockNumber = TreeUtil.getNextMissingNumberToTheRight(lastBlockNumber, occupiedBlocksNumbers, blockCount);
-            // If we don't have capacity to move blocks, update in place
+            // If we don't have capacity to move blocks, update in place.
+            // NOTE: it's relatively simple to avoid in-place updates altogether, if we make sure to always keep 1 block
+            // unused, that's enough space to swap and move other blocks around.
+            // In client mode the only operation that creates new blockId and therefore permanently consumes more space
+            // is new phrase creation, so we enforce "at least 1 free block" rule in createPhrase() method of this class.
             if (freeBlockNumber == null) {
                 if (blockNumber != null) {
                     freeBlockNumber = blockNumber;
@@ -818,6 +822,11 @@ public class DbRuntime {
     }
 
     public void createPhrase(int phraseTemplateId, int folderId, String phraseName) {
+        if (occupiedBlocksNumbers.size() >= blockCount) {
+            throw new RuntimeException("No spare blocks left (" + occupiedBlocksNumbers.size() + "/" + blockCount +
+                    ") - note that we need to keep at least 1 block free for complementary copy to work");
+        }
+
         PhraseTemplate phraseTemplate = getPhraseTemplate(phraseTemplateId);
         if (phraseTemplate == null) { throw new RuntimeException("PhraseTemplate [" + phraseTemplateId + "] not found"); }
 
