@@ -105,10 +105,15 @@ table WordTemplate {
 
 //CRD only, immutable in storage
 //PhraseTemplate is a template for a set of tokens, e.g. login/password/url
+table WordTemplateRef {
+  word_template_id: uint16;
+  word_template_ordinal: uint16;
+}
+
 table PhraseTemplate {
   phrase_template_id: uint16;
   phrase_template_name: string;
-  word_template_ids: [uint16];
+  word_template_refs: [WordTemplateRef];
 }
 
 table PhraseTemplatesBlock {
@@ -121,6 +126,7 @@ table PhraseTemplatesBlock {
 
 table Word {
   word_template_id: uint16;
+  word_template_ordinal: uint16;
   name: string;
   word: string;
   permissions: byte;
