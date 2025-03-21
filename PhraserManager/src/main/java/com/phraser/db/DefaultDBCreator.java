@@ -1,19 +1,5 @@
-package com.phraser.forms;
+package com.phraser.db;
 
-import com.phraser.db.Block;
-import com.phraser.db.FoldersBlock;
-import com.phraser.db.Icon;
-import com.phraser.db.ImmutableFoldersBlock;
-import com.phraser.db.ImmutableKeyBlock;
-import com.phraser.db.ImmutablePhraseBlock;
-import com.phraser.db.ImmutablePhraseHistory;
-import com.phraser.db.ImmutablePhraseTemplatesBlock;
-import com.phraser.db.ImmutableSymbolSetsBlock;
-import com.phraser.db.ImmutableWord;
-import com.phraser.db.KeyBlock;
-import com.phraser.db.PhraseBlock;
-import com.phraser.db.PhraseTemplatesBlock;
-import com.phraser.db.SymbolSetsBlock;
 import com.phraser.utils.PhraserUtils;
 
 import javax.crypto.SecretKey;
@@ -22,7 +8,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.phraser.db.Block.FLASH_SECTOR_SIZE;
 import static com.phraser.utils.PhraserUtils.getWordPermissions;
@@ -178,7 +163,7 @@ public class DefaultDBCreator {
                         List.of(1,2,8)
                 ),
                 PhraseTemplatesBlock.WordTemplate.of(5,
-                        getWordPermissions(true, false, true, false),
+                        getWordPermissions(true, true, true, true),
                         Icon.LOCK,
                         24,
                         64,

@@ -49,6 +49,7 @@ dependencies {
     annotationProcessor "org.immutables:value:2.9.2"
     annotationProcessor "com.uber.nullaway:nullaway:0.7.9"
 
+    implementation 'com.fazecast:jSerialComm:2.9.1'
     implementation 'com.google.flatbuffers:flatbuffers-java:24.3.25'
 
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0'

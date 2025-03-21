@@ -1,6 +1,6 @@
 package com.phraser.dbcodec;
 
-import com.phraser.forms.DefaultDBCreator;
+import com.phraser.db.DefaultDBCreator;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

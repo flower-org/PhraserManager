@@ -46,7 +46,7 @@ import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.phraser.db.Block.*;
-import static com.phraser.forms.DefaultDBCreator.DEFAULT_SYMBOL_SETS;
+import static com.phraser.db.DefaultDBCreator.DEFAULT_SYMBOL_SETS;
 import static com.phraser.forms.PhraserDbForm.NEW_BLOCK;
 import static com.phraser.forms.PhraseWordsDialog.DialogWord;
 

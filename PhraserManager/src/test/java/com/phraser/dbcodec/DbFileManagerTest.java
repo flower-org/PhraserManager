@@ -1,7 +1,7 @@
 package com.phraser.dbcodec;
 
 import com.phraser.db.Block;
-import com.phraser.forms.DefaultDBCreator;
+import com.phraser.db.DefaultDBCreator;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;

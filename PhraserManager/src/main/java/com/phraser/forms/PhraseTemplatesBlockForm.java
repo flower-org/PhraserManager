@@ -3,6 +3,7 @@ package com.phraser.forms;
 import com.flower.fxutils.JavaFxUtils;
 import com.flower.fxutils.ModalWindow;
 import com.phraser.db.Block;
+import com.phraser.db.DefaultDBCreator;
 import com.phraser.db.Icon;
 import com.phraser.db.ImmutablePhraseTemplate;
 import com.phraser.db.ImmutablePhraseTemplatesBlock;

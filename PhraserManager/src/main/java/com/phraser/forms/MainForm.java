@@ -127,7 +127,6 @@ public class MainForm {
 
     public Tab openKeyBlockForm(@Nullable Block keyBlock, PhraserDB phraserDB, Consumer<KeyBlock> keyBlockCallback) {
         KeyBlockForm keyBlockForm = new KeyBlockForm(keyBlock, phraserDB, keyBlockCallback);
-//        keyBlockForm.setStage(checkNotNull(mainStage));
         final Tab tab = new Tab("Key Block", keyBlockForm);
         tab.setClosable(true);
 
@@ -268,5 +267,13 @@ public class MainForm {
             LOGGER.error("Error opening DB in client mode: ", e);
             alert.showAndWait();
         }
+    }
+
+    public void downloadDb() {
+        // TODO: download DB from Phraser token via USB serial and save it to file
+    }
+
+    public void uploadDb() {
+        // TODO: upload DB to Phraser token via USB serial
     }
 }

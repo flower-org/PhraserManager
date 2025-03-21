@@ -20,6 +20,12 @@
             <MenuItem mnemonicParsing="false" onAction="#closeAllTabs" text="Close all tabs" />
             <MenuItem mnemonicParsing="false" onAction="#quit" text="Quit" />
         </Menu>
+      <Menu mnemonicParsing="false" text="Token">
+        <items>
+          <MenuItem mnemonicParsing="false" onAction="#downloadDb" text="Download DB" />
+            <MenuItem mnemonicParsing="false" onAction="#uploadDb" text="Upload DB" />
+        </items>
+      </Menu>
         <Menu mnemonicParsing="false" text="Help">
             <MenuItem mnemonicParsing="false" onAction="#showAboutDialog" text="About" />
         </Menu>

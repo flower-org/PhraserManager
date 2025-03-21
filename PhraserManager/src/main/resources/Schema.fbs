@@ -42,7 +42,9 @@ enum Icon : byte {
     Minus = 21,
     X = 22,
     Check = 23,
-    Copy = 24
+    Copy = 24,
+    Download = 25,
+    Upload = 26
 }
 
 // -------- Common block structure --------

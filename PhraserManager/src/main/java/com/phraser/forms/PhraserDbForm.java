@@ -42,8 +42,8 @@ import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.flower.fxutils.JavaFxUtils.YesNo.NO;
 import static com.phraser.db.BlockType.PHRASE_BLOCK;
-import static com.phraser.forms.DefaultDBCreator.DEFAULT_BLOCKS_IN_DB;
-import static com.phraser.forms.DefaultDBCreator.initDefaultBlockConfig;
+import static com.phraser.db.DefaultDBCreator.DEFAULT_BLOCKS_IN_DB;
+import static com.phraser.db.DefaultDBCreator.initDefaultBlockConfig;
 
 public class PhraserDbForm extends AnchorPane {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraserDbForm.class);
