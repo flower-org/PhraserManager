@@ -267,6 +267,8 @@
                                                                                  <String fx:value="X" />
                                                                                  <String fx:value="CHECK" />
                                                                                  <String fx:value="COPY" />
+                                                                                 <String fx:value="DOWNLOAD" />
+                                                                                 <String fx:value="UPLOAD" />
                                                                              </FXCollections>
                                                                          </items>
                                                                      </ComboBox>

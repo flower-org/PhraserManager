@@ -29,7 +29,9 @@ public enum Icon {
     MINUS(Minus),
     X(com.phraser.schema.phraser.Icon.X),
     CHECK(Check),
-    COPY(Copy);
+    COPY(Copy),
+    DOWNLOAD(Download),
+    UPLOAD(Upload);
 
     public final byte code;
 
@@ -66,6 +68,8 @@ public enum Icon {
             case com.phraser.schema.phraser.Icon.X : return X;
             case Check : return CHECK;
             case Copy : return COPY;
+            case Download : return DOWNLOAD;
+            case Upload : return UPLOAD;
 
             default: throw new RuntimeException("Unknown Icon code " + code);
         }
