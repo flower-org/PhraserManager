@@ -31,7 +31,8 @@ public enum Icon {
     CHECK(Check),
     COPY(Copy),
     DOWNLOAD(Download),
-    UPLOAD(Upload);
+    UPLOAD(Upload),
+    SKULL(Skull);
 
     public final byte code;
 
@@ -70,6 +71,7 @@ public enum Icon {
             case Copy : return COPY;
             case Download : return DOWNLOAD;
             case Upload : return UPLOAD;
+            case Skull : return SKULL;
 
             default: throw new RuntimeException("Unknown Icon code " + code);
         }
