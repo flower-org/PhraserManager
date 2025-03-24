@@ -108,7 +108,7 @@ public class SerialCommunication {
             return new Message(operation);
         }
 
-        // 1.2 Block ID
+        // 1.2 Block Number
         byte[] blockNumberBytes = serialPort.getInputStream().readNBytes(4);
         int blockNumber = byteArrayToInt(blockNumberBytes);
         if (operation == Operation.BACKUP_BLOCK_RECEIVED || operation == Operation.RESTORE_BLOCK_RECEIVED
@@ -134,21 +134,30 @@ public class SerialCommunication {
     static void sendMessage(SerialPort serialPort, Message message) throws IOException {
         serialPort.getOutputStream().write(MAGIC_NUMBER);
 
+        // 1.1 Send Operation Code
         Operation operation = message.operation;
         serialPort.getOutputStream().write(UnsignedConverter.shortToByte(operation.opCode));
         if (operation == Operation.HELLO || operation == Operation.BYE
                 || operation == Operation.START_BACKUP
-                || operation == Operation.START_RESTORE || operation == Operation.START_RESTORE_CONFIRMATION) {
+                || operation == Operation.START_RESTORE) {
             return;
         }
 
+        // 1.2 Block Number
         serialPort.getOutputStream().write(intToByteArray(checkNotNull(message.blockNumber)));
         if (operation == Operation.BACKUP_BLOCK_RECEIVED || operation == Operation.RESTORE_BLOCK_RECEIVED
-                || operation == Operation.START_BACKUP_CONFIRMATION) {
+                || operation == Operation.START_BACKUP_CONFIRMATION || operation == Operation.START_RESTORE_CONFIRMATION) {
             return;
         }
 
+        // 1.3 Length
+        byte[] lengthBytes = intToByteArray(checkNotNull(message.data).length);
+        serialPort.getOutputStream().write(lengthBytes);
+
+        // 1.4 Data
         serialPort.getOutputStream().write(checkNotNull(message.data));
+
+        // 1.5 Adler32
         int unsignedAdler32 = UnsignedConverter.longToInt(checkNotNull(message.adler32));
         serialPort.getOutputStream().write(intToByteArray(unsignedAdler32));
     }
@@ -166,14 +175,20 @@ public class SerialCommunication {
 
         File saveDb = new File("/home/john/new.phr");
         if (saveDb.exists()) {
-            throw new RuntimeException("File exists: " + saveDb);
+            saveDb.delete();
+            //throw new RuntimeException("File exists: " + saveDb);
+        } else {
+            saveDb.createNewFile();
         }
-        RandomAccessFile saveDbRaf = new RandomAccessFile(loadDb, "rwd");
+        RandomAccessFile saveDbRaf = new RandomAccessFile(saveDb, "rwd");
 
         SerialPort serialPort = SerialPort.getCommPort("/dev/ttyACM0"); // Change to your port
 
         serialPort.setComPortParameters(115200, 8, 1, 0); // Match the baud rate to your RP2040
         serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 0);
+
+        int backupBlockCount = 256;
+        int restoreBlockCount = 256; //dummy value
 
         if (serialPort.openPort()) {
             LOGGER.info("Port opened successfully.");
@@ -207,19 +222,20 @@ public class SerialCommunication {
 //                                LOGGER.info("Parasitic HELLO received, ignoring");
                             } else if (message.operation == Operation.START_BACKUP) {
                                 LOGGER.info("START_BACKUP received, sending START_BACKUP_CONFIRMATION back");
-                                sendMessage(serialPort, new Message(Operation.START_BACKUP_CONFIRMATION, 312));
-                                LOGGER.info("START_BACKUP_CONFIRMATION sent");
+                                sendMessage(serialPort, new Message(Operation.START_BACKUP_CONFIRMATION, backupBlockCount));
+                                LOGGER.info("START_BACKUP_CONFIRMATION sent; backupBlockCount" + backupBlockCount);
                                 stage = ProtocolStage.BACKUP;
                             } else if (message.operation == Operation.START_RESTORE) {
-                                LOGGER.info("START_RESTORE received, sending START_RESTORE_CONFIRMATION back");
-                                sendMessage(serialPort, new Message(Operation.START_RESTORE_CONFIRMATION));
+                                restoreBlockCount = (int)(loadDbRaf.length() / 4096L);
+                                LOGGER.info("START_RESTORE received, sending START_RESTORE_CONFIRMATION back; restoreBlockCount " + restoreBlockCount);
+                                sendMessage(serialPort, new Message(Operation.START_RESTORE_CONFIRMATION, restoreBlockCount));
 
                                 // send RESTORE_BLOCK firstBlockNumber (0)
                                 LOGGER.info("sending RESTORE_BLOCK 0");
                                 byte[] blockData = loadBlock(blockNumber, loadDbRaf);
 
                                 Adler32 adler32 = new Adler32();
-                                adler32.update(blockData, blockNumber++, blockData.length);
+                                adler32.update(blockData, 0, blockData.length);
                                 long checksum = adler32.getValue();
                                 sendMessage(serialPort, new Message(Operation.RESTORE_BLOCK, 0, blockData, checksum));
 
@@ -231,6 +247,9 @@ public class SerialCommunication {
                             }
                         } else if (stage == ProtocolStage.BACKUP) {
                             if (message.operation == Operation.BYE) {
+                                if (blockNumber != backupBlockCount) {
+                                    throw new RuntimeException("BACKUP_BLOCK final block count mismatch " + blockNumber + " : " + backupBlockCount);
+                                }
                                 LOGGER.info("BYE received, sending BYE back");
                                 sendMessage(serialPort, new Message(Operation.BYE));
                                 // Sleep here or Thumby might get BYE message corrupted (not sure why)
@@ -265,24 +284,29 @@ public class SerialCommunication {
                             }
                         } else if (stage == ProtocolStage.RESTORE) {
                             if (message.operation == Operation.BYE) {
-                                LOGGER.info("BYE received, sending BYE back");
-                                sendMessage(serialPort, new Message(Operation.BYE));
-                                LOGGER.info("Quitting");
+                                LOGGER.info("BYE received, quitting");
+                                return;
                             } if (message.operation == Operation.RESTORE_BLOCK_RECEIVED) {
-                                LOGGER.info("RESTORE_BLOCK_RECEIVED message received");
+                                LOGGER.info("RESTORE_BLOCK_RECEIVED message received " + message.blockNumber);
                                 if (checkNotNull(message.blockNumber) != blockNumber) {
                                     throw new RuntimeException("RESTORE_BLOCK_RECEIVED block number mismatch " + blockNumber + " : " + message.blockNumber);
                                 }
+                                blockNumber++;
 
-                                //send next block RESTORE_BLOCK or END
-                                byte[] blockData = loadBlock(blockNumber, loadDbRaf);
+                                if (blockNumber == restoreBlockCount) {
+                                    LOGGER.info("All blocks sent, sending BYE");
+                                    sendMessage(serialPort, new Message(Operation.BYE));
+                                } else {
+                                    //send next block RESTORE_BLOCK or END
+                                    byte[] blockData = loadBlock(blockNumber, loadDbRaf);
 
-                                Adler32 adler32 = new Adler32();
-                                adler32.update(blockData, blockNumber++, blockData.length);
-                                long checksum = adler32.getValue();
-                                sendMessage(serialPort, new Message(Operation.RESTORE_BLOCK, 0, blockData, checksum));
+                                    Adler32 adler32 = new Adler32();
+                                    adler32.update(blockData, 0, blockData.length);
+                                    long checksum = adler32.getValue();
+                                    sendMessage(serialPort, new Message(Operation.RESTORE_BLOCK, blockNumber, blockData, checksum));
 
-                                LOGGER.info("RESTORE_BLOCK sent");
+                                    LOGGER.info("RESTORE_BLOCK sent "  + blockNumber);
+                                }
                             } else {
                                 throw new RuntimeException("Unexpected opCode at RESTORE: " + message.operation);
                             }
