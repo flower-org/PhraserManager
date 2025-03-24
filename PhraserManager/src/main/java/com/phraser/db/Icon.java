@@ -73,6 +73,7 @@ public enum Icon {
             case Download : return DOWNLOAD;
             case Upload : return UPLOAD;
             case Skull : return SKULL;
+            case Email : return EMAIL;
 
             default: throw new RuntimeException("Unknown Icon code " + code);
         }

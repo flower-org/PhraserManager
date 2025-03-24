@@ -209,7 +209,7 @@ public class DefaultDBCreator {
                 PhraseTemplatesBlock.PhraseTemplate.of(4,
                         "Generated Login/Pass",
                         wordTemplateRefs(6, 2)),
-                PhraseTemplatesBlock.PhraseTemplate.of(1,
+                PhraseTemplatesBlock.PhraseTemplate.of(5,
                         "Login/Email/Pass",
                         wordTemplateRefs(1, 7, 2))
         );

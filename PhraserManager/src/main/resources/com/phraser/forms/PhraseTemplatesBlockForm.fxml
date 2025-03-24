@@ -270,6 +270,7 @@
                                                                                  <String fx:value="DOWNLOAD" />
                                                                                  <String fx:value="UPLOAD" />
                                                                                  <String fx:value="SKULL" />
+                                                                                 <String fx:value="EMAIL" />
                                                                              </FXCollections>
                                                                          </items>
                                                                      </ComboBox>
