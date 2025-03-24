@@ -33,8 +33,9 @@ public final class Icon {
   public static final byte Download = 25;
   public static final byte Upload = 26;
   public static final byte Skull = 27;
+  public static final byte Email = 28;
 
-  public static final String[] names = { "Unknown", "Key", "Login", "Asterisk", "Lock", "Aa", "Star", "Settings", "Folder", "ToParentFolder", "LookingGlass", "LTTriangle", "GTTriangle", "TextOut", "Ledger", "PlusMinus", "Stars", "Message", "Quote", "Question", "Plus", "Minus", "X", "Check", "Copy", "Download", "Upload", "Skull", };
+  public static final String[] names = { "Unknown", "Key", "Login", "Asterisk", "Lock", "Aa", "Star", "Settings", "Folder", "ToParentFolder", "LookingGlass", "LTTriangle", "GTTriangle", "TextOut", "Ledger", "PlusMinus", "Stars", "Message", "Quote", "Question", "Plus", "Minus", "X", "Check", "Copy", "Download", "Upload", "Skull", "Email", };
 
   public static String name(int e) { return names[e]; }
 }

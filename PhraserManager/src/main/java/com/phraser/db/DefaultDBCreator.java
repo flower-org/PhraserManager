@@ -185,6 +185,14 @@ public class DefaultDBCreator {
                         10,
                         "bios password",
                         List.of(1,2,6)
+                ),
+                PhraseTemplatesBlock.WordTemplate.of(7,
+                        getWordPermissions(false, true, true, true),
+                        Icon.EMAIL,
+                        5,//a@b.c
+                        255,
+                        "email",
+                        List.of(1,2,5)
                 )
         );
 
@@ -200,7 +208,10 @@ public class DefaultDBCreator {
                         wordTemplateRefs(1, 2, 3, 4, 3, 4, 3, 4)),
                 PhraseTemplatesBlock.PhraseTemplate.of(4,
                         "Generated Login/Pass",
-                        wordTemplateRefs(6, 2))
+                        wordTemplateRefs(6, 2)),
+                PhraseTemplatesBlock.PhraseTemplate.of(1,
+                        "Login/Email/Pass",
+                        wordTemplateRefs(1, 7, 2))
         );
 
         PhraseTemplatesBlock storePhraseTemplatesBlock = ImmutablePhraseTemplatesBlock.builder()

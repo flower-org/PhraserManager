@@ -45,7 +45,8 @@ enum Icon : byte {
     Copy = 24,
     Download = 25,
     Upload = 26,
-    Skull = 27
+    Skull = 27,
+    Email = 28
 }
 
 // -------- Common block structure --------

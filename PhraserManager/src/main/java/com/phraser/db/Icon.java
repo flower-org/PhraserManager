@@ -32,7 +32,8 @@ public enum Icon {
     COPY(Copy),
     DOWNLOAD(Download),
     UPLOAD(Upload),
-    SKULL(Skull);
+    SKULL(Skull),
+    EMAIL(Email);
 
     public final byte code;
 
