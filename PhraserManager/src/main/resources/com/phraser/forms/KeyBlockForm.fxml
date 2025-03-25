@@ -37,6 +37,7 @@
                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -46,7 +47,7 @@
                         <GridPane.margin>
                            <Insets right="10.0" />
                         </GridPane.margin></TextField>
-                     <TextField fx:id="keyTextField" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                     <TextField fx:id="keyTextField" onKeyPressed="#updateBlockSize" GridPane.columnIndex="1" GridPane.rowIndex="5">
                         <GridPane.margin>
                            <Insets right="10.0" />
                         </GridPane.margin></TextField>
@@ -55,17 +56,17 @@
                            <Insets left="10.0" />
                         </GridPane.margin>
                      </Label>
-                     <Label text="AES-256 Key (hex):" GridPane.rowIndex="4">
+                     <Label text="AES-256 Key (hex):" GridPane.rowIndex="5">
                         <GridPane.margin>
                            <Insets left="10.0" />
                         </GridPane.margin>
                      </Label>
-                     <Label text="Initialization Vector (hex):" GridPane.rowIndex="5">
+                     <Label text="Initialization Vector (hex):" GridPane.rowIndex="6">
                         <GridPane.margin>
                            <Insets left="10.0" />
                         </GridPane.margin>
                      </Label>
-                     <TextField fx:id="ivTextField" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                     <TextField fx:id="ivTextField" onKeyPressed="#updateBlockSize" GridPane.columnIndex="1" GridPane.rowIndex="6">
                         <GridPane.margin>
                            <Insets right="10.0" />
                         </GridPane.margin>
@@ -75,7 +76,7 @@
                            <Insets left="10.0" />
                         </GridPane.margin>
                      </Label>
-                     <TextField fx:id="dbNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                     <TextField fx:id="dbNameTextField" onKeyPressed="#updateBlockSize" GridPane.columnIndex="1" GridPane.rowIndex="2">
                         <GridPane.margin>
                            <Insets right="10.0" />
                         </GridPane.margin>
@@ -93,22 +94,22 @@
                            <Insets right="10.0" />
                         </GridPane.margin>
                      </TextField>
-                     <Label fx:id="blockCountLabel" text="Block count (50-384):" GridPane.rowIndex="3">
+                     <Label fx:id="blockCountLabel" text="Block count (50-384):" GridPane.rowIndex="4">
                         <GridPane.margin>
                            <Insets left="10.0" />
                         </GridPane.margin>
                      </Label>
-                     <TextField fx:id="blockCountTextField" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                     <TextField fx:id="blockCountTextField" onKeyPressed="#updateBlockSize" GridPane.columnIndex="1" GridPane.rowIndex="4">
                         <GridPane.margin>
                            <Insets right="10.0" />
                         </GridPane.margin>
                      </TextField>
-                     <Label text="Entropy:" GridPane.rowIndex="6">
+                     <Label text="Entropy:" GridPane.rowIndex="7">
                         <GridPane.margin>
                            <Insets left="10.0" />
                         </GridPane.margin>
                      </Label>
-                     <TextField fx:id="entropyTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="6">
+                     <TextField fx:id="entropyTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="7">
                         <opaqueInsets>
                            <Insets />
                         </opaqueInsets>
@@ -116,6 +117,12 @@
                            <Insets right="10.0" />
                         </GridPane.margin>
                      </TextField>
+                     <Label text="Block size:" GridPane.rowIndex="3">
+                        <GridPane.margin>
+                           <Insets left="10.0" />
+                        </GridPane.margin>
+                     </Label>
+                     <TextField fx:id="blockSizeTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                   </children>
                </GridPane>
             </children>

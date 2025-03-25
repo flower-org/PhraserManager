@@ -245,4 +245,9 @@ public class PhraserDB {
     dbBlocks.clear();
     dbBlocks.addAll(validBlocks);
   }
+
+  public void removeAllKeyBlocks() {
+    List<Block> keyBlocks = dbBlocks.stream().filter(b -> b.blockType() == KEY_BLOCK).toList();
+    dbBlocks.removeAll(keyBlocks);
+  }
 }

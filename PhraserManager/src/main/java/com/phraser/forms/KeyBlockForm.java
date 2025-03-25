@@ -5,6 +5,7 @@ import com.phraser.db.Block;
 import com.phraser.db.ImmutableKeyBlock;
 import com.phraser.db.KeyBlock;
 import com.phraser.db.PhraserDB;
+import com.phraser.dbcodec.FlatBufBlockEncoder;
 import com.phraser.utils.PhraserUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -39,6 +40,7 @@ public class KeyBlockForm extends AnchorPane {
     @Nullable @FXML TextField versionTextField;
     @Nullable @FXML TextField blockCountTextField;
     @FXML @Nullable TextField entropyTextField;
+    @FXML @Nullable TextField blockSizeTextField;
 
     @Nullable @FXML TextField dbNameTextField;
     @Nullable @FXML Label blockCountLabel;
@@ -112,46 +114,33 @@ public class KeyBlockForm extends AnchorPane {
 
         this.phraserDB = phraserDB;
         this.keyBlockCallback = keyBlockCallback;
+
+        updateBlockSize();
     }
 
-    public void saveToDb() {
+    public KeyBlock formKeyBlock() {
         // 1 - empty key proceed?
         byte[] key = HexTool.hexStringToByteArray(checkNotNull(keyTextField).textProperty().get());
         byte[] iv = HexTool.hexStringToByteArray(checkNotNull(ivTextField).textProperty().get());
         String dbName = checkNotNull(dbNameTextField).textProperty().get();
 
         if (key.length != 32) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Key should be 32 bytes long (64 hex chars)", ButtonType.OK);
-            alert.showAndWait();
-            return;
+            throw new RuntimeException("Key should be 32 bytes long (64 hex chars)");
         }
         if (iv.length != 16) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "IV should be 16 bytes long (32 hex chars)", ButtonType.OK);
-            alert.showAndWait();
-            return;
+            throw new RuntimeException("IV should be 16 bytes long (32 hex chars)");
         }
         if (StringUtils.isBlank(dbName)) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "DB Name should not be empty", ButtonType.OK);
-            alert.showAndWait();
-            return;
+            throw new RuntimeException("DB Name should not be empty");
         }
         int blockCount;
-        try {
             blockCount = Integer.parseInt(checkNotNull(blockCountTextField).textProperty().get());
             if (blockCount < MIN_BLOCK_COUNT || blockCount > MAX_BLOCK_COUNT) {
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Block count should be between "
-                        + MIN_BLOCK_COUNT + " and " + MAX_BLOCK_COUNT + " (inclusive)", ButtonType.OK);
-                alert.showAndWait();
-                return;
+                throw new RuntimeException("Block count should be between "
+                        + MIN_BLOCK_COUNT + " and " + MAX_BLOCK_COUNT + " (inclusive)");
             }
-        } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "saveToDb Error " + e, ButtonType.OK);
-            LOGGER.error("saveToDb Error", e);
-            alert.showAndWait();
-            return;
-        }
 
-        KeyBlock newKeyBlock = ImmutableKeyBlock.builder()
+        return ImmutableKeyBlock.builder()
                 .blockId(keyBlock == null ? -1 : checkNotNull(keyBlock.keyBlock()).blockId())
                 .version(-1)
                 .blockCount(blockCount)
@@ -160,9 +149,19 @@ public class KeyBlockForm extends AnchorPane {
                 .iv(iv)
                 .dbName(dbName)
                 .build();
+    }
 
-        // This call will close the form and process the formed block
-        keyBlockCallback.accept(newKeyBlock);
+    public void saveToDb() {
+        try {
+            // This call will close the form and process the formed block
+            KeyBlock newKeyBlock = formKeyBlock();
+            keyBlockCallback.accept(newKeyBlock);
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "saveToDb Error " + e, ButtonType.OK);
+            LOGGER.error("saveToDb Error", e);
+            alert.showAndWait();
+            return;
+        }
     }
 
     public void generateKey() {
@@ -171,6 +170,7 @@ public class KeyBlockForm extends AnchorPane {
         String hexKey = HexTool.bytesToHex(aes256Key);
 
         checkNotNull(keyTextField).setText(hexKey);
+        updateBlockSize();
     }
 
     public void generateIv() {
@@ -178,5 +178,15 @@ public class KeyBlockForm extends AnchorPane {
         String hexIv = HexTool.bytesToHex(iv);
 
         checkNotNull(ivTextField).setText(hexIv);
+        updateBlockSize();
+    }
+
+    public void updateBlockSize() {
+        try {
+            Block block = Block.of(formKeyBlock());
+
+            int bufferLength = FlatBufBlockEncoder.toFlatBufBlock(block).length;
+            checkNotNull(blockSizeTextField).textProperty().set(Integer.toString(bufferLength));
+        } catch(Exception e) {}
     }
 }

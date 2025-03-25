@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.flower.fxutils.JavaFxUtils.YesNo.NO;
+import static com.phraser.db.BlockType.KEY_BLOCK;
 import static com.phraser.db.BlockType.PHRASE_BLOCK;
 import static com.phraser.db.DefaultDBCreator.DEFAULT_BLOCKS_IN_DB;
 import static com.phraser.db.DefaultDBCreator.initDefaultBlockConfig;
@@ -122,6 +123,22 @@ public class PhraserDbForm extends AnchorPane {
 
     public void addBlock(Block dbBlock) {
         try {
+            if (dbBlock.blockType() == KEY_BLOCK) {
+                Block lastKey = phraserDB.getLastKeyBlock();
+                if (lastKey != null) {
+                    int oldBlockCount = checkNotNull(lastKey.keyBlock()).blockCount();
+                    int newBlockCount = checkNotNull(dbBlock.keyBlock()).blockCount();
+                    if (newBlockCount > oldBlockCount) {
+                        if (YES != JavaFxUtils.showYesNoDialog("KeyBlock old version removal",
+                                "You're tying to increase blockCount in the DB (" + oldBlockCount + " -> " + newBlockCount + ").\n" +
+                                        "In order to increase blockCount we need to remove all previous versions of KeyBlock. Proceed?")) {
+                            return;
+                        }
+                        phraserDB.removeAllKeyBlocks();
+                    }
+                }
+            }
+
             phraserDB.addBlock(dbBlock);
             checkNotNull(dbBlocksTable).refresh();
         } catch (Exception e) {
