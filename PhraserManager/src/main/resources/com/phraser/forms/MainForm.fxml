@@ -22,8 +22,7 @@
         </Menu>
       <Menu mnemonicParsing="false" text="Token">
         <items>
-          <MenuItem mnemonicParsing="false" onAction="#downloadDb" text="Download DB" />
-            <MenuItem mnemonicParsing="false" onAction="#uploadDb" text="Upload DB" />
+          <MenuItem mnemonicParsing="false" onAction="#backups" text="DB Backups" />
         </items>
       </Menu>
         <Menu mnemonicParsing="false" text="Help">

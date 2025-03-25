@@ -269,11 +269,13 @@ public class MainForm {
         }
     }
 
-    public void downloadDb() {
-        // TODO: download DB from Phraser token via USB serial and save it to file
-    }
+    public Tab backups() {
+        BackupsForm backupsForm = new BackupsForm();
+        final Tab tab = new Tab("Backups", backupsForm);
+        tab.setClosable(true);
 
-    public void uploadDb() {
-        // TODO: upload DB to Phraser token via USB serial
+        addTab(tab);
+        backupsForm.setStage(checkNotNull(mainStage));
+        return tab;
     }
 }
