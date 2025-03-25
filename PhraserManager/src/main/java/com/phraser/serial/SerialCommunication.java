@@ -175,7 +175,7 @@ public class SerialCommunication {
         File loadDb = new File("/home/john/test.phr");
 
         File saveDb = new File("/home/john/new.phr");
-        int backupBlockCount = 256;
+        int backupBlockCount = 128;
         runSequence("/dev/ttyACM0", saveDb, loadDb, backupBlockCount, LOGGER::info);
     }
 
@@ -186,7 +186,7 @@ public class SerialCommunication {
         serialPort.setComPortParameters(115200, 8, 1, 0); // Match the baud rate to your RP2040
         serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 0);
 
-        int restoreBlockCount = 256; //dummy value
+        int restoreBlockCount = 128; //dummy value
 
         RandomAccessFile loadDbRaf = null;
         if (loadDb != null) {

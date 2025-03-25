@@ -100,7 +100,7 @@ public class KeyBlockForm extends AnchorPane {
             checkNotNull(versionTextField).setText(NEW_BLOCK);
             checkNotNull(entropyTextField).textProperty().set(NEW_BLOCK);
             checkNotNull(dbNameTextField).setText(phraserDB.dbName());
-            checkNotNull(blockCountTextField).textProperty().set("384");
+            checkNotNull(blockCountTextField).textProperty().set("128");
         } else {
             checkNotNull(blockIdTextField).setText(Integer.toString(checkNotNull(keyBlock.keyBlock()).blockId()));
             checkNotNull(versionTextField).setText(Long.toString(checkNotNull(keyBlock.keyBlock()).version()));

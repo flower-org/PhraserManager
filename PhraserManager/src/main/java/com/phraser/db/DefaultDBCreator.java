@@ -13,11 +13,14 @@ import static com.phraser.db.Block.FLASH_SECTOR_SIZE;
 import static com.phraser.utils.PhraserUtils.getWordPermissions;
 
 public class DefaultDBCreator {
-    // TODO: determine a practical default DB size rather than based on total usable space on device.
-    //  E.g. 64 blocks is much faster startup, or 128 blocks might be a good compromise.
-    //  The goal would be to find the best balance between practical performance (notably, startup time)
-    //  on target HW, while still maintaining enough DB capacity for all practical purposes.
-    public static final int DEFAULT_BLOCKS_IN_DB = (1024 * 1024) / FLASH_SECTOR_SIZE; // 256 blocks in 1 mb
+    // Current practical default DB size set to 128 blocks, start time with 256 is too long.
+    // TODO: Retest the final token version, we might want to reduce that to 96 or even 64 for best startup time.
+    public static final int DEFAULT_BLOCKS_IN_DB = (512 * 1024) / FLASH_SECTOR_SIZE; // 128 blocks in 1 mb
+    // TODO: This can be made into a feature: token can support 3 "banks" of 128 blocks each.
+    //  - Bank1 - flash offset 512k
+    //  - Bank2 - flash offset 1m
+    //  - Bank3 - flash offset 1.5m
+    //  i.e. 3 separate databases with different passwords
 
     public static final char[] DIGITS = "0123456789".toCharArray();
     public static final char[] LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();

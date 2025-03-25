@@ -5,7 +5,7 @@ This project provides a UI management tool for custom database format used in th
 ## A Bit About the Database:
 
 The database consists of 4096 bytes blocks (the size of a flash sector of the target microcontroller RP2040). 
-By default, we occupy 1 MB of built-in flash, which gives us 256 such blocks. The structure and types of data 
+By default, we occupy 512 kB of built-in flash, which gives us 128 such blocks. The structure and types of data 
 stored in the blocks are described using FlatBuf, and their structure can be examined in more detail in 
 `resources/Schema.fbs`.
 
