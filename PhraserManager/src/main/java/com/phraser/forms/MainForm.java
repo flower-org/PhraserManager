@@ -101,7 +101,8 @@ public class MainForm {
                         try {
                             String password = enterPasswordDialog.getPassword();
                             if (password != null) {
-                                List<Block> db = DbFileManager.loadBlocksFromFile(password, dbFile);
+                                int iterations = checkNotNull(enterPasswordDialog.getPbkdf2IterationCount());
+                                List<Block> db = DbFileManager.loadBlocksFromFile(password, iterations, dbFile);
 
                                 PhraserDbForm phraserDbForm = new PhraserDbForm(this, db);
                                 phraserDbForm.setStage(checkNotNull(mainStage));
@@ -246,7 +247,8 @@ public class MainForm {
                         try {
                             String password = enterPasswordDialog.getPassword();
                             if (password != null) {
-                                ClientModeForm clientModeForm = new ClientModeForm(this, password, dbFile);
+                                int iterations = checkNotNull(enterPasswordDialog.getPbkdf2IterationCount());
+                                ClientModeForm clientModeForm = new ClientModeForm(this, password, iterations, dbFile);
                                 clientModeForm.setStage(checkNotNull(mainStage));
 
                                 final Tab tab = new Tab(UNTITLED_DB, clientModeForm);

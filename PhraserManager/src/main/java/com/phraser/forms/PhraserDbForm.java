@@ -553,7 +553,8 @@ public class PhraserDbForm extends AnchorPane {
                         try {
                             String password = enterPasswordDialog.getPassword();
                             if (password != null) {
-                                DbFileManager.writeBlocksToFile(phraserDB.blocksObservableArray(), password, finalSaveFile);
+                                int iterations = checkNotNull(enterPasswordDialog.getPbkdf2IterationCount());
+                                DbFileManager.writeBlocksToFile(phraserDB.blocksObservableArray(), password, iterations, finalSaveFile);
 
                                 String successfulMessage = "DB `" + phraserDB.dbName() + "` exported to " + finalSaveFile.getPath() + ".";
                                 Alert alert = new Alert(Alert.AlertType.INFORMATION, successfulMessage, ButtonType.OK);

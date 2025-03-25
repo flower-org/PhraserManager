@@ -156,7 +156,7 @@ public class DbRuntime {
         }
     }
 
-    public DbRuntime(File dbFile, String dbPassword) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public DbRuntime(File dbFile, String dbPassword, int pbkdf2IterationCount) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         this.dbFile = dbFile;
         this.dbPassword = dbPassword;
 
@@ -170,7 +170,7 @@ public class DbRuntime {
         Block latestKeyBlock = null;
         int latestKeyBlockNumber = -1;
 
-        keyBlockKey = Pbkdf2Tool.getPbkdf2Key(dbPassword);
+        keyBlockKey = Pbkdf2Tool.getPbkdf2Key(dbPassword, pbkdf2IterationCount);
         for (int i = 0; i < f.length(); i += FLASH_SECTOR_SIZE) {
             readFromFileAtPos(block, f, i);
 

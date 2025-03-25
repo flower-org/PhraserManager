@@ -24,11 +24,11 @@ import static com.phraser.utils.Pbkdf2Tool.getPbkdf2Key;
 public class DbFileManager {
     final static Logger LOGGER = LoggerFactory.getLogger(PhraserDbForm.class);
 
-    public static void writeBlocksToFile(List<Block> srcBlocks, String password, File file) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public static void writeBlocksToFile(List<Block> srcBlocks, String password, int iterations, File file) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         List<Block> blocks = new ArrayList<>(srcBlocks);
 
         // 1. Form KeyBlockKey from password using PBKDF2 and hardcoded stuff
-        byte[] keyBlockKey = getPbkdf2Key(password);
+        byte[] keyBlockKey = getPbkdf2Key(password, iterations);
 
         // 2. Get latest KeyBlock
         Block latestKeyBlock = null;
@@ -78,11 +78,11 @@ public class DbFileManager {
         }
     }
 
-    public static List<Block> loadBlocksFromFile(String password, File file) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public static List<Block> loadBlocksFromFile(String password, int iterations, File file) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         List<Block> blocks = new ArrayList<>();
 
         // 1. Form KeyBlockKey from password using PBKDF2 and hardcoded stuff
-        byte[] keyBlockKey = getPbkdf2Key(password);
+        byte[] keyBlockKey = getPbkdf2Key(password, iterations);
         assert(keyBlockKey.length == 32);
 
         // 2. Locate latest KeyBlock, decrypt with KeyBlockKey

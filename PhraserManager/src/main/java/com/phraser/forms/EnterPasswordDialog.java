@@ -5,6 +5,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
@@ -16,6 +18,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.phraser.utils.Pbkdf2Tool.PBKDF2_ITERATIONS;
 
 public class EnterPasswordDialog extends VBox {
     final static Logger LOGGER = LoggerFactory.getLogger(EnterPasswordDialog.class);
@@ -23,7 +26,10 @@ public class EnterPasswordDialog extends VBox {
     @Nullable Stage stage;
 
     @Nullable String password;
+    @Nullable Integer pbkdf2IterationCount;
+
     @Nullable @FXML PasswordField passwordPasswordField;
+    @FXML @Nullable TextField pbkdf2IterationsTextField;
 
     public EnterPasswordDialog() {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("EnterPasswordDialog.fxml"));
@@ -35,6 +41,17 @@ public class EnterPasswordDialog extends VBox {
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
+
+        checkNotNull(pbkdf2IterationsTextField).textProperty().set(Integer.toString(PBKDF2_ITERATIONS));
+        checkNotNull(pbkdf2IterationsTextField).setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.length() <= 32 && newText.matches("[0-9]*")) {
+                change.setText(change.getText().toLowerCase());
+                return change;
+            }
+            return null;
+        }
+        ));
     }
 
     public void setStage(Stage stage) {
@@ -46,9 +63,12 @@ public class EnterPasswordDialog extends VBox {
         return password;
     }
 
+    @Nullable public Integer getPbkdf2IterationCount() { return pbkdf2IterationCount; }
+
     public void okClose() {
         try {
             password = checkNotNull(passwordPasswordField).textProperty().get();
+            pbkdf2IterationCount = Integer.parseInt(checkNotNull(pbkdf2IterationsTextField).textProperty().get());
             checkNotNull(stage).close();
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "EnterPasswordDialog close Error: " + e, ButtonType.OK);

@@ -176,7 +176,7 @@ public class ClientModeForm extends AnchorPane {
     protected int currentHistoryIndex;
     protected boolean isHistoryView;
 
-    public ClientModeForm(MainForm mainForm, String dbPassword, File dbFile) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public ClientModeForm(MainForm mainForm, String dbPassword, int iterations, File dbFile) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("ClientModeForm.fxml"));
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);
@@ -187,7 +187,7 @@ public class ClientModeForm extends AnchorPane {
             throw new RuntimeException(exception);
         }
 
-        this.dbRuntime = new DbRuntime(dbFile, dbPassword);
+        this.dbRuntime = new DbRuntime(dbFile, dbPassword, iterations);
         this.mainForm = mainForm;
         this.path = new Stack<>();
 

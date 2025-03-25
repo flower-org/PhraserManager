@@ -7,7 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
 public class Pbkdf2Tool {
-    public static final int PBKDF2_ITERATIONS = 10000; // Number of iterations
+    public static final int PBKDF2_ITERATIONS = 10239; // Number of iterations
     public static final int PBKDF2_KEY_LENGTH = 256; // Key length in bits
 
     public static final String HARDCODED_PHRASER_TOKEN = "PhraserPasswordManager"; // Hardcoded salt string
@@ -25,8 +25,8 @@ public class Pbkdf2Tool {
     }
 
 
-    public static byte[] getPbkdf2Key(String password) throws InvalidKeySpecException, NoSuchAlgorithmException {
-        byte[] keyBlockKey = Pbkdf2Tool.pbkdf2(password, PBKDF2_ITERATIONS, PBKDF2_KEY_LENGTH, HARDCODED_SALT);
+    public static byte[] getPbkdf2Key(String password, int iterations) throws InvalidKeySpecException, NoSuchAlgorithmException {
+        byte[] keyBlockKey = Pbkdf2Tool.pbkdf2(password, iterations, PBKDF2_KEY_LENGTH, HARDCODED_SALT);
         assert(keyBlockKey.length == 32);
         return keyBlockKey;
     }
