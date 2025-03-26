@@ -58,8 +58,8 @@ struct StoreBlock {
   //This version is a global unique update version, as opposed to block version for a particular block
   version: uint32;
 
-  //Use the sum of millis() and micros() to seed the random generator randomSeed(millis() + micros());
-  entropy: uint64;
+  //Use this value to seed the random number generator
+  entropy: uint32;
 }
 
 // -------- Folder / FoldersBlock --------

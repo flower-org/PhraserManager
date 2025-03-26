@@ -28,12 +28,12 @@ public final class StoreBlock extends Struct {
   public void mutateBlockId(int block_id) { bb.putShort(bb_pos + 0, (short) block_id); }
   public long version() { return (long)bb.getInt(bb_pos + 4) & 0xFFFFFFFFL; }
   public void mutateVersion(long version) { bb.putInt(bb_pos + 4, (int) version); }
-  public long entropy() { return bb.getLong(bb_pos + 8); }
-  public void mutateEntropy(long entropy) { bb.putLong(bb_pos + 8, entropy); }
+  public long entropy() { return (long)bb.getInt(bb_pos + 8) & 0xFFFFFFFFL; }
+  public void mutateEntropy(long entropy) { bb.putInt(bb_pos + 8, (int) entropy); }
 
   public static int createStoreBlock(FlatBufferBuilder builder, int blockId, long version, long entropy) {
-    builder.prep(8, 16);
-    builder.putLong(entropy);
+    builder.prep(4, 12);
+    builder.putInt((int) entropy);
     builder.putInt((int) version);
     builder.pad(2);
     builder.putShort((short) blockId);
