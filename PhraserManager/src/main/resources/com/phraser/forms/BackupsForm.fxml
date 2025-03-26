@@ -38,7 +38,7 @@
                                          </rowConstraints>
                                           <children>
                                              <TextField fx:id="backupFileTextField" GridPane.columnIndex="1" />
-                                             <TextField fx:id="blockCountTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                             <TextField fx:id="blockCountTextField" promptText="128" text="128" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                              <Button mnemonicParsing="false" onAction="#saveBackupTo" text="Save backup to:" />
                                              <Label text="Block count:" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
                                                 <GridPane.margin>
