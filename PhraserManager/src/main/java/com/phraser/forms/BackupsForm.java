@@ -1,5 +1,6 @@
 package com.phraser.forms;
 
+import com.flower.fxutils.JavaFxUtils;
 import com.phraser.serial.SerialCommunication;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -24,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+import static com.flower.fxutils.JavaFxUtils.YesNo.YES;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BackupsForm extends AnchorPane {
@@ -149,6 +151,24 @@ public class BackupsForm extends AnchorPane {
                 bank, maxBlockCount, blockCountType, blockCount);
     }
 
+    private boolean checkBankOverflow(int blockCount, int bank) {
+        String errorMsg = null;
+        switch (bank) {
+            case 1:
+                if (blockCount > 256) { errorMsg = "The data will spill to BANK2 and BANK3. Proceed?"; }
+                else if (blockCount > 128) { errorMsg = "The data will spill to BANK2. Proceed?"; }
+                break;
+            case 2:
+                if (blockCount > 128) { errorMsg = "The data will spill to BANK3. Proceed?"; }
+                break;
+        }
+
+        if (errorMsg != null) {
+            return (YES == JavaFxUtils.showYesNoDialog("Bank overflow", errorMsg));
+        }
+        return true;
+    }
+
     boolean checkBlockCountAgainstBank(String blockCountType, int blockCount, int bank) {
         String errorMsg = null;
         switch (bank) {
@@ -211,6 +231,9 @@ public class BackupsForm extends AnchorPane {
         try {
             int restoreBlockCount = Integer.parseInt(checkNotNull(restoreBlockCountTextField).textProperty().get());
             if (!checkBlockCountAgainstBank("Restore", restoreBlockCount, bank)) {
+                return;
+            }
+            if (!checkBankOverflow(restoreBlockCount, bank)) {
                 return;
             }
         } catch (Exception e) {}
