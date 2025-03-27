@@ -155,11 +155,11 @@ public class BackupsForm extends AnchorPane {
         String errorMsg = null;
         switch (bank) {
             case 1:
-                if (blockCount > 256) { errorMsg = "The data will spill to BANK2 and BANK3. Proceed?"; }
-                else if (blockCount > 128) { errorMsg = "The data will spill to BANK2. Proceed?"; }
+                if (blockCount > 256) { errorMsg = "Block data will use blocks from BANK2 and BANK3. (BANK1 will work fine, but don't use BANK2 or BANK 3). Proceed?"; }
+                else if (blockCount > 128) { errorMsg = "Block data will use blocks from BANK2. (BANK1 will work fine, but don't use BANK2). Proceed?"; }
                 break;
             case 2:
-                if (blockCount > 128) { errorMsg = "The data will spill to BANK3. Proceed?"; }
+                if (blockCount > 128) { errorMsg = "Block data will use blocks from BANK3. (BANK2 will work fine, but don't use BANK3). Proceed?"; }
                 break;
         }
 
