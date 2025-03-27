@@ -57,6 +57,13 @@ public class DbFileManager {
 
         // 5. Shuffle blocks for security
         Collections.shuffle(blocks);
+        int keyBlockPos = blocks.indexOf(latestKeyBlock);
+        if (keyBlockPos >= 128) {
+            int pos = (int)(Math.random()*128);
+            Block tmp = blocks.get(pos);
+            blocks.set(pos, latestKeyBlock);
+            blocks.set(keyBlockPos, tmp);
+        }
 
         // 6. Encrypt KeyBlocks with KeyBlockKey, other blocks with MainKey
         try (FileOutputStream fos = new FileOutputStream(file)) {
