@@ -50,3 +50,12 @@ Using minicom:
 sudo apt install minicom
 minicom -D /dev/ttyACM0 -b 9600
 ```
+
+5. Using Fidd to secure backup DB
+
+Even though Phraser DB by itself is encrypted, we don't want to risk keeping its backups as is.
+Ideally, backup files should be encrypted using some private key, e.g. with 
+Hybrid Asymmetric-Symmetric Encryption Method.  
+With tools like Cryptor non-exportable certificates from PKCS#11 tokens can be utilized for that.
+Fidd can be used to further improve the reliability allowing dual certificate encryption, so that
+a single PKCS#11 token failure won't be fatal, and another token can be used to access the backups.
