@@ -1,6 +1,7 @@
 package com.phraser.serial;
 
 import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortIOException;
 import com.phraser.utils.UnsignedConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,23 +58,26 @@ public class SerialCommunication {
 
     static class Message {
         final Operation operation;
+        @Nullable final Short bank;
         @Nullable final Integer blockNumber;
         @Nullable final byte[] data;
         @Nullable final Long adler32;
 
         Message(Operation operation) {
-            this(operation, null);
+            this(operation, null, null);
         }
 
-        Message(Operation operation, @Nullable Integer blockNumber) {
-            this(operation, blockNumber, null, null);
+        Message(Operation operation, @Nullable Short bank, @Nullable Integer blockNumber) {
+            this(operation, bank, blockNumber, null, null);
         }
 
         Message(Operation operation,
+                @Nullable Short bank,
                 @Nullable Integer blockNumber,
                 @Nullable byte[] data,
                 @Nullable Long adler32) {
             this.operation = operation;
+            this.bank = bank;
             this.blockNumber = blockNumber;
             this.data = data;
             this.adler32 = adler32;
@@ -106,16 +110,18 @@ public class SerialCommunication {
         Operation operation = Operation.of(UnsignedConverter.byteToShort(opCode[0]));
         if (operation == Operation.HELLO || operation == Operation.BYE
                 || operation == Operation.START_BACKUP
-                || operation == Operation.START_RESTORE || operation == Operation.START_RESTORE_CONFIRMATION) {
+                || operation == Operation.START_RESTORE) {
             return new Message(operation);
         }
 
         // 1.2 Block Number
+        byte[] bankBytes = serialPort.getInputStream().readNBytes(1);
+        short bank = UnsignedConverter.byteToShort(bankBytes[0]);
         byte[] blockNumberBytes = serialPort.getInputStream().readNBytes(4);
         int blockNumber = byteArrayToInt(blockNumberBytes);
         if (operation == Operation.BACKUP_BLOCK_RECEIVED || operation == Operation.RESTORE_BLOCK_RECEIVED
-                || operation == Operation.START_BACKUP_CONFIRMATION) {
-            return new Message(operation, blockNumber);
+                || operation == Operation.START_BACKUP_CONFIRMATION || operation == Operation.START_RESTORE_CONFIRMATION) {
+            return new Message(operation, bank, blockNumber);
         }
 
         // 1.3 Length
@@ -130,7 +136,7 @@ public class SerialCommunication {
         int adler32Int = byteArrayToInt(adler32Bytes);
         long adler32 = UnsignedConverter.intToLong(adler32Int);
 
-        return new Message(operation, blockNumber, dataBytes, adler32);
+        return new Message(operation, bank, blockNumber, dataBytes, adler32);
     }
 
     static void sendMessage(SerialPort serialPort, Message message) throws IOException {
@@ -145,10 +151,12 @@ public class SerialCommunication {
             return;
         }
 
-        // 1.2 Block Number
+        // 1.2.1 Bank #
+        // 1.2.2 Block Number
+        serialPort.getOutputStream().write(UnsignedConverter.shortToByte(checkNotNull(message.bank)));
         serialPort.getOutputStream().write(intToByteArray(checkNotNull(message.blockNumber)));
         if (operation == Operation.BACKUP_BLOCK_RECEIVED || operation == Operation.RESTORE_BLOCK_RECEIVED
-                || operation == Operation.START_BACKUP_CONFIRMATION || operation == Operation.START_RESTORE_CONFIRMATION) {
+            || operation == Operation.START_BACKUP_CONFIRMATION || operation == Operation.START_RESTORE_CONFIRMATION) {
             return;
         }
 
@@ -176,12 +184,14 @@ public class SerialCommunication {
 
         File saveDb = new File("/home/john/new.phr");
         int backupBlockCount = 128;
-        runSequence("/dev/ttyACM0", saveDb, loadDb, backupBlockCount, LOGGER::info);
+        runSequence("/dev/ttyACM0", (short)1, saveDb, loadDb, backupBlockCount, LOGGER::info);
     }
 
-    public static void runSequence(String comPort, @Nullable File saveDb, @Nullable File loadDb,
+    // TODO: fix this
+    public static volatile @Nullable SerialPort serialPort;
+    public static void runSequence(String comPort, short bank, @Nullable File saveDb, @Nullable File loadDb,
                                    @Nullable Integer backupBlockCount, Consumer<String> logger) throws Exception {
-        SerialPort serialPort = SerialPort.getCommPort(comPort); // Change to your port
+        serialPort = SerialPort.getCommPort(comPort); // Change to your port
 
         serialPort.setComPortParameters(115200, 8, 1, 0); // Match the baud rate to your RP2040
         serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 0);
@@ -222,6 +232,11 @@ public class SerialCommunication {
                 boolean magicNumberCaught = false;
                 // Continuously read from the serial port
                 while (true) {
+                    SerialPort serialPort = SerialCommunication.serialPort;
+                    if (serialPort == null) {
+                        return;
+                    }
+
                     // Check if data is available to read
                     if (serialPort.bytesAvailable() > 0) {
                         if (!magicNumberCaught) {
@@ -253,7 +268,7 @@ public class SerialCommunication {
                                     }
 
                                     logger.accept("START_BACKUP received, sending START_BACKUP_CONFIRMATION back");
-                                    sendMessage(serialPort, new Message(Operation.START_BACKUP_CONFIRMATION, backupBlockCount));
+                                    sendMessage(serialPort, new Message(Operation.START_BACKUP_CONFIRMATION, bank, backupBlockCount));
                                     logger.accept("START_BACKUP_CONFIRMATION sent; backupBlockCount" + backupBlockCount);
                                     stage = ProtocolStage.BACKUP;
                                 } else if (message.operation == Operation.START_RESTORE) {
@@ -263,7 +278,7 @@ public class SerialCommunication {
 
                                     restoreBlockCount = (int) ((loadDbRaf).length() / 4096L);
                                     logger.accept("START_RESTORE received, sending START_RESTORE_CONFIRMATION back; restoreBlockCount " + restoreBlockCount);
-                                    sendMessage(serialPort, new Message(Operation.START_RESTORE_CONFIRMATION, restoreBlockCount));
+                                    sendMessage(serialPort, new Message(Operation.START_RESTORE_CONFIRMATION, bank, restoreBlockCount));
 
                                     // send RESTORE_BLOCK firstBlockNumber (0)
                                     logger.accept("sending RESTORE_BLOCK 0");
@@ -272,7 +287,7 @@ public class SerialCommunication {
                                     Adler32 adler32 = new Adler32();
                                     adler32.update(blockData, 0, blockData.length);
                                     long checksum = adler32.getValue();
-                                    sendMessage(serialPort, new Message(Operation.RESTORE_BLOCK, 0, blockData, checksum));
+                                    sendMessage(serialPort, new Message(Operation.RESTORE_BLOCK, bank, 0, blockData, checksum));
 
                                     logger.accept("RESTORE_BLOCK 0 sent");
 
@@ -291,6 +306,9 @@ public class SerialCommunication {
                                     Thread.sleep(1000);
                                     serialPort.flushIOBuffers();
                                     logger.accept("Quitting");
+
+                                    serialPort.closePort();
+                                    serialPort = null;
                                     return;
                                 }
                                 if (message.operation == Operation.BACKUP_BLOCK) {
@@ -313,7 +331,7 @@ public class SerialCommunication {
                                     saveBlock(message.blockNumber, message.data, saveDbRafSupplier.get());
                                     logger.accept("BACKUP_BLOCK saved, sending BACKUP_BLOCK_RECEIVED back");
 
-                                    sendMessage(serialPort, new Message(Operation.BACKUP_BLOCK_RECEIVED, message.blockNumber));
+                                    sendMessage(serialPort, new Message(Operation.BACKUP_BLOCK_RECEIVED, bank, message.blockNumber));
                                     logger.accept("BACKUP_BLOCK_RECEIVED sent");
                                 } else {
                                     throw new RuntimeException("Unexpected opCode at BACKUP: " + message.operation);
@@ -321,6 +339,9 @@ public class SerialCommunication {
                             } else if (stage == ProtocolStage.RESTORE) {
                                 if (message.operation == Operation.BYE) {
                                     logger.accept("BYE received, quitting");
+
+                                    serialPort.closePort();
+                                    serialPort = null;
                                     return;
                                 }
                                 if (message.operation == Operation.RESTORE_BLOCK_RECEIVED) {
@@ -340,7 +361,7 @@ public class SerialCommunication {
                                         Adler32 adler32 = new Adler32();
                                         adler32.update(blockData, 0, blockData.length);
                                         long checksum = adler32.getValue();
-                                        sendMessage(serialPort, new Message(Operation.RESTORE_BLOCK, blockNumber, blockData, checksum));
+                                        sendMessage(serialPort, new Message(Operation.RESTORE_BLOCK, bank, blockNumber, blockData, checksum));
 
                                         logger.accept("RESTORE_BLOCK sent " + blockNumber);
                                     }
@@ -352,12 +373,21 @@ public class SerialCommunication {
                     }
                 }
             } catch (Exception e) {
-                serialPort.closePort();
+                if (serialPort != null) {
+                    serialPort.closePort();
+                    serialPort = null;
+                }
                 throw e;
             }
         } else {
-            throw new RuntimeException("Failed to open the port. Error: " + serialPort.getLastErrorCode() +
-                    " / " + serialPort.getLastErrorLocation());
+            if (serialPort != null) {
+                RuntimeException exc = new RuntimeException("Failed to open the port. Error: " + serialPort.getLastErrorCode() +
+                        " / " + serialPort.getLastErrorLocation());
+                serialPort = null;
+                throw exc;
+            } else {
+                throw new RuntimeException("Failed to open the port");
+            }
         }
     }
 
