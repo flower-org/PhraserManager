@@ -1,4 +1,11 @@
 ```
+Mar 27, 2025
+PhraserManager-0.0.3-all.jar
+30683211
+SHA2-256= c52d4dfbaacecf6d1d7d58aa508a6252213bcd50ac55b462187668f77aa529d9
+```
+
+```
 Mar 20, 2025
 PhraserManager-0.0.2-all.jar
 29769042
