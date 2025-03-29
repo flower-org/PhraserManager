@@ -139,7 +139,7 @@ public class DefaultDBCreator {
                         4,
                         256,
                         "username",
-                        List.of()
+                        List.of()//empty since it's not generateable
                 ),
                 PhraseTemplatesBlock.WordTemplate.of(2,
                         getWordPermissions(true, false, true, false),
@@ -189,13 +189,29 @@ public class DefaultDBCreator {
                         "bios password",
                         List.of(1,2,6)
                 ),
-                PhraseTemplatesBlock.WordTemplate.of(7,
+                PhraseTemplatesBlock.WordTemplate.of(8,
                         getWordPermissions(false, true, true, true),
                         Icon.EMAIL,
                         5,//a@b.c
                         255,
                         "email",
-                        List.of(1,2,5)
+                        List.of()//empty since it's not generateable
+                ),
+                PhraseTemplatesBlock.WordTemplate.of(9,
+                        getWordPermissions(false, true, true, true),
+                        Icon.KEY,
+                        1,
+                        4000,
+                        "key",
+                        List.of()//empty since it's not generateable
+                ),
+                PhraseTemplatesBlock.WordTemplate.of(10,
+                        getWordPermissions(false, true, true, true),
+                        Icon.ASTERISK,
+                        1,
+                        4000,
+                        "private key",
+                        List.of()//empty since it's not generateable
                 )
         );
 
@@ -214,7 +230,13 @@ public class DefaultDBCreator {
                         wordTemplateRefs(6, 2)),
                 PhraseTemplatesBlock.PhraseTemplate.of(5,
                         "Login/Email/Pass",
-                        wordTemplateRefs(1, 7, 2))
+                        wordTemplateRefs(1, 8, 2)),
+                PhraseTemplatesBlock.PhraseTemplate.of(6,
+                        "Key",
+                        wordTemplateRefs(9)),
+                PhraseTemplatesBlock.PhraseTemplate.of(7,
+                        "Key Pair",
+                        wordTemplateRefs(9, 10))
         );
 
         PhraseTemplatesBlock storePhraseTemplatesBlock = ImmutablePhraseTemplatesBlock.builder()

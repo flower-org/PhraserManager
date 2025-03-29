@@ -10,6 +10,9 @@ import com.phraser.db.PhraseTemplatesBlock;
 import com.phraser.db.SymbolSetsBlock;
 import com.phraser.runtimedb.BlockDataSizeExceededException;
 import com.phraser.runtimedb.DbRuntime;
+import com.phraser.runtimedb.DbRuntimeOrig;
+import com.phraser.runtimedb.FolderContent;
+import com.phraser.runtimedb.PhraseFolderAndName;
 import com.phraser.utils.PhraserUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -187,7 +190,7 @@ public class ClientModeForm extends AnchorPane {
             throw new RuntimeException(exception);
         }
 
-        this.dbRuntime = new DbRuntime(dbFile, dbPassword, iterations);
+        this.dbRuntime = new DbRuntimeOrig(dbFile, dbPassword, iterations);
         this.mainForm = mainForm;
         this.path = new Stack<>();
 
@@ -331,7 +334,7 @@ public class ClientModeForm extends AnchorPane {
     public void loadFolders() {
         checkNotNull(foldersTitledPane).textProperty().set(currentPath());
 
-        DbRuntime.FolderContent folderContentObj = dbRuntime.getFolderContent(currentFolderId);
+        FolderContent folderContentObj = dbRuntime.getFolderContent(currentFolderId);
         List<ExplorerNode> folderContentList = new ArrayList<>();
 
         if (currentFolderId != 0) {
@@ -340,7 +343,7 @@ public class ClientModeForm extends AnchorPane {
         for (FoldersBlock.Folder subFolder : folderContentObj.subFolders) {
             folderContentList.add(new ExplorerNode(ExplorerNodeType.FOLDER, subFolder.folderName(), subFolder.folderId()));
         }
-        for (DbRuntime.PhraseFolderAndName phrase : folderContentObj.phrases) {
+        for (PhraseFolderAndName phrase : folderContentObj.phrases) {
             folderContentList.add(new ExplorerNode(ExplorerNodeType.PHRASE, phrase.name, phrase.phraseBlockId));
         }
 
