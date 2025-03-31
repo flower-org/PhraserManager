@@ -138,7 +138,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
 
         checkNotNull(wordTemplateMinLengthTextField).setTextFormatter(new TextFormatter<>(change -> {
                 String newText = change.getControlNewText();
-                if (newText.length() <= 3 && newText.matches("[0-9]*")) {
+                if (newText.length() <= 4 && newText.matches("[0-9]*")) {
                     change.setText(change.getText().toLowerCase());
                     return change;
                 }
@@ -147,7 +147,7 @@ public class PhraseTemplatesBlockForm extends AnchorPane {
         ));
         checkNotNull(wordTemplateMaxLengthTextField).setTextFormatter(new TextFormatter<>(change -> {
                 String newText = change.getControlNewText();
-                if (newText.length() <= 3 && newText.matches("[0-9]*")) {
+                if (newText.length() <= 4 && newText.matches("[0-9]*")) {
                     change.setText(change.getText().toLowerCase());
                     return change;
                 }
