@@ -50,8 +50,7 @@ Using minicom:
 sudo apt install minicom
 minicom -D /dev/ttyACM0 -b 9600
 ```
-
-5. Using Fidd to secure backup DB
+## Using Fidd to secure backup DB
 
 Even though Phraser DB by itself is encrypted, we don't want to risk keeping its backups as is.
 Ideally, backup files should be encrypted using some private key, e.g. with 
@@ -59,3 +58,18 @@ Hybrid Asymmetric-Symmetric Encryption Method.
 With tools like Cryptor non-exportable certificates from PKCS#11 tokens can be utilized for that.
 Fidd can be used to further improve the reliability allowing dual certificate encryption, so that
 a single PKCS#11 token failure won't be fatal, and another token can be used to access the backups.
+
+## Terminology
+
+The word Block is overused, currently in docs and code it might refer to at least 3 things:
+1) A physical region on ROM (flash or file) which is a unit or RW and that holds a unit of data.
+2) Byte buffer organized in a special format, encryptable and decryptable.
+3) FlatBuf structure that holds actual app data, like a folder list of phrase.
+
+The proposal is to use different words for those 3 concepts, namely:
+1) Bucket
+2) Block
+3) Content
+
+With that said, the terminology is all over the code and docs, and changing that would require 
+a sizeable effort, therefore this is low prio. 
