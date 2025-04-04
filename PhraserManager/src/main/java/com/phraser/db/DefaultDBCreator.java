@@ -168,8 +168,8 @@ public class DefaultDBCreator {
                 PhraseTemplatesBlock.WordTemplate.of(5,
                         getWordPermissions(true, true, true, true),
                         Icon.LOCK,
-                        24,
-                        64,
+                        8,
+                        12,
                         "drive password",
                         List.of(1,2,5)
                 ),
@@ -184,7 +184,7 @@ public class DefaultDBCreator {
                 PhraseTemplatesBlock.WordTemplate.of(7,
                         getWordPermissions(true, true, true, true),
                         Icon.SETTINGS,
-                        8,
+                        6,
                         10,
                         "bios password",
                         List.of(1,2,6)
