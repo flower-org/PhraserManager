@@ -145,7 +145,7 @@ public class DefaultDBCreator {
                         getWordPermissions(true, false, true, false),
                         Icon.KEY,
                         24,
-                        64,
+                        32,
                         "password",
                         List.of(1,2,7)
                 ),
@@ -161,7 +161,7 @@ public class DefaultDBCreator {
                         getWordPermissions(true, true, true, true),
                         Icon.MESSAGE,
                         24,
-                        64,
+                        32,
                         "answer",
                         List.of(1,2,8)
                 ),
@@ -177,7 +177,7 @@ public class DefaultDBCreator {
                         getWordPermissions(true, true, true, true),
                         Icon.LOGIN,
                         8,
-                        24,
+                        16,
                         "generated login",
                         List.of(1,2)
                 ),
