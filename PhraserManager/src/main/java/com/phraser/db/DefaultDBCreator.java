@@ -236,7 +236,16 @@ public class DefaultDBCreator {
                         wordTemplateRefs(9)),
                 PhraseTemplatesBlock.PhraseTemplate.of(7,
                         "Key Pair",
-                        wordTemplateRefs(9, 10))
+                        wordTemplateRefs(9, 10)),
+                PhraseTemplatesBlock.PhraseTemplate.of(8,
+                        "Computer+",
+                        wordTemplateRefs(6, 2, 5, 7)),
+                PhraseTemplatesBlock.PhraseTemplate.of(9,
+                        "Windows",
+                        wordTemplateRefs(1, 2, 5, 7, 3, 4, 3, 4, 3, 4)),
+                PhraseTemplatesBlock.PhraseTemplate.of(10,
+                        "Windows+",
+                        wordTemplateRefs(6, 2, 5, 7, 3, 4, 3, 4, 3, 4))
         );
 
         PhraseTemplatesBlock storePhraseTemplatesBlock = ImmutablePhraseTemplatesBlock.builder()
