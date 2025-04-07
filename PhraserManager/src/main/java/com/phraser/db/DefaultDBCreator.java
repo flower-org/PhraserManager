@@ -212,6 +212,14 @@ public class DefaultDBCreator {
                         4000,
                         "private key",
                         List.of()//empty since it's not generateable
+                ),
+                PhraseTemplatesBlock.WordTemplate.of(11,
+                        getWordPermissions(true, true, true, true),
+                        Icon.LOGIN,
+                        8,
+                        16,
+                        "gen. linux login",
+                        List.of(1, 4)//empty since it's not generateable
                 )
         );
 
@@ -239,13 +247,13 @@ public class DefaultDBCreator {
                         wordTemplateRefs(9, 10)),
                 PhraseTemplatesBlock.PhraseTemplate.of(8,
                         "Computer+",
-                        wordTemplateRefs(6, 2, 5, 7)),
+                        wordTemplateRefs(11, 2, 5, 7)),
                 PhraseTemplatesBlock.PhraseTemplate.of(9,
                         "Windows",
                         wordTemplateRefs(1, 2, 5, 7, 3, 4, 3, 4, 3, 4)),
                 PhraseTemplatesBlock.PhraseTemplate.of(10,
                         "Windows+",
-                        wordTemplateRefs(6, 2, 5, 7, 3, 4, 3, 4, 3, 4))
+                        wordTemplateRefs(11, 2, 5, 7, 3, 4, 3, 4, 3, 4))
         );
 
         PhraseTemplatesBlock storePhraseTemplatesBlock = ImmutablePhraseTemplatesBlock.builder()
