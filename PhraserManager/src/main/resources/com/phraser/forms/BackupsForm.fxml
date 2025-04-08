@@ -128,6 +128,11 @@
                                  <Button fx:id="stopSequenceButton" disable="true" mnemonicParsing="false" onAction="#stopSequence" text="Stop" />
                                  <Separator orientation="VERTICAL" prefHeight="200.0" />
                                  <Button mnemonicParsing="false" onAction="#clearLogs" text="Clear logs" />
+                                 <Label text="On Linux: sudo usermod -a -G dialout $USER" textFill="#262f90">
+                                    <padding>
+                                       <Insets left="10.0" />
+                                    </padding>
+                                 </Label>
                              </items>
                            </ToolBar>
                         </children>
