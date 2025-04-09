@@ -218,8 +218,8 @@ public class DefaultDBCreator {
                         Icon.LOGIN,
                         8,
                         16,
-                        "gen. linux login",
-                        List.of(1, 4)//empty since it's not generateable
+                        "login (lowercase) generated",
+                        List.of(1, 4)
                 )
         );
 
