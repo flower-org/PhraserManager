@@ -20,7 +20,7 @@ In the header of the encrypted segment, we have: 1 (BlockType) + 2 (DataLength) 
 In the footer of the encrypted segment, we have: 4 (Adler32) = 4 bytes.  
 Thus, the maximum size of the data is 4080 - (4+3) = 4073 bytes.
 
-![DB Block structure.png](DB%20Block%20structure.png)
+![Encrypted DB Block structure.png](Encrypted%20DB%20Block%20structure.png)
 
 Data is padded with random bytes to the maximum size and reversed before encryption so that 
 what an attacker trying to decrypt sees first is random data, not structured data. Triple AES is 
