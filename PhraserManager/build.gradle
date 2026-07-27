@@ -113,7 +113,7 @@ tasks.withType(JavaCompile) {
     if (!name.toLowerCase().contains("test") && !name.toLowerCase().contains("build")) {
         options.errorprone {
             //Exclude Immutables generated code
-            excludedPaths.set("$buildDir/tmp/.*|$buildDir/generated/sources/.*|.*/com/phraser/schema/phraser/.*")
+            excludedPaths.set(".*[\\\\/]tmp[\\\\/].*|.*[\\\\/]generated[\\\\/]sources[\\\\/].*|.*[\\\\/]com[\\\\/]phraser[\\\\/]schema[\\\\/]phraser[\\\\/].*")
             check("NullAway", CheckSeverity.ERROR)
             option("NullAway:AnnotatedPackages", "com.phraser")
         }
